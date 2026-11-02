@@ -56,3 +56,7 @@ import Testing
 @Test func braceInsideAssignmentIsAValue() throws {
     #expect(try parseConfigEntries("s {\nk = a{b\n}")[0] == ConfigEntry(key: "s:k", value: "a{b", line: 2))
 }
+
+@Test func dollarNotFollowedByNameIsLiteral() throws {
+    #expect(try parseConfigEntries("k = ^(a|b)$, x$")[0].value == "^(a|b)$, x$")
+}

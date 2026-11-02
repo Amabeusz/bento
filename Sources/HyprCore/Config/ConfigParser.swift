@@ -65,6 +65,11 @@ private func substituteVariables(in value: String, variables: [String: String], 
         rest = rest[dollar...]
         guard let name = namesLongestFirst.first(where: { rest.hasPrefix($0) }) else {
             let identifier = rest.dropFirst().prefix { $0.isLetter || $0.isNumber || $0 == "_" }
+            if identifier.isEmpty {
+                result += "$"
+                rest = rest.dropFirst()
+                continue
+            }
             throw ConfigError(line: line, message: "undefined variable '$\(identifier)'")
         }
         result += variables[name] ?? ""
