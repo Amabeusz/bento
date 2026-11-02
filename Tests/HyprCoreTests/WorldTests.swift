@@ -168,6 +168,138 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         #expect(bars[2]?[5] == WorkspaceBadge(number: 6, isHere: true, isOnOtherMonitor: false, isEmpty: true))
     }
 
+    @Test func moveFocusAcrossMonitorsFollowsDirection() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M2))
+        w.externalFocus(1)
+        #expect(w.perform(.moveFocus(.down)) == [])
+        #expect(w.snapshot().focused == 1)
+        #expect(w.perform(.moveFocus(.right)) == [.focusWindow(2), .warpCursor(M2.frame.center)])
+        #expect(w.snapshot().focused == 2)
+        #expect(w.perform(.moveFocus(.up)) == [])
+        #expect(w.snapshot().focused == 2)
+    }
+
+    @Test func moveWindowToMonitorInDirection() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M2))
+        w.externalFocus(1)
+        #expect(w.perform(.moveWindow(.down)) == [])
+        #expect(w.perform(.moveWindow(.right)) == [.focusWindow(1), .warpCursor(M2.frame.center)])
+        let s = w.snapshot()
+        #expect(s.focused == 1)
+        #expect(s.bars[1]?[0].isEmpty == true)
+        if case .tiled(let r) = s.placements[1] { #expect(M2.frame.contains(r.center)) } else { Issue.record("not tiled") }
+    }
+
+    @Test func removingFocusedFallsBackToRecentInWorkspace() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M1))
+        w.addWindow(window(3, on: M1))
+        w.externalFocus(1)
+        w.removeWindow(2)
+        #expect(w.snapshot().focused == 1)
+        w.removeWindow(1)
+        #expect(w.snapshot().focused == 3)
+        w.removeWindow(3)
+        #expect(w.snapshot().focused == nil)
+    }
+
+    @Test func moveFocusAndMoveWindowWithinWorkspace() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M1))
+        let left = Rect(x: 12, y: 45, w: 739, h: 925)
+        let right = Rect(x: 761, y: 45, w: 739, h: 925)
+        #expect(w.perform(.moveFocus(.left)) == [.focusWindow(1)])
+        #expect(w.perform(.moveWindow(.right)) == [])
+        let s = w.snapshot()
+        #expect(s.focused == 1)
+        #expect(s.placements[1] == .tiled(right))
+        #expect(s.placements[2] == .tiled(left))
+    }
+
+    @Test func fullscreenFillsTilingArea() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M1))
+        _ = w.perform(.fullscreen)
+        #expect(w.snapshot().placements[2] == .tiled(area1))
+        #expect(w.snapshot().placements[1] == .tiled(Rect(x: 12, y: 45, w: 739, h: 925)))
+        _ = w.perform(.fullscreen)
+        #expect(w.snapshot().placements[2] == .tiled(Rect(x: 761, y: 45, w: 739, h: 925)))
+    }
+
+    @Test func toggleFloatingBothWays() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M1))
+        let right = Rect(x: 761, y: 45, w: 739, h: 925)
+        _ = w.perform(.toggleFloating)
+        #expect(w.snapshot().placements[2] == .floating(right))
+        #expect(w.snapshot().placements[1] == .tiled(area1))
+        _ = w.perform(.toggleFloating)
+        #expect(w.snapshot().placements[2] == .tiled(right))
+        #expect(w.snapshot().placements[1] == .tiled(Rect(x: 12, y: 45, w: 739, h: 925)))
+    }
+
+    @Test func resizeFloatingKeepsTopLeft() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1, isDialog: true))
+        _ = w.perform(.resizeActive(dx: 50, dy: -20))
+        #expect(w.snapshot().placements[1] == .floating(Rect(x: 100, y: 100, w: 450, h: 280)))
+    }
+
+    @Test func moveWorkspaceToEmptyOtherMonitor() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.externalFocus(1)
+        _ = w.perform(.moveCurrentWorkspaceToMonitor)
+        let s = w.snapshot()
+        #expect(s.visibleWorkspace == [1: 2, 2: 1])
+        #expect(s.placements[1] == .tiled(area2))
+        #expect(s.focused == 1)
+    }
+
+    @Test func floatingWindowFollowsWorkspaceToOtherMonitor() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M2, isDialog: true))
+        w.externalFocus(2)
+        _ = w.perform(.moveCurrentWorkspaceToMonitor)
+        let s = w.snapshot()
+        #expect(s.visibleWorkspace == [1: 6, 2: 1])
+        #expect(s.placements[2] == .floating(Rect(x: 100, y: 108, w: 400, h: 300)))
+    }
+
+    @Test func replugShowsLowestHiddenWhenOldWorkspaceIsVisible() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M2))
+        w.externalFocus(2)
+        w.setMonitors([M1])
+        _ = w.perform(.workspace(6))
+        #expect(w.snapshot().visibleWorkspace == [1: 6])
+        w.setMonitors([M1, M2])
+        #expect(w.snapshot().visibleWorkspace == [1: 6, 2: 1])
+    }
+
+    @Test func externalFocusOnHiddenWorkspaceShowsIt() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M1))
+        _ = w.perform(.moveToWorkspace(3))
+        w.externalFocus(2)
+        let s = w.snapshot()
+        #expect(s.visibleWorkspace[1] == 3)
+        #expect(s.focused == 2)
+        #expect(s.placements[2] == .tiled(area1))
+        #expect(parkedRect(s.placements[1]) != nil)
+    }
+
     @Test func addingKnownWindowIsNoOp() {
         let w = makeWorld()
         w.addWindow(window(1, on: M1))

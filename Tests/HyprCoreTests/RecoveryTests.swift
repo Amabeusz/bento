@@ -6,11 +6,18 @@ private let M2 = MonitorInfo(id: 2, frame: Rect(x: 1512, y: 0, w: 2560, h: 1440)
 
 @Suite struct RecoveryTests {
     @Test func parkFrameIsBottomRightCorner() {
-        #expect(parkFrame(for: Rect(x: 10, y: 20, w: 800, h: 600), on: M2) == Rect(x: 4071, y: 1439, w: 800, h: 600))
+        #expect(parkFrame(for: Rect(x: 10, y: 20, w: 800, h: 600), on: M2, monitors: [M1, M2]) == Rect(x: 4071, y: 1439, w: 800, h: 600))
+    }
+
+    @Test func parkFrameAvoidsOtherMonitors() {
+        let r = parkFrame(for: Rect(x: 0, y: 0, w: 800, h: 600), on: M1, monitors: [M1, M2])
+        #expect(r == Rect(x: -799, y: 981, w: 800, h: 600))
+        #expect(r.intersection(M2.frame) == nil)
+        #expect(isParked(r, monitors: [M1, M2]))
     }
 
     @Test func parkedFrameDetected() {
-        #expect(isParked(parkFrame(for: Rect(x: 0, y: 0, w: 800, h: 600), on: M2), monitors: [M1, M2]))
+        #expect(isParked(parkFrame(for: Rect(x: 0, y: 0, w: 800, h: 600), on: M2, monitors: [M1, M2]), monitors: [M1, M2]))
         #expect(!isParked(Rect(x: 100, y: 100, w: 800, h: 600), monitors: [M1, M2]))
     }
 

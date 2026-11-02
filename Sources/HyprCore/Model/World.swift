@@ -78,6 +78,7 @@ public enum SideEffect: Equatable, Sendable {
 public final class World {
     private var config: Config
     private var monitors: [MonitorInfo] = []
+    private var known: [MonitorID: MonitorInfo] = [:]
     private var visible: [MonitorID: Int] = [:]
     private var lastMonitor: [Int: MonitorID] = [:]
     private var shownBeforeUnplug: [MonitorID: Int] = [:]
@@ -100,6 +101,7 @@ public final class World {
 
     public func setMonitors(_ ms: [MonitorInfo]) {
         let focusedBefore = currentMonitor?.id
+        for m in ms { known[m.id] = m }
         let ordered = ms.filter(\.isBuiltin) + ms.filter { !$0.isBuiltin }
         let kept = Set(ordered.map(\.id))
         for m in monitors where !kept.contains(m.id) {
@@ -232,7 +234,7 @@ public final class World {
                 let isFullscreen = fullscreen.contains(id)
                 let frame = isFullscreen ? area : floating[id] ?? tiles[id] ?? area
                 placements[id] =
-                    if !shown { .parked(parkFrame(for: frame, on: home)) }
+                    if !shown { .parked(parkFrame(for: frame, on: home, monitors: monitors)) }
                     else if floating[id] != nil && !isFullscreen { .floating(frame) }
                     else { .tiled(frame) }
             }
@@ -313,9 +315,29 @@ public final class World {
     }
 
     private func move(_ id: WindowID, to n: Int) {
+        let source = workspaceOf[id].flatMap(frameMonitor(of:))
         detach(id)
         workspaceOf[id] = n
-        if floating[id] == nil { insertTiled(id, into: n) }
+        if let f = floating[id] {
+            if let target = frameMonitor(of: n), target.id != source?.id {
+                floating[id] = relocate(f, from: source, to: target)
+            }
+        } else {
+            insertTiled(id, into: n)
+        }
+    }
+
+    private func frameMonitor(of n: Int) -> MonitorInfo? {
+        lastMonitor[n].flatMap { known[$0] }
+    }
+
+    private func relocate(_ r: Rect, from source: MonitorInfo?, to target: MonitorInfo) -> Rect {
+        let u = target.usable
+        let w = min(r.w, u.w)
+        let h = min(r.h, u.h)
+        let x = r.x + (source.map { u.x - $0.usable.x } ?? 0)
+        let y = r.y + (source.map { u.y - $0.usable.y } ?? 0)
+        return Rect(x: min(max(x, u.minX), u.maxX - w), y: min(max(y, u.minY), u.maxY - h), w: w, h: h)
     }
 
     private func detach(_ id: WindowID) {
@@ -376,15 +398,20 @@ public final class World {
 
     private func monitor(from current: MonitorInfo, toward dir: Direction) -> MonitorInfo? {
         let c = current.frame.center
-        return monitors.first { m in
+        func distance(_ m: MonitorInfo) -> Double {
             let o = m.frame.center
-            switch dir {
-            case .left: return o.x < c.x
-            case .right: return o.x > c.x
-            case .up: return o.y < c.y
-            case .down: return o.y > c.y
-            }
+            return (o.x - c.x) * (o.x - c.x) + (o.y - c.y) * (o.y - c.y)
         }
+        return monitors.filter { m in
+            let dx = m.frame.center.x - c.x
+            let dy = m.frame.center.y - c.y
+            switch dir {
+            case .left: return -dx > abs(dy)
+            case .right: return dx > abs(dy)
+            case .up: return -dy > abs(dx)
+            case .down: return dy > abs(dx)
+            }
+        }.min { distance($0) < distance($1) }
     }
 
     private func tilingArea(_ m: MonitorInfo) -> Rect {
@@ -401,6 +428,12 @@ public final class World {
     }
 
     private func show(_ n: Int, on id: MonitorID) {
+        if lastMonitor[n] != id, let target = known[id] {
+            let source = frameMonitor(of: n)
+            for (w, ws) in workspaceOf where ws == n {
+                if let f = floating[w] { floating[w] = relocate(f, from: source, to: target) }
+            }
+        }
         visible[id] = n
         lastMonitor[n] = id
     }

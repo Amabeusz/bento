@@ -1,5 +1,11 @@
-public func parkFrame(for size: Rect, on monitor: MonitorInfo) -> Rect {
-    Rect(x: monitor.frame.maxX - 1, y: monitor.frame.maxY - 1, w: size.w, h: size.h)
+public func parkFrame(for size: Rect, on monitor: MonitorInfo, monitors: [MonitorInfo]) -> Rect {
+    let f = monitor.frame
+    let left = f.minX - size.w + 1
+    let top = f.minY - size.h + 1
+    let corners = [(f.maxX - 1, f.maxY - 1), (left, f.maxY - 1), (f.maxX - 1, top), (left, top)]
+        .map { Rect(x: $0.0, y: $0.1, w: size.w, h: size.h) }
+    let others = monitors.filter { $0.id != monitor.id }
+    return corners.first { r in others.allSatisfy { r.intersection($0.frame) == nil } } ?? corners[0]
 }
 
 public func isParked(_ frame: Rect, monitors: [MonitorInfo]) -> Bool {
