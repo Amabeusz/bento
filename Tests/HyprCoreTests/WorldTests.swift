@@ -300,6 +300,43 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         #expect(parkedRect(s.placements[1]) != nil)
     }
 
+    @Test func switchingToEmptyWorkspaceFocusesNothing() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.externalFocus(1)
+        #expect(w.perform(.workspace(3)) == [.focusNothing])
+        #expect(w.snapshot().focused == nil)
+    }
+
+    @Test func sendingLastWindowAwayFocusesNothing() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.externalFocus(1)
+        #expect(w.perform(.moveToWorkspace(2)) == [.focusNothing])
+        #expect(w.snapshot().focused == nil)
+    }
+
+    @Test func floatingResizeStopsAtMinimumSize() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1, isDialog: true))
+        _ = w.perform(.resizeActive(dx: -1000, dy: -1000))
+        #expect(w.snapshot().placements[1] == .floating(Rect(x: 100, y: 100, w: 100, h: 60)))
+    }
+
+    @Test func floatingFrameStopsAtMinimumSize() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1, isDialog: true))
+        w.setFloatingFrame(1, Rect(x: 200, y: 150, w: 20, h: 10))
+        #expect(w.snapshot().placements[1] == .floating(Rect(x: 200, y: 150, w: 100, h: 60)))
+    }
+
+    @Test func smallFloatingWindowMovesWithoutGrowing() {
+        let w = makeWorld()
+        w.addWindow(WindowInfo(id: 1, app: "Ghostty", title: "", isDialog: true, frame: Rect(x: 100, y: 100, w: 80, h: 40)))
+        w.setFloatingFrame(1, Rect(x: 300, y: 200, w: 80, h: 40))
+        #expect(w.snapshot().placements[1] == .floating(Rect(x: 300, y: 200, w: 80, h: 40)))
+    }
+
     @Test func addingKnownWindowIsNoOp() {
         let w = makeWorld()
         w.addWindow(window(1, on: M1))

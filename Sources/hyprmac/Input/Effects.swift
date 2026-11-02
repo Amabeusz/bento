@@ -23,6 +23,13 @@ final class Effects {
             tracker.window(id)?.close()
         case .focusWindow(let id):
             tracker.window(id)?.raiseAndFocus()
+        case .focusNothing:
+            let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first
+            if let finder, !tracker.allWindows.contains(where: { $0.pid == finder.processIdentifier }) {
+                finder.activate()
+            } else {
+                NSApp.activate()
+            }
         case .warpCursor(let p):
             CGWarpMouseCursorPosition(CGPoint(x: p.x, y: p.y))
             CGAssociateMouseAndMouseCursorPosition(1)

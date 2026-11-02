@@ -14,4 +14,8 @@ public struct ApplyPlan {
         written = targets
         return changed
     }
+
+    public mutating func invalidate(_ id: WindowID) {
+        written[id] = nil
+    }
 }

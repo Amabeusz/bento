@@ -34,4 +34,12 @@ private let P = Rect(x: 1511, y: 981, w: 700, h: 900)
         _ = plan.writes(for: snapshot([:]))
         #expect(plan.writes(for: snapshot([1: .tiled(A)])) == [1: A])
     }
+
+    @Test func invalidatedWindowIsWrittenAgain() {
+        var plan = ApplyPlan()
+        let s = snapshot([1: .tiled(A), 2: .tiled(B)])
+        _ = plan.writes(for: s)
+        plan.invalidate(1)
+        #expect(plan.writes(for: s) == [1: A])
+    }
 }

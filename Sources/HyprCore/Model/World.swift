@@ -72,6 +72,7 @@ public enum SideEffect: Equatable, Sendable {
     case launchApp(String)
     case closeWindow(WindowID)
     case focusWindow(WindowID)
+    case focusNothing
     case warpCursor(Point)
 }
 
@@ -180,7 +181,7 @@ public final class World {
         case .resizeActive(let dx, let dy):
             guard let id = focused, let n = workspaceOf[id] else { return [] }
             if let f = floating[id] {
-                floating[id] = Rect(x: f.x, y: f.y, w: f.w + dx, h: f.h + dy)
+                floating[id] = clamped(Rect(x: f.x, y: f.y, w: f.w + dx, h: f.h + dy), from: f)
             } else {
                 trees[n]?.resize(id, dx: dx, dy: dy, area: area(of: n), gapsIn: config.gapsIn)
             }
@@ -206,8 +207,12 @@ public final class World {
     }
 
     public func setFloatingFrame(_ id: WindowID, _ r: Rect) {
-        guard floating[id] != nil else { return }
-        floating[id] = r
+        guard let f = floating[id] else { return }
+        floating[id] = clamped(r, from: f)
+    }
+
+    private func clamped(_ r: Rect, from old: Rect) -> Rect {
+        Rect(x: r.x, y: r.y, w: max(r.w, min(100, old.w)), h: max(r.h, min(60, old.h)))
     }
 
     public func dropTiled(_ id: WindowID, at p: Point) {
@@ -359,7 +364,7 @@ public final class World {
     }
 
     private func focusEffects(warpTo m: MonitorInfo?) -> [SideEffect] {
-        var effects: [SideEffect] = focused.map { [.focusWindow($0)] } ?? []
+        var effects: [SideEffect] = [focused.map { .focusWindow($0) } ?? .focusNothing]
         if let m, config.warpCursor { effects.append(.warpCursor(m.frame.center)) }
         return effects
     }
