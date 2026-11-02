@@ -53,3 +53,13 @@ Checks to run by hand after granting permissions (see docs/SETUP.md).
 - [ ] A ctrl-alt left-drag of a tiled or floating window moves its ring with it live; resizing with ctrl-alt right-drag resizes the ring live.
 - [ ] Floating windows' rings do not show above other windows that cover them.
 - [ ] Workspace-parked (off-screen) windows have no ring; Pause Tiling removes all rings, Resume brings them back.
+
+## Task 11
+
+- [ ] One centered translucent island per monitor sits right under the macOS menu bar, showing 1–10 (the last label is "10").
+- [ ] The workspace shown on a monitor is a filled pink pill with dark text on that monitor's bar; the workspace shown on the other monitor has a purple outline; empty workspaces are dimmed, others are normal light text.
+- [ ] Switching workspaces with the hotkeys moves the highlights on both monitors' bars.
+- [ ] Clicking a number switches to that workspace without activating hyprmac or stealing focus from the current app.
+- [ ] Tiled windows never overlap the island; the island stays above other windows and appears on every Space, but not in Mission Control.
+- [ ] Save `bar { height = 40 }`: the island resizes without a relaunch and the tiling area adjusts; save `enabled = false`: the island disappears and tiling grows into the space; `enabled = true` brings it back.
+- [ ] Unplugging / replugging the external monitor removes / recreates its island; Pause Tiling hides the islands, Resume brings them back.

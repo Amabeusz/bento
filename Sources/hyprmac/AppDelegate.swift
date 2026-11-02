@@ -25,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var unknownKeys: [String] = []
     private var drag: Drag?
     private let borders = BorderManager()
+    private lazy var bars = BarManager { [weak self] number in self?.selectWorkspace(number) }
 
     private struct Drag {
         let id: WindowID
@@ -54,6 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         borders.removeAll()
+        bars.removeAll()
         restoreParkedWindows()
     }
 
@@ -101,6 +103,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let snapshot = world.snapshot()
         applier.apply(snapshot)
         borders.update(snapshot, config: loader.current)
+        bars.update(snapshot, monitors: monitorInfos(), config: loader.current)
+    }
+
+    private func selectWorkspace(_ number: Int) {
+        guard !isPaused, let world else { return }
+        world.perform(.workspace(number)).forEach { effects?.run($0) }
+        applyLayout()
     }
 
     private func handleKey(_ mods: Modifiers, _ code: CGKeyCode) -> Bool {
@@ -283,6 +292,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         isPaused.toggle()
         if isPaused {
             borders.removeAll()
+            bars.removeAll()
             restoreParkedWindows()
             world = nil
             applier = nil
