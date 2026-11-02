@@ -20,3 +20,6 @@ Checks to run by hand after granting permissions (see docs/SETUP.md).
 - [ ] Open System Settings: it floats (not tiled).
 - [ ] Plug and unplug the external monitor: no window is lost (every window is still reachable on a visible screen).
 - [ ] `kill -9` the app with nothing parked, relaunch: the layout is rebuilt.
+- [ ] Put a tiled Ghostty window into native fullscreen: the other windows re-tile to fill its space. Leave fullscreen: it tiles again.
+- [ ] Launch hyprmac while a window is in native fullscreen; leave fullscreen: the window joins the layout.
+- [ ] Minimize a tiled window: the rest re-tile. Restore it from the Dock: it tiles again.

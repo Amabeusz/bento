@@ -19,14 +19,13 @@ final class WindowTracker {
     var onFocus: (WindowID) -> Void = { _ in }
 
     private var windows: [WindowID: AXWindow] = [:]
+    private var reported: Set<WindowID> = []
     private var observers: [pid_t: AXObserver] = [:]
     private static let appNotifications = [kAXWindowCreatedNotification, kAXFocusedWindowChangedNotification]
-    private static let windowNotifications = [
-        kAXUIElementDestroyedNotification, kAXWindowMiniaturizedNotification, kAXWindowDeminiaturizedNotification,
-    ]
+    private static let windowNotifications = [kAXWindowMiniaturizedNotification, kAXWindowDeminiaturizedNotification]
 
     var managedWindows: [AXWindow] {
-        windows.values.filter { !$0.isMinimized && !$0.isFullscreen }
+        reported.compactMap { windows[$0] }
     }
 
     var allWindows: [AXWindow] {
@@ -39,6 +38,7 @@ final class WindowTracker {
         center.addObserver(self, selector: #selector(appLaunched), name: NSWorkspace.didLaunchApplicationNotification, object: nil)
         center.addObserver(self, selector: #selector(appTerminated), name: NSWorkspace.didTerminateApplicationNotification, object: nil)
         center.addObserver(self, selector: #selector(appActivated), name: NSWorkspace.didActivateApplicationNotification, object: nil)
+        center.addObserver(self, selector: #selector(spaceChanged), name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
         NSWorkspace.shared.runningApplications.forEach { observe($0) }
     }
 
@@ -62,14 +62,15 @@ final class WindowTracker {
         if let observer = observers.removeValue(forKey: pid) {
             CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .commonModes)
         }
-        for w in windows.values where w.pid == pid {
-            windows[w.id] = nil
-            onRemove(w.id)
-        }
+        for w in windows.values where w.pid == pid { forget(w.id) }
     }
 
     @objc private func appActivated(_ note: Notification) {
         if let id = focusedWindowID() { onFocus(id) }
+    }
+
+    @objc private func spaceChanged(_ note: Notification) {
+        recheckAll()
     }
 
     private func observe(_ app: NSRunningApplication, attempt: Int = 0) {
@@ -105,10 +106,33 @@ final class WindowTracker {
               let w = AXWindow(element: element, pid: pid, app: app.localizedName ?? "")
         else { return nil }
         let refcon = Unmanaged.passUnretained(self).toOpaque()
+        guard AXObserverAddNotification(observer, element, kAXUIElementDestroyedNotification as CFString, refcon) == .success
+        else { return nil }
         Self.windowNotifications.forEach { _ = AXObserverAddNotification(observer, element, $0 as CFString, refcon) }
         windows[id] = w
-        if !w.isMinimized && !w.isFullscreen { onAdd(w.info) }
+        report(w, eligible: isEligible(w))
         return w
+    }
+
+    private func isEligible(_ w: AXWindow) -> Bool {
+        !w.isMinimized && !w.isFullscreen
+    }
+
+    private func report(_ w: AXWindow, eligible: Bool) {
+        if eligible, reported.insert(w.id).inserted {
+            onAdd(w.info)
+        } else if !eligible, reported.remove(w.id) != nil {
+            onRemove(w.id)
+        }
+    }
+
+    private func recheckAll() {
+        windows.values.forEach { report($0, eligible: isEligible($0)) }
+    }
+
+    private func forget(_ id: WindowID) {
+        windows[id] = nil
+        if reported.remove(id) != nil { onRemove(id) }
     }
 
     fileprivate func handle(_ element: AXUIElement, _ notification: String) {
@@ -116,15 +140,15 @@ final class WindowTracker {
         case kAXWindowCreatedNotification:
             discover(element)
         case kAXFocusedWindowChangedNotification:
-            if let w = discover(element), !w.isMinimized, !w.isFullscreen { onFocus(w.id) }
+            guard let w = discover(element) else { return }
+            recheckAll()
+            if reported.contains(w.id) { onFocus(w.id) }
         case kAXUIElementDestroyedNotification:
-            guard let w = windows.values.first(where: { CFEqual($0.element, element) }) else { return }
-            windows[w.id] = nil
-            onRemove(w.id)
+            if let w = windows.values.first(where: { CFEqual($0.element, element) }) { forget(w.id) }
         case kAXWindowMiniaturizedNotification:
-            if let id = windowID(of: element), windows[id] != nil { onRemove(id) }
+            if let id = windowID(of: element), let w = windows[id] { report(w, eligible: false) }
         case kAXWindowDeminiaturizedNotification:
-            if let id = windowID(of: element), let w = windows[id] { onAdd(w.info) }
+            if let id = windowID(of: element), let w = windows[id] { report(w, eligible: !w.isFullscreen) }
         default:
             break
         }
