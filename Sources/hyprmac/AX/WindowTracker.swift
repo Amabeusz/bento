@@ -141,7 +141,7 @@ final class WindowTracker {
             discover(element)
         case kAXFocusedWindowChangedNotification:
             guard let w = discover(element) else { return }
-            recheckAll()
+            report(w, eligible: isEligible(w))
             if reported.contains(w.id) { onFocus(w.id) }
         case kAXUIElementDestroyedNotification:
             if let w = windows.values.first(where: { CFEqual($0.element, element) }) { forget(w.id) }

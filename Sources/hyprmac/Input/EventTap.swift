@@ -1,11 +1,22 @@
 import CoreGraphics
+import Foundation
 import HyprCore
 
-enum MouseEvent {
+enum MouseEvent: Sendable {
     case down(button: Int, mods: Modifiers, at: Point)
     case dragged(button: Int, at: Point)
     case up(button: Int, at: Point)
     case moved(at: Point)
+}
+
+enum TapEvent: Sendable {
+    case key(KeyChord)
+    case mouse(MouseEvent)
+}
+
+struct MouseChord: Hashable, Sendable {
+    var mods: Modifiers
+    var button: Int
 }
 
 private func tapCallback(
@@ -13,85 +24,135 @@ private func tapCallback(
 ) -> Unmanaged<CGEvent>? {
     guard let refcon else { return Unmanaged.passUnretained(event) }
     let tap = Unmanaged<EventTap>.fromOpaque(refcon).takeUnretainedValue()
-    nonisolated(unsafe) let event = event
-    let swallow = MainActor.assumeIsolated { tap.handle(type, event) }
-    return swallow ? nil : Unmanaged.passUnretained(event)
+    return tap.handle(type, event) ? nil : Unmanaged.passUnretained(event)
 }
 
-@MainActor
-final class EventTap {
-    private static let leftButton = 272
-    private static let rightButton = 273
+private struct PortHandoff: @unchecked Sendable {
+    let port: CFMachPort
+}
+
+final class EventTap: @unchecked Sendable {
+    static let leftButton = 272
+    static let rightButton = 273
     private static let types: [CGEventType] = [
         .keyDown, .leftMouseDown, .leftMouseDragged, .leftMouseUp,
         .rightMouseDown, .rightMouseDragged, .rightMouseUp,
     ]
 
-    private let onKey: (Modifiers, CGKeyCode) -> Bool
-    private let onMouse: (MouseEvent) -> Bool
+    private let onEvent: @MainActor @Sendable (TapEvent) -> Void
+    private let lock = NSLock()
+    private var chords: Set<KeyChord> = []
+    private var mouseBinds: Set<MouseChord> = []
+    private var paused = false
+    private var followMouse = false
+    private var gesture: Int?
     private var port: CFMachPort?
-    private var source: CFRunLoopSource?
 
-    var watchesMouseMoved = false {
-        didSet {
-            guard watchesMouseMoved != oldValue, port != nil else { return }
+    init(onEvent: @escaping @MainActor @Sendable (TapEvent) -> Void) {
+        self.onEvent = onEvent
+    }
+
+    var isRunning: Bool {
+        lock.withLock { port != nil }
+    }
+
+    func configure(chords: Set<KeyChord>, mouseBinds: Set<MouseChord>, followMouse: Bool, paused: Bool) {
+        let restart = lock.withLock {
+            self.chords = chords
+            self.mouseBinds = mouseBinds
+            self.paused = paused
+            let changed = port != nil && self.followMouse != followMouse
+            self.followMouse = followMouse
+            return changed
+        }
+        if restart {
             stop()
             start()
         }
     }
 
-    init(onKey: @escaping (Modifiers, CGKeyCode) -> Bool, onMouse: @escaping (MouseEvent) -> Bool) {
-        self.onKey = onKey
-        self.onMouse = onMouse
-    }
-
-    func start() {
-        let types = watchesMouseMoved ? Self.types + [.mouseMoved] : Self.types
+    @discardableResult
+    func start() -> Bool {
+        let types = lock.withLock { followMouse } ? Self.types + [.mouseMoved] : Self.types
         let mask = types.reduce(CGEventMask(0)) { $0 | (1 << $1.rawValue) }
         guard let port = CGEvent.tapCreate(
             tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
             eventsOfInterest: mask, callback: tapCallback, userInfo: Unmanaged.passUnretained(self).toOpaque())
-        else { return }
-        let source = CFMachPortCreateRunLoopSource(nil, port, 0)
-        self.port = port
-        self.source = source
-        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-        CGEvent.tapEnable(tap: port, enable: true)
+        else { return false }
+        lock.withLock { self.port = port }
+        let handoff = PortHandoff(port: port)
+        let thread = Thread {
+            let port = handoff.port
+            guard let source = CFMachPortCreateRunLoopSource(nil, port, 0) else { return }
+            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
+            CGEvent.tapEnable(tap: port, enable: true)
+            CFRunLoopRun()
+        }
+        thread.name = "hyprmac event tap"
+        thread.qualityOfService = .userInteractive
+        thread.start()
+        return true
     }
 
     private func stop() {
+        let port = lock.withLock {
+            defer { self.port = nil }
+            return self.port
+        }
         guard let port else { return }
         CGEvent.tapEnable(tap: port, enable: false)
-        CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
         CFMachPortInvalidate(port)
-        self.port = nil
-        source = nil
     }
 
     fileprivate func handle(_ type: CGEventType, _ event: CGEvent) -> Bool {
         let p = Point(x: event.location.x, y: event.location.y)
         switch type {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
-            if let port { CGEvent.tapEnable(tap: port, enable: true) }
+            if let port = lock.withLock({ port }) { CGEvent.tapEnable(tap: port, enable: true) }
             return false
         case .keyDown:
-            return onKey(modifiers(from: event.flags), CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode)))
-        case .leftMouseDown:
-            return onMouse(.down(button: Self.leftButton, mods: modifiers(from: event.flags), at: p))
-        case .rightMouseDown:
-            return onMouse(.down(button: Self.rightButton, mods: modifiers(from: event.flags), at: p))
-        case .leftMouseDragged:
-            return onMouse(.dragged(button: Self.leftButton, at: p))
-        case .rightMouseDragged:
-            return onMouse(.dragged(button: Self.rightButton, at: p))
-        case .leftMouseUp:
-            return onMouse(.up(button: Self.leftButton, at: p))
-        case .rightMouseUp:
-            return onMouse(.up(button: Self.rightButton, at: p))
+            let chord = KeyChord(
+                mods: modifiers(from: event.flags), code: CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode)))
+            guard lock.withLock({ !paused && chords.contains(chord) }) else { return false }
+            send(.key(chord))
+            return true
+        case .leftMouseDown, .rightMouseDown:
+            let button = type == .leftMouseDown ? Self.leftButton : Self.rightButton
+            let mods = modifiers(from: event.flags)
+            let bound = lock.withLock {
+                gesture = nil
+                guard !paused, mouseBinds.contains(MouseChord(mods: mods, button: button)) else { return false }
+                gesture = button
+                return true
+            }
+            guard bound else { return false }
+            send(.mouse(.down(button: button, mods: mods, at: p)))
+            return true
+        case .leftMouseDragged, .rightMouseDragged:
+            let button = type == .leftMouseDragged ? Self.leftButton : Self.rightButton
+            guard lock.withLock({ gesture == button }) else { return false }
+            send(.mouse(.dragged(button: button, at: p)))
+            return true
+        case .leftMouseUp, .rightMouseUp:
+            let button = type == .leftMouseUp ? Self.leftButton : Self.rightButton
+            let ended = lock.withLock {
+                guard gesture == button else { return false }
+                gesture = nil
+                return true
+            }
+            guard ended else { return false }
+            send(.mouse(.up(button: button, at: p)))
+            return true
         case .mouseMoved:
-            return onMouse(.moved(at: p))
+            send(.mouse(.moved(at: p)))
+            return false
         default:
             return false
         }
+    }
+
+    private func send(_ event: TapEvent) {
+        let onEvent = onEvent
+        DispatchQueue.main.async { onEvent(event) }
     }
 }

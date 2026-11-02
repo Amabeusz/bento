@@ -66,9 +66,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func configDidChange() {
         reloadFromDisk()
-        refreshMenu()
         world?.updateConfig(loader.current)
-        eventTap?.watchesMouseMoved = loader.current.followMouse
+        syncTap()
+        refreshMenu()
         applyLayout()
     }
 
@@ -88,12 +88,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         tracker.start()
         self.tracker = tracker
         effects = Effects(tracker: tracker)
-        let eventTap = EventTap(
-            onKey: { [weak self] mods, code in self?.handleKey(mods, code) ?? false },
-            onMouse: { [weak self] event in self?.handleMouse(event) ?? false })
-        eventTap.watchesMouseMoved = loader.current.followMouse
-        eventTap.start()
+        let eventTap = EventTap { [weak self] event in self?.handleTap(event) }
         self.eventTap = eventTap
+        syncTap()
+        eventTap.start()
+        refreshMenu()
         NotificationCenter.default.addObserver(
             self, selector: #selector(screensChanged), name: NSApplication.didChangeScreenParametersNotification, object: nil)
         if !isPaused { buildWorld() }
@@ -135,29 +134,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyLayout(animated: true)
     }
 
-    private func handleKey(_ mods: Modifiers, _ code: CGKeyCode) -> Bool {
-        guard !isPaused, let world, let action = keyBinds[KeyChord(mods: mods, code: code)] else { return false }
-        world.perform(action).forEach { effects?.run($0) }
-        applyLayout(animated: true)
-        return true
+    private func syncTap() {
+        eventTap?.configure(
+            chords: Set(keyBinds.keys),
+            mouseBinds: Set(loader.current.mouseBinds.map { MouseChord(mods: $0.mods, button: $0.button) }),
+            followMouse: loader.current.followMouse,
+            paused: isPaused)
     }
 
-    private func handleMouse(_ event: MouseEvent) -> Bool {
+    private func handleTap(_ event: TapEvent) {
+        switch event {
+        case .key(let chord): handleKey(chord)
+        case .mouse(let mouse): handleMouse(mouse)
+        }
+    }
+
+    private func handleKey(_ chord: KeyChord) {
+        guard !isPaused, let world, let action = keyBinds[chord] else { return }
+        world.perform(action).forEach { effects?.run($0) }
+        applyLayout(animated: true)
+    }
+
+    private func handleMouse(_ event: MouseEvent) {
         guard !isPaused, let world else {
             drag = nil
-            return false
+            return
         }
         switch event {
         case .down(let button, let mods, let p):
             drag = nil
             guard let bind = loader.current.mouseBinds.first(where: { $0.mods == mods && $0.button == button }),
                   let hit = managedWindow(at: p, in: world.snapshot())
-            else { return false }
+            else { return }
             animator.finish()
             drag = Drag(id: hit.id, button: button, action: bind.action, isFloating: hit.isFloating, frame: hit.frame, last: p)
-            return true
         case .dragged(let button, let p):
-            guard var d = drag, d.button == button else { return false }
+            guard var d = drag, d.button == button else { return }
             let dx = p.x - d.last.x
             let dy = p.y - d.last.y
             d.last = p
@@ -182,24 +194,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 applyLayout()
             }
             drag = d
-            return true
         case .up(let button, let p):
-            guard let d = drag, d.button == button else { return false }
+            guard let d = drag, d.button == button else { return }
             drag = nil
             if d.action == .move && !d.isFloating {
                 world.dropTiled(d.id, at: p)
                 applyLayout()
                 if case .tiled(let r) = world.snapshot().placements[d.id] { tracker?.window(d.id)?.frame = r }
             }
-            return true
         case .moved(let p):
-            guard loader.current.followMouse else { return false }
+            guard loader.current.followMouse else { return }
             let snapshot = world.snapshot()
-            guard let hit = managedWindow(at: p, in: snapshot), hit.id != snapshot.focused else { return false }
+            guard let hit = managedWindow(at: p, in: snapshot), hit.id != snapshot.focused else { return }
             world.externalFocus(hit.id)
             tracker?.window(hit.id)?.raiseAndFocus()
             applyLayout()
-            return false
         }
     }
 
@@ -280,6 +289,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for key in unknownKeys {
             menu.addItem(disabledItem("Config Error: unknown key '\(key)'"))
         }
+        if eventTap?.isRunning == false {
+            menu.addItem(disabledItem("Hotkeys unavailable — check Accessibility permission"))
+        }
         if !screenRecordingGranted {
             menu.addItem(disabledItem("Animations off (no Screen Recording)"))
         }
@@ -315,6 +327,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func togglePause() {
         isPaused.toggle()
+        syncTap()
         if isPaused {
             animator.finish()
             shown = nil
