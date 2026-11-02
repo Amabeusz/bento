@@ -18,12 +18,15 @@ final class WindowTracker {
     var onRemove: (WindowID) -> Void = { _ in }
     var onFocus: (WindowID) -> Void = { _ in }
     var onAppGone: () -> Void = {}
+    var onFrameChange: (WindowID) -> Void = { _ in }
 
     private var windows: [WindowID: AXWindow] = [:]
     private var reported: Set<WindowID> = []
     private var observers: [pid_t: AXObserver] = [:]
     private static let appNotifications = [kAXWindowCreatedNotification, kAXFocusedWindowChangedNotification]
-    private static let windowNotifications = [kAXWindowMiniaturizedNotification, kAXWindowDeminiaturizedNotification]
+    private static let windowNotifications = [
+        kAXWindowMiniaturizedNotification, kAXWindowDeminiaturizedNotification, kAXMovedNotification, kAXResizedNotification,
+    ]
 
     var managedWindows: [AXWindow] {
         reported.compactMap { windows[$0] }
@@ -151,6 +154,8 @@ final class WindowTracker {
             if let id = windowID(of: element), let w = windows[id] { report(w, eligible: false) }
         case kAXWindowDeminiaturizedNotification:
             if let id = windowID(of: element), let w = windows[id] { report(w, eligible: !w.isFullscreen) }
+        case kAXMovedNotification, kAXResizedNotification:
+            if let id = windowID(of: element), reported.contains(id) { onFrameChange(id) }
         default:
             break
         }

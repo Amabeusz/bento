@@ -27,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var lastFocusDisturbance = ContinuousClock.now - .seconds(1)
     private var pendingReveal: WindowID?
     private var refocusScheduled = false
+    private var frameChecks: Set<WindowID> = []
     private let borders = BorderManager()
     private let animator = Animator()
     private var shown: LayoutSnapshot?
@@ -85,6 +86,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         tracker.onRemove = { [weak self] id in self?.windowRemoved(id) }
         tracker.onFocus = { [weak self] id in self?.windowFocused(id) }
         tracker.onAppGone = { [weak self] in self?.noteFocusDisturbance() }
+        tracker.onFrameChange = { [weak self] id in self?.scheduleFrameCheck(id) }
         tracker.start()
         self.tracker = tracker
         effects = Effects(tracker: tracker)
@@ -168,6 +170,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         run([world.snapshot().focused.map { .focusWindow($0) } ?? .focusNothing])
     }
 
+    private func scheduleFrameCheck(_ id: WindowID) {
+        guard frameChecks.insert(id).inserted else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(150)) { [weak self] in
+            self?.frameChecks.remove(id)
+            self?.checkFrame(id)
+        }
+    }
+
+    private func checkFrame(_ id: WindowID) {
+        guard let world, let applier, let w = tracker?.window(id) else { return }
+        guard NSEvent.pressedMouseButtons == 0 else {
+            scheduleFrameCheck(id)
+            return
+        }
+        guard !applier.wroteRecently(id) else { return }
+        let frame = w.frame
+        let s = world.snapshot()
+        switch s.placements[id] {
+        case .floating(let r) where r != frame:
+            world.setFloatingFrame(id, frame)
+            applyLayout()
+        case .tiled(let r) where r != frame, .parked(let r) where r != frame:
+            animator.finish()
+            applier.restore(id, to: r, in: s)
+        default:
+            break
+        }
+    }
+
     private func windowFocused(_ id: WindowID) {
         guard let world else { return }
         pendingReveal = nil
@@ -241,7 +272,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case (.move, false):
                 d.frame.x += dx
                 d.frame.y += dy
-                tracker?.window(d.id)?.frame = d.frame
+                applier?.place(d.id, d.frame)
                 borders.updateFrame(d.id, d.frame)
             case (.resize, true):
                 d.frame.w += dx
@@ -259,7 +290,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if d.action == .move && !d.isFloating {
                 world.dropTiled(d.id, at: p)
                 applyLayout()
-                if case .tiled(let r) = world.snapshot().placements[d.id] { tracker?.window(d.id)?.frame = r }
+                if case .tiled(let r) = world.snapshot().placements[d.id] { applier?.place(d.id, r) }
             }
         case .moved(let p):
             guard loader.current.followMouse else { return }
