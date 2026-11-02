@@ -136,11 +136,11 @@ final class BarManager {
         }
         let style = BarStyle(config)
         let height = config.barHeight
-        let width = height * (error == nil ? 11 : 12)
         var live: Set<MonitorID> = []
         for monitor in monitors {
-            guard let badges = s.bars[monitor.id],
-                  let frame = appKitFrame(Rect(
+            guard let badges = s.bars[monitor.id] else { continue }
+            let width = height * Double(badges.count + (error == nil ? 1 : 2))
+            guard let frame = appKitFrame(Rect(
                       x: monitor.frame.x + (monitor.frame.w - width) / 2, y: monitor.usable.y + 4, w: width, h: height))
             else { continue }
             live.insert(monitor.id)

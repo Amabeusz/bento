@@ -40,7 +40,7 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 | mod + shift + strzałki / h j k l | przesuń okno |
 | mod + 1…0 | pulpit 1–10 |
 | mod + shift + 1…0 | wyślij okno na pulpit 1–10 |
-| mod + shift + Tab | przenieś pulpit na drugi ekran |
+| mod + shift + Tab | przenieś pulpit na drugi ekran (tylko bez ekranu wbudowanego, np. dwa monitory zewnętrzne) |
 | mod + minus / equal | zmniejsz / powiększ okno |
 | mod + T | zmień podział (obok siebie / jedno pod drugim) |
 | mod + F | wypełnij ekran |
@@ -48,6 +48,10 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 | mod + Q | zamknij okno |
 | mod + przeciągnij / prawy przycisk | przesuń / zmień rozmiar myszką |
 | mod + Return | otwórz Ghostty |
+
+## Dwa ekrany
+
+Gdy do MacBooka podłączony jest monitor zewnętrzny, ekran wbudowany ma na stałe jeden pulpit (1), a pulpity 2–10 zawsze otwierają się na monitorze zewnętrznym — niezależnie od tego, na którym ekranie jest fokus. ctrl-alt-1 przenosi fokus na ekran wbudowany. Wyspa wbudowanego pokazuje tylko 1, wyspa zewnętrznego 2–10. Numer pulpitu wbudowanego bierze się z linii `workspace = 1, monitor:builtin, default:true` w konfiguracji. Przy samym laptopie wszystkie 10 pulpitów jest na jego ekranie.
 
 ## Konfiguracja
 

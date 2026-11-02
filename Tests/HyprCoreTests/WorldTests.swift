@@ -14,6 +14,16 @@ private func makeWorld() -> World {
     return world
 }
 
+private let E1 = MonitorInfo(id: 1, frame: M1.frame, usable: M1.usable, isBuiltin: false)
+
+private func makeTwoExternalWorld() -> World {
+    var config = try! parseConfig(defaultConfigText)
+    config.barEnabled = false
+    let world = World(config: config)
+    world.setMonitors([E1, M2])
+    return world
+}
+
 private func window(_ id: WindowID, on m: MonitorInfo, app: String = "Ghostty", isDialog: Bool = false) -> WindowInfo {
     WindowInfo(id: id, app: app, title: "", isDialog: isDialog, frame: Rect(x: m.frame.x + 100, y: m.frame.y + 100, w: 400, h: 300))
 }
@@ -32,7 +42,8 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         #expect(s.visibleWorkspace == [1: 1, 2: 6])
         #expect(s.placements[1] == .tiled(area2))
         #expect(s.placements[2] == .tiled(area1))
-        #expect(s.bars[1]?.filter { !$0.isEmpty }.map(\.number) == [1, 6])
+        #expect(s.bars[1]?.filter { !$0.isEmpty }.map(\.number) == [1])
+        #expect(s.bars[2]?.filter { !$0.isEmpty }.map(\.number) == [6])
     }
 
     @Test func newWindowSplitsFocused() {
@@ -83,17 +94,17 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         #expect(s.focused == 1)
         #expect(effects == [.focusWindow(1)])
         #expect(s.visibleWorkspace[1] == 1)
-        #expect(s.bars[1]?[1].isEmpty == false)
+        #expect(s.bars[2]?.first { $0.number == 2 }?.isEmpty == false)
     }
 
-    @Test func moveWorkspaceToOtherMonitorSwaps() {
-        let w = makeWorld()
-        w.addWindow(window(1, on: M1))
+    @Test func moveWorkspaceToOtherMonitorSwapsWithoutBuiltin() {
+        let w = makeTwoExternalWorld()
+        w.addWindow(window(1, on: E1))
         w.addWindow(window(2, on: M2))
         w.externalFocus(1)
         _ = w.perform(.moveCurrentWorkspaceToMonitor)
         let s = w.snapshot()
-        #expect(s.visibleWorkspace == [1: 6, 2: 1])
+        #expect(s.visibleWorkspace == [1: 1, 2: 6])
         #expect(s.placements[1] == .tiled(area2))
         #expect(s.placements[2] == .tiled(area1))
         #expect(s.focused == 1)
@@ -109,9 +120,9 @@ private func parkedRect(_ p: Placement?) -> Rect? {
 
         let effects = w.perform(.focusOrLaunch("Safari"))
         let s = w.snapshot()
-        #expect(s.visibleWorkspace[1] == 4)
+        #expect(s.visibleWorkspace[2] == 4)
         #expect(s.focused == 2)
-        #expect(s.placements[2] == .tiled(area1))
+        #expect(s.placements[2] == .tiled(area2))
         #expect(effects.contains(.focusWindow(2)))
 
         #expect(w.perform(.focusOrLaunch("Notes")) == [.launchApp("Notes")])
@@ -159,13 +170,17 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         let w = makeWorld()
         w.addWindow(window(1, on: M1))
         let bars = w.snapshot().bars
-        #expect(bars[1]?.count == 10)
-        #expect(bars[2]?.count == 10)
-        #expect(bars[1]?[0] == WorkspaceBadge(number: 1, isHere: true, isOnOtherMonitor: false, isEmpty: false))
-        #expect(bars[1]?[5] == WorkspaceBadge(number: 6, isHere: false, isOnOtherMonitor: true, isEmpty: true))
-        #expect(bars[1]?[2] == WorkspaceBadge(number: 3, isHere: false, isOnOtherMonitor: false, isEmpty: true))
-        #expect(bars[2]?[0] == WorkspaceBadge(number: 1, isHere: false, isOnOtherMonitor: true, isEmpty: false))
-        #expect(bars[2]?[5] == WorkspaceBadge(number: 6, isHere: true, isOnOtherMonitor: false, isEmpty: true))
+        #expect(bars[1] == [WorkspaceBadge(number: 1, isHere: true, isOnOtherMonitor: false, isEmpty: false)])
+        #expect(bars[2]?.count == 9)
+        #expect(bars[2]?[0] == WorkspaceBadge(number: 2, isHere: false, isOnOtherMonitor: false, isEmpty: true))
+        #expect(bars[2]?[4] == WorkspaceBadge(number: 6, isHere: true, isOnOtherMonitor: false, isEmpty: true))
+
+        let e = makeTwoExternalWorld()
+        e.addWindow(window(1, on: E1))
+        let both = e.snapshot().bars
+        #expect(both[1]?.count == 10)
+        #expect(both[1]?[0] == WorkspaceBadge(number: 1, isHere: false, isOnOtherMonitor: true, isEmpty: true))
+        #expect(both[1]?[5] == WorkspaceBadge(number: 6, isHere: true, isOnOtherMonitor: false, isEmpty: false))
     }
 
     @Test func moveFocusAcrossMonitorsFollowsDirection() {
@@ -253,29 +268,29 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         #expect(w.snapshot().placements[1] == .floating(Rect(x: 100, y: 100, w: 450, h: 280)))
     }
 
-    @Test func moveWorkspaceToEmptyOtherMonitor() {
-        let w = makeWorld()
-        w.addWindow(window(1, on: M1))
+    @Test func moveWorkspaceToEmptyOtherMonitorWithoutBuiltin() {
+        let w = makeTwoExternalWorld()
+        w.addWindow(window(1, on: E1))
         w.externalFocus(1)
         _ = w.perform(.moveCurrentWorkspaceToMonitor)
         let s = w.snapshot()
-        #expect(s.visibleWorkspace == [1: 2, 2: 1])
+        #expect(s.visibleWorkspace == [1: 1, 2: 6])
         #expect(s.placements[1] == .tiled(area2))
         #expect(s.focused == 1)
     }
 
     @Test func floatingWindowFollowsWorkspaceToOtherMonitor() {
-        let w = makeWorld()
-        w.addWindow(window(1, on: M1))
+        let w = makeTwoExternalWorld()
+        w.addWindow(window(1, on: E1))
         w.addWindow(window(2, on: M2, isDialog: true))
         w.externalFocus(2)
         _ = w.perform(.moveCurrentWorkspaceToMonitor)
         let s = w.snapshot()
-        #expect(s.visibleWorkspace == [1: 6, 2: 1])
+        #expect(s.visibleWorkspace == [1: 1, 2: 6])
         #expect(s.placements[2] == .floating(Rect(x: 100, y: 108, w: 400, h: 300)))
     }
 
-    @Test func replugShowsLowestHiddenWhenOldWorkspaceIsVisible() {
+    @Test func replugPinsBuiltinAndMovesItsWorkspaceToExternal() {
         let w = makeWorld()
         w.addWindow(window(1, on: M1))
         w.addWindow(window(2, on: M2))
@@ -284,7 +299,7 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         _ = w.perform(.workspace(6))
         #expect(w.snapshot().visibleWorkspace == [1: 6])
         w.setMonitors([M1, M2])
-        #expect(w.snapshot().visibleWorkspace == [1: 6, 2: 1])
+        #expect(w.snapshot().visibleWorkspace == [1: 1, 2: 6])
     }
 
     @Test func externalFocusOnHiddenWorkspaceShowsIt() {
@@ -294,17 +309,17 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         _ = w.perform(.moveToWorkspace(3))
         w.externalFocus(2)
         let s = w.snapshot()
-        #expect(s.visibleWorkspace[1] == 3)
+        #expect(s.visibleWorkspace[2] == 3)
         #expect(s.focused == 2)
-        #expect(s.placements[2] == .tiled(area1))
-        #expect(parkedRect(s.placements[1]) != nil)
+        #expect(s.placements[2] == .tiled(area2))
+        #expect(s.placements[1] == .tiled(area1))
     }
 
     @Test func switchingToEmptyWorkspaceFocusesNothing() {
         let w = makeWorld()
         w.addWindow(window(1, on: M1))
         w.externalFocus(1)
-        #expect(w.perform(.workspace(3)) == [.focusNothing])
+        #expect(w.perform(.workspace(3)).contains(.focusNothing))
         #expect(w.snapshot().focused == nil)
     }
 
@@ -343,5 +358,76 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         let before = w.snapshot()
         w.addWindow(window(1, on: M2))
         #expect(w.snapshot() == before)
+    }
+
+    @Test func hiddenWorkspaceOpensOnExternalWhenTwoMonitors() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.externalFocus(1)
+        let effects = w.perform(.workspace(3))
+        #expect(w.snapshot().visibleWorkspace == [1: 1, 2: 3])
+        #expect(effects.contains(.warpCursor(M2.frame.center)))
+    }
+
+    @Test func workspaceOneFocusesBuiltin() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M2))
+        w.externalFocus(2)
+        let effects = w.perform(.workspace(1))
+        let s = w.snapshot()
+        #expect(s.visibleWorkspace == [1: 1, 2: 6])
+        #expect(s.focused == 1)
+        #expect(effects.contains(.warpCursor(M1.frame.center)))
+    }
+
+    @Test func pluggingExternalMovesCurrentWorkspaceThere() {
+        var config = try! parseConfig(defaultConfigText)
+        config.barEnabled = false
+        let w = World(config: config)
+        w.setMonitors([M1])
+        w.addWindow(window(1, on: M1))
+        _ = w.perform(.workspace(3))
+        w.addWindow(window(2, on: M1))
+        w.setMonitors([M1, M2])
+        let s = w.snapshot()
+        #expect(s.visibleWorkspace == [1: 1, 2: 3])
+        #expect(s.placements[1] == .tiled(area1))
+        #expect(s.placements[2] == .tiled(area2))
+    }
+
+    @Test func moveWorkspaceToMonitorIsNoOpWithPinnedBuiltin() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M2))
+        #expect(w.perform(.moveCurrentWorkspaceToMonitor) == [])
+        #expect(w.snapshot().visibleWorkspace == [1: 1, 2: 6])
+    }
+
+    @Test func badgesSplitBetweenBuiltinAndExternal() {
+        let s = makeWorld().snapshot()
+        #expect(s.bars[1]?.map(\.number) == [1])
+        #expect(s.bars[2]?.map(\.number) == Array(2...10))
+    }
+
+    @Test func singleMonitorKeepsAllWorkspaces() {
+        var config = try! parseConfig(defaultConfigText)
+        config.barEnabled = false
+        let w = World(config: config)
+        w.setMonitors([M1])
+        _ = w.perform(.workspace(3))
+        let s = w.snapshot()
+        #expect(s.visibleWorkspace == [1: 3])
+        #expect(s.bars[1]?.map(\.number) == Array(1...10))
+    }
+
+    @Test func openingLidPinsWorkspaceOneBackToBuiltin() {
+        var config = try! parseConfig(defaultConfigText)
+        config.barEnabled = false
+        let w = World(config: config)
+        w.setMonitors([M2])
+        _ = w.perform(.workspace(1))
+        w.setMonitors([M1, M2])
+        #expect(w.snapshot().visibleWorkspace == [1: 1, 2: 6])
     }
 }

@@ -107,3 +107,13 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] On first launch without Screen Recording, macOS prompts for it and hyprmac appears in System Settings -> Privacy & Security -> Screen Recording; after granting and relaunching, animations run.
 - [ ] mod+drag and mod+right-drag still move/resize windows; a mod+click on the empty desktop does nothing; plain clicks and drags still reach apps.
 - [ ] With `follow_mouse = 1`, focus still follows the mouse; toggling it in the config still takes effect without a relaunch.
+
+## Pinned built-in workspace (two screens)
+
+- [ ] With the external monitor connected: the built-in island shows only "1" and is narrow; the external island shows 2–10 with no empty space at its end.
+- [ ] Focus on the built-in screen, press ctrl-alt-3: workspace 3 opens on the external monitor, focus and cursor move there, the built-in screen still shows workspace 1.
+- [ ] Focus on the external monitor, press ctrl-alt-1: focus and cursor move to the built-in screen.
+- [ ] On the laptop alone switch to workspace 3 with a window on it, then plug the monitor in: the built-in shows 1, the external shows workspace 3 with its window.
+- [ ] ctrl-alt-shift-Tab with two screens does nothing.
+- [ ] Unplug the monitor: all 10 workspaces are reachable on the built-in screen and no window is lost.
+- [ ] Lid closed / mirrored displays: note what happens (rule is off when there is no built-in screen in the list).

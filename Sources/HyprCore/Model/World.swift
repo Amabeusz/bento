@@ -108,7 +108,17 @@ public final class World {
         for m in monitors where !kept.contains(m.id) {
             shownBeforeUnplug[m.id] = visible.removeValue(forKey: m.id)
         }
+        let builtinBefore = monitors.first(where: \.isBuiltin).flatMap { visible[$0.id] }
         monitors = ordered
+        if let builtin = pinnedMonitors?.builtin, visible[builtin.id] != pinnedBuiltin {
+            visible[builtin.id] = nil
+            if let holder = monitorShowing(pinnedBuiltin) { visible[holder.id] = nil }
+            show(pinnedBuiltin, on: builtin.id)
+        }
+        if let external = pinnedMonitors?.external, visible[external.id] == nil,
+           let n = builtinBefore, n != pinnedBuiltin, isHidden(n) {
+            show(n, on: external.id)
+        }
         for m in ordered where visible[m.id] == nil {
             let preferred = shownBeforeUnplug[m.id] ?? config.startupWorkspace[m.isBuiltin ? .builtin : .external]
             guard let n = preferred.flatMap({ isHidden($0) ? $0 : nil }) ?? lowestHidden() else { continue }
@@ -246,7 +256,7 @@ public final class World {
         }
         var bars: [MonitorID: [WorkspaceBadge]] = [:]
         for m in monitors {
-            bars[m.id] = (1...10).map { n in
+            bars[m.id] = workspaces(shownOn: m).map { n in
                 WorkspaceBadge(
                     number: n,
                     isHere: visible[m.id] == n,
@@ -264,8 +274,8 @@ public final class World {
         if let m = monitorShowing(n) {
             target = m
         } else {
-            show(n, on: current.id)
-            target = current
+            target = pinnedTarget(for: n) ?? current
+            show(n, on: target.id)
         }
         focusedMonitor = target.id
         focus(window ?? lastFocused(in: n))
@@ -280,7 +290,7 @@ public final class World {
     }
 
     private func moveCurrentWorkspaceToMonitor() -> [SideEffect] {
-        guard monitors.count == 2, let current = currentMonitor, let mine = visible[current.id],
+        guard pinnedMonitors == nil, monitors.count == 2, let current = currentMonitor, let mine = visible[current.id],
               let other = monitors.first(where: { $0.id != current.id }), let theirs = visible[other.id]
         else { return [] }
         if isEmpty(theirs) {
@@ -441,6 +451,25 @@ public final class World {
         }
         visible[id] = n
         lastMonitor[n] = id
+    }
+
+    private var pinnedBuiltin: Int {
+        config.startupWorkspace[.builtin] ?? 1
+    }
+
+    private var pinnedMonitors: (builtin: MonitorInfo, external: MonitorInfo)? {
+        guard monitors.count > 1, let builtin = monitors.first(where: \.isBuiltin),
+              let external = monitors.first(where: { !$0.isBuiltin }) else { return nil }
+        return (builtin, external)
+    }
+
+    private func pinnedTarget(for n: Int) -> MonitorInfo? {
+        pinnedMonitors.map { n == pinnedBuiltin ? $0.builtin : $0.external }
+    }
+
+    private func workspaces(shownOn m: MonitorInfo) -> [Int] {
+        guard pinnedMonitors != nil else { return Array(1...10) }
+        return m.isBuiltin ? [pinnedBuiltin] : (1...10).filter { $0 != pinnedBuiltin }
     }
 
     private func isHidden(_ n: Int) -> Bool {
