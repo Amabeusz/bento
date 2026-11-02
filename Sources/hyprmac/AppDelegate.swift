@@ -195,7 +195,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .floating(let r) where r != frame:
             world.setFloatingFrame(id, frame)
             applyLayout()
-        case .tiled(let r) where r != frame, .parked(let r) where r != frame:
+        case .tiled(let r) where applier.needsRestore(id, frame: frame, target: r),
+             .parked(let r) where applier.needsRestore(id, frame: frame, target: r):
             animator.finish()
             applier.restore(id, to: r, in: s)
         default:

@@ -5,7 +5,7 @@ final class Applier {
     private let tracker: WindowTracker
     private var plan = ApplyPlan()
     private var lastWrite: [WindowID: ContinuousClock.Instant] = [:]
-    private var refused: [WindowID: Rect] = [:]
+    private var snapBack = SnapBack()
 
     init(tracker: WindowTracker) {
         self.tracker = tracker
@@ -26,10 +26,13 @@ final class Applier {
         lastWrite[id].map { ContinuousClock.now - $0 < .milliseconds(300) } ?? false
     }
 
+    func needsRestore(_ id: WindowID, frame: Rect, target: Rect) -> Bool {
+        snapBack.needsRestore(id, frame: frame, target: target)
+    }
+
     func restore(_ id: WindowID, to target: Rect, in s: LayoutSnapshot) {
-        guard refused[id] != target else { return }
         plan.invalidate(id)
         apply(s)
-        if tracker.window(id)?.frame != target { refused[id] = target }
+        if let frame = tracker.window(id)?.frame { snapBack.settle(id, target: target, at: frame) }
     }
 }
