@@ -43,3 +43,13 @@ Checks to run by hand after granting permissions (see docs/SETUP.md).
 - [ ] With `follow_mouse = 1`, moving the cursor over another window focuses it; save `follow_mouse = 0` and it stops (no relaunch needed), save 1 again and it resumes.
 - [ ] Pause Tiling: the hotkeys and mod+drag pass through to apps; Resume: they work again.
 - [ ] Keys feel instant, including during animations.
+
+## Task 10
+
+- [ ] The focused window has the pink→purple→blue ring at 135° (pink at the top-left, blue at the bottom-right); other windows have the grey ring.
+- [ ] Rings sit in the gaps between windows and line up with the macOS 26 window corners at `rounding = 16`. If they don't, measure the real corner radius and change the default in `DefaultConfig.swift` and `Config.swift` (update the Task 3 test).
+- [ ] Changing focus cross-fades the ring colors over about 0.5 s; with `animations = 0` or `animation = border, 0` the switch is instant.
+- [ ] Changing `col.active_border` in the config and saving updates the rings without a relaunch.
+- [ ] A ctrl-alt left-drag of a tiled or floating window moves its ring with it live; resizing with ctrl-alt right-drag resizes the ring live.
+- [ ] Floating windows' rings do not show above other windows that cover them.
+- [ ] Workspace-parked (off-screen) windows have no ring; Pause Tiling removes all rings, Resume brings them back.

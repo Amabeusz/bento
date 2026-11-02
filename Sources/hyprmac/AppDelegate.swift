@@ -24,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var keyBinds: [KeyChord: Action] = [:]
     private var unknownKeys: [String] = []
     private var drag: Drag?
+    private let borders = BorderManager()
 
     private struct Drag {
         let id: WindowID
@@ -52,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        borders.removeAll()
         restoreParkedWindows()
     }
 
@@ -96,7 +98,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func applyLayout() {
         guard let world, let applier else { return }
-        applier.apply(world.snapshot())
+        let snapshot = world.snapshot()
+        applier.apply(snapshot)
+        borders.update(snapshot, config: loader.current)
     }
 
     private func handleKey(_ mods: Modifiers, _ code: CGKeyCode) -> Bool {
@@ -134,6 +138,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 d.frame.x += dx
                 d.frame.y += dy
                 tracker?.window(d.id)?.frame = d.frame
+                borders.updateFrame(d.id, d.frame)
             case (.resize, true):
                 d.frame.w += dx
                 d.frame.h += dy
@@ -277,6 +282,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func togglePause() {
         isPaused.toggle()
         if isPaused {
+            borders.removeAll()
             restoreParkedWindows()
             world = nil
             applier = nil
@@ -354,4 +360,10 @@ func monitorInfos() -> [MonitorInfo] {
         let id = CGDirectDisplayID(number.uint32Value)
         return MonitorInfo(id: id, frame: flip(screen.frame), usable: flip(screen.visibleFrame), isBuiltin: CGDisplayIsBuiltin(id) != 0)
     }
+}
+
+@MainActor
+func appKitFrame(_ r: Rect) -> NSRect? {
+    guard let primaryHeight = NSScreen.screens.first?.frame.height else { return nil }
+    return NSRect(x: r.x, y: primaryHeight - (r.y + r.h), width: r.w, height: r.h)
 }
