@@ -83,15 +83,14 @@ final class BorderWindow {
 
     static func gradientPoints(angleDegrees: Double, size: CGSize) -> (start: CGPoint, end: CGPoint) {
         let radians = angleDegrees * .pi / 180
-        let dx = sin(radians)
-        let dy = cos(radians)
-        let half = (abs(size.width * dx) + abs(size.height * dy)) / 2
-        let cx = size.width / 2
-        let cy = size.height / 2
-        func unit(_ x: Double, _ y: Double) -> CGPoint {
-            CGPoint(x: size.width > 0 ? x / size.width : 0.5, y: size.height > 0 ? y / size.height : 0.5)
-        }
-        return (unit(cx - half * dx, cy - half * dy), unit(cx + half * dx, cy + half * dy))
+        var ax = sin(radians) * size.width
+        var ay = cos(radians) * size.height
+        let length = hypot(ax, ay)
+        guard size.width > 0, size.height > 0, length > 0 else { return (CGPoint(x: 0, y: 0.5), CGPoint(x: 1, y: 0.5)) }
+        ax /= length
+        ay /= length
+        let half = (abs(ax) + abs(ay)) / 2
+        return (CGPoint(x: 0.5 - half * ax, y: 0.5 - half * ay), CGPoint(x: 0.5 + half * ax, y: 0.5 + half * ay))
     }
 }
 
