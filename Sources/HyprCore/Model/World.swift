@@ -1,0 +1,419 @@
+public typealias MonitorID = UInt32
+
+public struct MonitorInfo: Equatable, Sendable {
+    public var id: MonitorID
+    public var frame: Rect
+    public var usable: Rect
+    public var isBuiltin: Bool
+
+    public init(id: MonitorID, frame: Rect, usable: Rect, isBuiltin: Bool) {
+        self.id = id
+        self.frame = frame
+        self.usable = usable
+        self.isBuiltin = isBuiltin
+    }
+}
+
+public struct WindowInfo: Equatable, Sendable {
+    public var id: WindowID
+    public var app: String
+    public var title: String
+    public var isDialog: Bool
+    public var frame: Rect
+
+    public init(id: WindowID, app: String, title: String, isDialog: Bool, frame: Rect) {
+        self.id = id
+        self.app = app
+        self.title = title
+        self.isDialog = isDialog
+        self.frame = frame
+    }
+}
+
+public enum Placement: Equatable, Sendable {
+    case tiled(Rect)
+    case floating(Rect)
+    case parked(Rect)
+}
+
+public struct WorkspaceBadge: Equatable, Sendable {
+    public var number: Int
+    public var isHere: Bool
+    public var isOnOtherMonitor: Bool
+    public var isEmpty: Bool
+
+    public init(number: Int, isHere: Bool, isOnOtherMonitor: Bool, isEmpty: Bool) {
+        self.number = number
+        self.isHere = isHere
+        self.isOnOtherMonitor = isOnOtherMonitor
+        self.isEmpty = isEmpty
+    }
+}
+
+public struct LayoutSnapshot: Equatable, Sendable {
+    public var placements: [WindowID: Placement]
+    public var focused: WindowID?
+    public var bars: [MonitorID: [WorkspaceBadge]]
+    public var visibleWorkspace: [MonitorID: Int]
+
+    public init(
+        placements: [WindowID: Placement], focused: WindowID?,
+        bars: [MonitorID: [WorkspaceBadge]], visibleWorkspace: [MonitorID: Int]
+    ) {
+        self.placements = placements
+        self.focused = focused
+        self.bars = bars
+        self.visibleWorkspace = visibleWorkspace
+    }
+}
+
+public enum SideEffect: Equatable, Sendable {
+    case exec(String)
+    case launchApp(String)
+    case closeWindow(WindowID)
+    case focusWindow(WindowID)
+    case warpCursor(Point)
+}
+
+public final class World {
+    private var config: Config
+    private var monitors: [MonitorInfo] = []
+    private var visible: [MonitorID: Int] = [:]
+    private var lastMonitor: [Int: MonitorID] = [:]
+    private var shownBeforeUnplug: [MonitorID: Int] = [:]
+    private var windows: [WindowID: WindowInfo] = [:]
+    private var workspaceOf: [WindowID: Int] = [:]
+    private var trees: [Int: DwindleTree] = [:]
+    private var floating: [WindowID: Rect] = [:]
+    private var fullscreen: Set<WindowID> = []
+    private var history: [WindowID] = []
+    private var focused: WindowID?
+    private var focusedMonitor: MonitorID?
+
+    public init(config: Config) {
+        self.config = config
+    }
+
+    public func updateConfig(_ c: Config) {
+        config = c
+    }
+
+    public func setMonitors(_ ms: [MonitorInfo]) {
+        let focusedBefore = currentMonitor?.id
+        let ordered = ms.filter(\.isBuiltin) + ms.filter { !$0.isBuiltin }
+        let kept = Set(ordered.map(\.id))
+        for m in monitors where !kept.contains(m.id) {
+            shownBeforeUnplug[m.id] = visible.removeValue(forKey: m.id)
+        }
+        monitors = ordered
+        for m in ordered where visible[m.id] == nil {
+            let preferred = shownBeforeUnplug[m.id] ?? config.startupWorkspace[m.isBuiltin ? .builtin : .external]
+            guard let n = preferred.flatMap({ isHidden($0) ? $0 : nil }) ?? lowestHidden() else { continue }
+            show(n, on: m.id)
+        }
+        if let before = focusedBefore, !kept.contains(before), let first = ordered.first {
+            focusedMonitor = first.id
+            focus(visible[first.id].flatMap(lastFocused(in:)))
+        }
+    }
+
+    public func addWindow(_ w: WindowInfo) {
+        guard windows[w.id] == nil else { return }
+        let monitor = focusedMonitor == nil
+            ? monitors.first { $0.frame.contains(w.frame.center) } ?? monitors.first
+            : currentMonitor
+        let n = monitor.flatMap { visible[$0.id] } ?? 1
+        windows[w.id] = w
+        workspaceOf[w.id] = n
+        if shouldFloat(w) {
+            floating[w.id] = w.frame
+        } else {
+            insertTiled(w.id, into: n)
+        }
+        focus(w.id)
+    }
+
+    public func removeWindow(_ id: WindowID) {
+        guard let n = workspaceOf[id] else { return }
+        detach(id)
+        windows[id] = nil
+        workspaceOf[id] = nil
+        floating[id] = nil
+        history.removeAll { $0 == id }
+        if focused == id { focused = lastFocused(in: n) }
+    }
+
+    public func externalFocus(_ id: WindowID) {
+        guard let n = workspaceOf[id] else { return }
+        if let m = monitorShowing(n) {
+            focusedMonitor = m.id
+            focus(id)
+        } else {
+            _ = goTo(n, focusing: id)
+        }
+    }
+
+    public func perform(_ a: Action) -> [SideEffect] {
+        focusedMonitor = currentMonitor?.id
+        switch a {
+        case .exec(let command):
+            return [.exec(command)]
+        case .killActive:
+            return focused.map { [.closeWindow($0)] } ?? []
+        case .workspace(let n):
+            return goTo(n, focusing: nil)
+        case .focusOrLaunch(let app):
+            guard let id = history.first(where: { windows[$0]?.app == app }), let n = workspaceOf[id] else {
+                return [.launchApp(app)]
+            }
+            return goTo(n, focusing: id)
+        case .moveToWorkspace(let n):
+            return moveToWorkspace(n)
+        case .moveCurrentWorkspaceToMonitor:
+            return moveCurrentWorkspaceToMonitor()
+        case .moveFocus(let dir):
+            return moveFocus(dir)
+        case .moveWindow(let dir):
+            return moveWindow(dir)
+        case .resizeActive(let dx, let dy):
+            guard let id = focused, let n = workspaceOf[id] else { return [] }
+            if let f = floating[id] {
+                floating[id] = Rect(x: f.x, y: f.y, w: f.w + dx, h: f.h + dy)
+            } else {
+                trees[n]?.resize(id, dx: dx, dy: dy, area: area(of: n), gapsIn: config.gapsIn)
+            }
+            return []
+        case .toggleSplit:
+            guard let id = focused, let n = workspaceOf[id] else { return [] }
+            trees[n]?.toggleSplit(of: id)
+            return []
+        case .fullscreen:
+            guard let id = focused else { return [] }
+            if fullscreen.remove(id) == nil { fullscreen.insert(id) }
+            return []
+        case .toggleFloating:
+            guard let id = focused, let n = workspaceOf[id], let w = windows[id] else { return [] }
+            if floating.removeValue(forKey: id) != nil {
+                insertTiled(id, into: n)
+            } else {
+                floating[id] = trees[n]?.frames(in: area(of: n), gapsIn: config.gapsIn)[id] ?? w.frame
+                trees[n]?.remove(id)
+            }
+            return []
+        }
+    }
+
+    public func setFloatingFrame(_ id: WindowID, _ r: Rect) {
+        guard floating[id] != nil else { return }
+        floating[id] = r
+    }
+
+    public func dropTiled(_ id: WindowID, at p: Point) {
+        guard let n = workspaceOf[id],
+              let frames = trees[n]?.frames(in: area(of: n), gapsIn: config.gapsIn), frames[id] != nil,
+              let target = frames.first(where: { $0.key != id && $0.value.contains(p) })?.key
+        else { return }
+        trees[n]?.swap(id, target)
+    }
+
+    public func resizeTiled(_ id: WindowID, dx: Double, dy: Double) {
+        guard let n = workspaceOf[id] else { return }
+        trees[n]?.resize(id, dx: dx, dy: dy, area: area(of: n), gapsIn: config.gapsIn)
+    }
+
+    public func snapshot() -> LayoutSnapshot {
+        var placements: [WindowID: Placement] = [:]
+        for n in 1...10 {
+            guard let home = homeMonitor(of: n) else { continue }
+            let area = tilingArea(home)
+            let tiles = trees[n]?.frames(in: area, gapsIn: config.gapsIn) ?? [:]
+            let shown = monitorShowing(n) != nil
+            for (id, ws) in workspaceOf where ws == n {
+                let isFullscreen = fullscreen.contains(id)
+                let frame = isFullscreen ? area : floating[id] ?? tiles[id] ?? area
+                placements[id] =
+                    if !shown { .parked(parkFrame(for: frame, on: home)) }
+                    else if floating[id] != nil && !isFullscreen { .floating(frame) }
+                    else { .tiled(frame) }
+            }
+        }
+        var bars: [MonitorID: [WorkspaceBadge]] = [:]
+        for m in monitors {
+            bars[m.id] = (1...10).map { n in
+                WorkspaceBadge(
+                    number: n,
+                    isHere: visible[m.id] == n,
+                    isOnOtherMonitor: visible.contains { $0.key != m.id && $0.value == n },
+                    isEmpty: isEmpty(n)
+                )
+            }
+        }
+        return LayoutSnapshot(placements: placements, focused: focused, bars: bars, visibleWorkspace: visible)
+    }
+
+    private func goTo(_ n: Int, focusing window: WindowID?) -> [SideEffect] {
+        guard (1...10).contains(n), let current = currentMonitor else { return [] }
+        let target: MonitorInfo
+        if let m = monitorShowing(n) {
+            target = m
+        } else {
+            show(n, on: current.id)
+            target = current
+        }
+        focusedMonitor = target.id
+        focus(window ?? lastFocused(in: n))
+        return focusEffects(warpTo: target.id != current.id ? target : nil)
+    }
+
+    private func moveToWorkspace(_ n: Int) -> [SideEffect] {
+        guard (1...10).contains(n), let id = focused, let source = workspaceOf[id], source != n else { return [] }
+        move(id, to: n)
+        focus(lastFocused(in: source))
+        return focusEffects(warpTo: nil)
+    }
+
+    private func moveCurrentWorkspaceToMonitor() -> [SideEffect] {
+        guard monitors.count == 2, let current = currentMonitor, let mine = visible[current.id],
+              let other = monitors.first(where: { $0.id != current.id }), let theirs = visible[other.id]
+        else { return [] }
+        if isEmpty(theirs) {
+            visible[current.id] = nil
+            show(mine, on: other.id)
+            if let n = lowestHidden() { show(n, on: current.id) }
+        } else {
+            show(theirs, on: current.id)
+            show(mine, on: other.id)
+        }
+        focusedMonitor = other.id
+        return focusEffects(warpTo: other)
+    }
+
+    private func moveFocus(_ dir: Direction) -> [SideEffect] {
+        guard let current = currentMonitor, let n = visible[current.id] else { return [] }
+        if let id = focused, let next = trees[n]?.neighbor(of: id, dir, area: area(of: n), gapsIn: config.gapsIn) {
+            focus(next)
+            return [.focusWindow(next)]
+        }
+        guard let m = monitor(from: current, toward: dir), let target = visible[m.id] else { return [] }
+        focusedMonitor = m.id
+        focus(lastFocused(in: target))
+        return focusEffects(warpTo: m)
+    }
+
+    private func moveWindow(_ dir: Direction) -> [SideEffect] {
+        guard let id = focused, let n = workspaceOf[id], let current = currentMonitor else { return [] }
+        if let next = trees[n]?.neighbor(of: id, dir, area: area(of: n), gapsIn: config.gapsIn) {
+            trees[n]?.swap(id, next)
+            return []
+        }
+        guard let m = monitor(from: current, toward: dir), let target = visible[m.id] else { return [] }
+        move(id, to: target)
+        focusedMonitor = m.id
+        return focusEffects(warpTo: m)
+    }
+
+    private func move(_ id: WindowID, to n: Int) {
+        detach(id)
+        workspaceOf[id] = n
+        if floating[id] == nil { insertTiled(id, into: n) }
+    }
+
+    private func detach(_ id: WindowID) {
+        if let n = workspaceOf[id] { trees[n]?.remove(id) }
+        fullscreen.remove(id)
+    }
+
+    private func insertTiled(_ id: WindowID, into n: Int) {
+        let target = history.first { trees[n]?.contains($0) == true }
+        let area = area(of: n)
+        trees[n, default: DwindleTree()].insert(id, splitting: target, area: area, gapsIn: config.gapsIn)
+    }
+
+    private func focus(_ id: WindowID?) {
+        focused = id
+        guard let id else { return }
+        history.removeAll { $0 == id }
+        history.insert(id, at: 0)
+    }
+
+    private func focusEffects(warpTo m: MonitorInfo?) -> [SideEffect] {
+        var effects: [SideEffect] = focused.map { [.focusWindow($0)] } ?? []
+        if let m, config.warpCursor { effects.append(.warpCursor(m.frame.center)) }
+        return effects
+    }
+
+    private func shouldFloat(_ w: WindowInfo) -> Bool {
+        w.isDialog || config.floatRules.contains { matches($0.appPattern, w.app) && matches($0.titlePattern, w.title) }
+    }
+
+    private func matches(_ pattern: String?, _ text: String) -> Bool {
+        guard let pattern else { return true }
+        guard let regex = try? Regex(pattern) else { return false }
+        return text.contains(regex)
+    }
+
+    private func lastFocused(in n: Int) -> WindowID? {
+        history.first { workspaceOf[$0] == n }
+    }
+
+    private var currentMonitor: MonitorInfo? {
+        focusedMonitor.flatMap(monitor(_:))
+            ?? focused.flatMap { workspaceOf[$0] }.flatMap(monitorShowing(_:))
+            ?? monitors.first
+    }
+
+    private func monitor(_ id: MonitorID) -> MonitorInfo? {
+        monitors.first { $0.id == id }
+    }
+
+    private func monitorShowing(_ n: Int) -> MonitorInfo? {
+        monitors.first { visible[$0.id] == n }
+    }
+
+    private func homeMonitor(of n: Int) -> MonitorInfo? {
+        monitorShowing(n) ?? lastMonitor[n].flatMap(monitor(_:)) ?? monitors.first
+    }
+
+    private func monitor(from current: MonitorInfo, toward dir: Direction) -> MonitorInfo? {
+        let c = current.frame.center
+        return monitors.first { m in
+            let o = m.frame.center
+            switch dir {
+            case .left: return o.x < c.x
+            case .right: return o.x > c.x
+            case .up: return o.y < c.y
+            case .down: return o.y > c.y
+            }
+        }
+    }
+
+    private func tilingArea(_ m: MonitorInfo) -> Rect {
+        var a = m.usable
+        if config.barEnabled {
+            a.y += config.barHeight + 8
+            a.h -= config.barHeight + 8
+        }
+        return a.inset(by: config.gapsOut)
+    }
+
+    private func area(of n: Int) -> Rect {
+        homeMonitor(of: n).map(tilingArea) ?? Rect(x: 0, y: 0, w: 0, h: 0)
+    }
+
+    private func show(_ n: Int, on id: MonitorID) {
+        visible[id] = n
+        lastMonitor[n] = id
+    }
+
+    private func isHidden(_ n: Int) -> Bool {
+        !visible.values.contains(n)
+    }
+
+    private func isEmpty(_ n: Int) -> Bool {
+        !workspaceOf.values.contains(n)
+    }
+
+    private func lowestHidden() -> Int? {
+        (1...10).first(where: isHidden)
+    }
+}
