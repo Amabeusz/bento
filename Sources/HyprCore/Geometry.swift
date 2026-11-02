@@ -1,6 +1,11 @@
 public struct Point: Equatable, Sendable {
     public var x: Double
     public var y: Double
+
+    public init(x: Double, y: Double) {
+        self.x = x
+        self.y = y
+    }
 }
 
 public struct Rect: Equatable, Hashable, Sendable {
@@ -9,17 +14,24 @@ public struct Rect: Equatable, Hashable, Sendable {
     public var w: Double
     public var h: Double
 
-    var minX: Double { x }
-    var minY: Double { y }
-    var maxX: Double { x + w }
-    var maxY: Double { y + h }
-    var center: Point { Point(x: x + w / 2, y: y + h / 2) }
+    public init(x: Double, y: Double, w: Double, h: Double) {
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+    }
 
-    func inset(by d: Double) -> Rect {
+    public var minX: Double { x }
+    public var minY: Double { y }
+    public var maxX: Double { x + w }
+    public var maxY: Double { y + h }
+    public var center: Point { Point(x: x + w / 2, y: y + h / 2) }
+
+    public func inset(by d: Double) -> Rect {
         Rect(x: x + d, y: y + d, w: w - 2 * d, h: h - 2 * d)
     }
 
-    func intersection(_ o: Rect) -> Rect? {
+    public func intersection(_ o: Rect) -> Rect? {
         let left = max(minX, o.minX)
         let top = max(minY, o.minY)
         let right = min(maxX, o.maxX)
@@ -28,7 +40,7 @@ public struct Rect: Equatable, Hashable, Sendable {
         return Rect(x: left, y: top, w: right - left, h: bottom - top)
     }
 
-    func contains(_ p: Point) -> Bool {
+    public func contains(_ p: Point) -> Bool {
         p.x >= minX && p.x < maxX && p.y >= minY && p.y < maxY
     }
 }
