@@ -54,6 +54,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         watcher = ConfigWatcher(url: configURL) { [weak self] in self?.configDidChange() }
 
         screenRecordingGranted = CGPreflightScreenCaptureAccess()
+        if !screenRecordingGranted { CGRequestScreenCaptureAccess() }
         refreshMenu()
 
         installSignalHandlers()
@@ -127,7 +128,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             applier.apply(snapshot)
         }
         borders.update(snapshot, config: loader.current)
-        bars.update(snapshot, monitors: monitorInfos(), config: loader.current)
+        let errors = configErrors
+        bars.update(
+            snapshot, monitors: monitorInfos(), config: loader.current,
+            error: errors.isEmpty ? nil : errors.joined(separator: "\n"))
     }
 
     private func selectWorkspace(_ number: Int) {
@@ -371,13 +375,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.addItem(item("Reload Config", #selector(reloadConfig)))
         menu.addItem(item("Open Config", #selector(openConfig)))
-        if let ioErrorMessage {
-            menu.addItem(disabledItem("Config Error: \(ioErrorMessage)"))
-        } else if let error = loader.lastError {
-            menu.addItem(disabledItem("Config Error: line \(error.line) — \(error.message)"))
-        }
-        for key in unknownKeys {
-            menu.addItem(disabledItem("Config Error: unknown key '\(key)'"))
+        for error in configErrors {
+            menu.addItem(disabledItem("Config Error: \(error)"))
         }
         if eventTap?.isRunning == false {
             menu.addItem(disabledItem("Hotkeys unavailable — check Accessibility permission"))
@@ -393,6 +392,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         menu.addItem(item("Quit hyprmac", #selector(quit), key: "q"))
         statusItem?.menu = menu
+    }
+
+    private var configErrors: [String] {
+        var errors: [String] = []
+        if let ioErrorMessage {
+            errors.append(ioErrorMessage)
+        } else if let error = loader.lastError {
+            errors.append("line \(error.line) — \(error.message)")
+        }
+        return errors + unknownKeys.map { "unknown key '\($0)'" }
     }
 
     private func item(_ title: String, _ action: Selector, key: String = "") -> NSMenuItem {

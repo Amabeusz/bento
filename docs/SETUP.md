@@ -22,10 +22,10 @@ open build/hyprmac.app
 
 ## 3. Grant permissions
 
-In System Settings -> Privacy & Security enable hyprmac under:
+On launch hyprmac asks for both permissions; enable hyprmac under System Settings -> Privacy & Security:
 
-- Accessibility (required; hyprmac does not tile until it is granted)
-- Screen Recording (optional; without it animations are off)
+- Accessibility (required; hyprmac does not tile until it is granted). Tiling starts within a couple of seconds of granting it.
+- Screen Recording (optional; without it animations are off). hyprmac requests it at launch, which adds it to the Screen Recording list. macOS applies the grant only after a relaunch: quit hyprmac from its menu and open it again.
 
 ## 4. Desktops
 

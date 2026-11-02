@@ -28,6 +28,12 @@ private struct BarStyle: Equatable {
 private final class WorkspaceStrip: NSView {
     var badges: [WorkspaceBadge] = [] { didSet { needsDisplay = true } }
     var style = BarStyle(Config()) { didSet { needsDisplay = true } }
+    var error: String? {
+        didSet {
+            toolTip = error
+            needsDisplay = true
+        }
+    }
     var onSelect: (Int) -> Void = { _ in }
 
     override var mouseDownCanMoveWindow: Bool { false }
@@ -65,6 +71,12 @@ private final class WorkspaceStrip: NSView {
             let size = text.size()
             text.draw(at: NSPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2))
         }
+        if error != nil {
+            let rect = NSRect(x: cell / 2 + cell * Double(badges.count), y: 0, width: cell, height: cell)
+            let text = NSAttributedString(string: "!", attributes: [.font: style.font, .foregroundColor: color(0xf38ba8)])
+            let size = text.size()
+            text.draw(at: NSPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2))
+        }
     }
 }
 
@@ -90,7 +102,7 @@ private final class BarPanel {
         panel.contentView = glass
     }
 
-    func configure(frame: NSRect, badges: [WorkspaceBadge], style: BarStyle) {
+    func configure(frame: NSRect, badges: [WorkspaceBadge], style: BarStyle, error: String?) {
         if frame != self.frame {
             self.frame = frame
             panel.setFrame(frame, display: true)
@@ -98,6 +110,7 @@ private final class BarPanel {
         if glass.cornerRadius != style.height / 2 { glass.cornerRadius = style.height / 2 }
         if strip.style != style { strip.style = style }
         if strip.badges != badges { strip.badges = badges }
+        if strip.error != error { strip.error = error }
         if !panel.isVisible { panel.orderFrontRegardless() }
     }
 
@@ -116,14 +129,14 @@ final class BarManager {
         self.onSelect = onSelect
     }
 
-    func update(_ s: LayoutSnapshot, monitors: [MonitorInfo], config: Config) {
+    func update(_ s: LayoutSnapshot, monitors: [MonitorInfo], config: Config, error: String?) {
         guard config.barEnabled else {
             removeAll()
             return
         }
         let style = BarStyle(config)
         let height = config.barHeight
-        let width = height * 11
+        let width = height * (error == nil ? 11 : 12)
         var live: Set<MonitorID> = []
         for monitor in monitors {
             guard let badges = s.bars[monitor.id],
@@ -133,7 +146,7 @@ final class BarManager {
             live.insert(monitor.id)
             let panel = panels[monitor.id] ?? BarPanel(onSelect: onSelect)
             panels[monitor.id] = panel
-            panel.configure(frame: frame, badges: badges, style: style)
+            panel.configure(frame: frame, badges: badges, style: style, error: error)
         }
         for id in panels.keys where !live.contains(id) {
             panels.removeValue(forKey: id)?.close()
