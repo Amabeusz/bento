@@ -23,6 +23,8 @@ final class WindowTracker {
     private var windows: [WindowID: AXWindow] = [:]
     private var reported: Set<WindowID> = []
     private var observers: [pid_t: AXObserver] = [:]
+    private var retrying: Set<pid_t> = []
+    private var hidden: Set<pid_t> = []
     private static let appNotifications = [kAXWindowCreatedNotification, kAXFocusedWindowChangedNotification]
     private static let windowNotifications = [
         kAXWindowMiniaturizedNotification, kAXWindowDeminiaturizedNotification, kAXMovedNotification, kAXResizedNotification,
@@ -43,6 +45,8 @@ final class WindowTracker {
         center.addObserver(self, selector: #selector(appTerminated), name: NSWorkspace.didTerminateApplicationNotification, object: nil)
         center.addObserver(self, selector: #selector(appActivated), name: NSWorkspace.didActivateApplicationNotification, object: nil)
         center.addObserver(self, selector: #selector(spaceChanged), name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
+        center.addObserver(self, selector: #selector(appHidden), name: NSWorkspace.didHideApplicationNotification, object: nil)
+        center.addObserver(self, selector: #selector(appUnhidden), name: NSWorkspace.didUnhideApplicationNotification, object: nil)
         NSWorkspace.shared.runningApplications.forEach { observe($0) }
     }
 
@@ -64,6 +68,8 @@ final class WindowTracker {
         guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
         let pid = app.processIdentifier
         onAppGone()
+        retrying.remove(pid)
+        hidden.remove(pid)
         if let observer = observers.removeValue(forKey: pid) {
             CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .commonModes)
         }
@@ -71,6 +77,22 @@ final class WindowTracker {
     }
 
     @objc private func appActivated(_ note: Notification) {
+        if let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication { observe(app) }
+        if let id = focusedWindowID() { onFocus(id) }
+    }
+
+    @objc private func appHidden(_ note: Notification) {
+        guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
+        onAppGone()
+        hidden.insert(app.processIdentifier)
+        for w in windows.values where w.pid == app.processIdentifier { report(w, eligible: false) }
+    }
+
+    @objc private func appUnhidden(_ note: Notification) {
+        guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+              hidden.remove(app.processIdentifier) != nil
+        else { return }
+        for w in windows.values where w.pid == app.processIdentifier { report(w, eligible: isEligible(w)) }
         if let id = focusedWindowID() { onFocus(id) }
     }
 
@@ -80,7 +102,9 @@ final class WindowTracker {
 
     private func observe(_ app: NSRunningApplication, attempt: Int = 0) {
         let pid = app.processIdentifier
-        guard app.activationPolicy == .regular, pid != getpid(), observers[pid] == nil, !app.isTerminated else { return }
+        guard app.activationPolicy == .regular, pid != getpid(), observers[pid] == nil, !app.isTerminated,
+              !retrying.contains(pid)
+        else { return }
         var created: AXObserver?
         guard AXObserverCreate(pid, axCallback, &created) == .success, let observer = created else { return }
         let appElement = AXUIElementCreateApplication(pid)
@@ -88,12 +112,17 @@ final class WindowTracker {
         let results = Self.appNotifications.map { AXObserverAddNotification(observer, appElement, $0 as CFString, refcon) }
         guard results.allSatisfy({ $0 == .success }) else {
             if attempt < 10 {
+                retrying.insert(pid)
                 DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(300)) { [weak self] in
-                    MainActor.assumeIsolated { self?.observe(app, attempt: attempt + 1) }
+                    MainActor.assumeIsolated {
+                        self?.retrying.remove(pid)
+                        self?.observe(app, attempt: attempt + 1)
+                    }
                 }
             }
             return
         }
+        if app.isHidden { hidden.insert(pid) }
         CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .commonModes)
         observers[pid] = observer
         let elements: [AXUIElement] = appElement.value(kAXWindowsAttribute) ?? []
@@ -120,7 +149,7 @@ final class WindowTracker {
     }
 
     private func isEligible(_ w: AXWindow) -> Bool {
-        !w.isMinimized && !w.isFullscreen
+        !hidden.contains(w.pid) && !w.isMinimized && !w.isFullscreen
     }
 
     private func report(_ w: AXWindow, eligible: Bool) {
