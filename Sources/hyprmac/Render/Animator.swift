@@ -220,7 +220,7 @@ final class Animator {
         let displays = content?.displays ?? []
         let scales = backingScales()
         let pid = getpid()
-        let hidden = windows.filter { plan.excluded.contains($0.windowID) || $0.owningApplication?.processID == pid }
+        let backdropWindows = windows.filter { !plan.excluded.contains($0.windowID) && $0.owningApplication?.processID != pid }
         var requests: [(Target, SCContentFilter, CGSize)] = []
         for window in windows {
             if let size = plan.captures[window.windowID] {
@@ -230,7 +230,7 @@ final class Animator {
         for display in displays {
             guard let m = plan.monitors[display.displayID] else { continue }
             let s = scales[m.id] ?? 2
-            requests.append((.display(m.id), SCContentFilter(display: display, excludingWindows: hidden),
+            requests.append((.display(m.id), SCContentFilter(display: display, including: backdropWindows),
                              CGSize(width: m.frame.w * s, height: m.frame.h * s)))
         }
         return await withTaskGroup(of: (Target, CGImage?).self) { group in
