@@ -40,6 +40,6 @@ Checks to run by hand after granting permissions (see docs/SETUP.md).
 - [ ] ctrl-alt + right-drag resizes a floating window live, and resizes a tiled window's split live.
 - [ ] Plain clicks and drags (without the mod) reach apps normally.
 - [ ] Switching to a workspace shown on the other monitor warps the cursor to that monitor's center.
-- [ ] With `follow_mouse = 1`, moving the cursor over another window focuses it.
+- [ ] With `follow_mouse = 1`, moving the cursor over another window focuses it; save `follow_mouse = 0` and it stops (no relaunch needed), save 1 again and it resumes.
 - [ ] Pause Tiling: the hotkeys and mod+drag pass through to apps; Resume: they work again.
 - [ ] Keys feel instant, including during animations.

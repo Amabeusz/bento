@@ -59,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         reloadFromDisk()
         refreshMenu()
         world?.updateConfig(loader.current)
+        eventTap?.watchesMouseMoved = loader.current.followMouse
         applyLayout()
     }
 
@@ -73,6 +74,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let eventTap = EventTap(
             onKey: { [weak self] mods, code in self?.handleKey(mods, code) ?? false },
             onMouse: { [weak self] event in self?.handleMouse(event) ?? false })
+        eventTap.watchesMouseMoved = loader.current.followMouse
         eventTap.start()
         self.eventTap = eventTap
         NotificationCenter.default.addObserver(
@@ -111,6 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         switch event {
         case .down(let button, let mods, let p):
+            drag = nil
             guard let bind = loader.current.mouseBinds.first(where: { $0.mods == mods && $0.button == button }),
                   let hit = managedWindow(at: p, in: world.snapshot())
             else { return false }

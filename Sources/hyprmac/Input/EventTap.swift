@@ -24,12 +24,21 @@ final class EventTap {
     private static let rightButton = 273
     private static let types: [CGEventType] = [
         .keyDown, .leftMouseDown, .leftMouseDragged, .leftMouseUp,
-        .rightMouseDown, .rightMouseDragged, .rightMouseUp, .mouseMoved,
+        .rightMouseDown, .rightMouseDragged, .rightMouseUp,
     ]
 
     private let onKey: (Modifiers, CGKeyCode) -> Bool
     private let onMouse: (MouseEvent) -> Bool
     private var port: CFMachPort?
+    private var source: CFRunLoopSource?
+
+    var watchesMouseMoved = false {
+        didSet {
+            guard watchesMouseMoved != oldValue, port != nil else { return }
+            stop()
+            start()
+        }
+    }
 
     init(onKey: @escaping (Modifiers, CGKeyCode) -> Bool, onMouse: @escaping (MouseEvent) -> Bool) {
         self.onKey = onKey
@@ -37,14 +46,26 @@ final class EventTap {
     }
 
     func start() {
-        let mask = Self.types.reduce(CGEventMask(0)) { $0 | (1 << $1.rawValue) }
+        let types = watchesMouseMoved ? Self.types + [.mouseMoved] : Self.types
+        let mask = types.reduce(CGEventMask(0)) { $0 | (1 << $1.rawValue) }
         guard let port = CGEvent.tapCreate(
             tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
             eventsOfInterest: mask, callback: tapCallback, userInfo: Unmanaged.passUnretained(self).toOpaque())
         else { return }
+        let source = CFMachPortCreateRunLoopSource(nil, port, 0)
         self.port = port
-        CFRunLoopAddSource(CFRunLoopGetMain(), CFMachPortCreateRunLoopSource(nil, port, 0), .commonModes)
+        self.source = source
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
         CGEvent.tapEnable(tap: port, enable: true)
+    }
+
+    private func stop() {
+        guard let port else { return }
+        CGEvent.tapEnable(tap: port, enable: false)
+        CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
+        CFMachPortInvalidate(port)
+        self.port = nil
+        source = nil
     }
 
     fileprivate func handle(_ type: CGEventType, _ event: CGEvent) -> Bool {
