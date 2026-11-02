@@ -66,7 +66,9 @@ Checks to run by hand after granting permissions (see docs/SETUP.md).
 
 ## Task 12
 
-- [ ] Opening and closing windows animates the re-tiling smoothly at 120 Hz on the built-in display; a new window pops in (slightly scaled up and faded in).
+- [ ] Opening and closing windows animates the re-tiling smoothly at 120 Hz on the built-in display; a new window pops in (slightly scaled up and faded in), or, if it is too new to capture, fades in at the end. During the animation the final layout never shows through behind the moving snapshots (no full-size windows behind growing snapshots, no flickering slivers in the gaps).
+- [ ] Switching from an empty workspace to a populated one never shows the new windows at once: windows with a cached snapshot slide in, others fade in at the end; switching to a workspace for the first time after launch fades its windows in at the end.
+- [ ] The desktop (wallpaper, icons) and unmoved windows look unchanged during an animation; no hyprmac border or bar is doubled in it.
 - [ ] ctrl-alt-1 → ctrl-alt-2 slides left, back slides right; clicking a number on the bar slides the same way.
 - [ ] Mashing ctrl-alt-1/2 quickly never lags the keys or leaves an overlay behind; every window ends up at its final frame.
 - [ ] Borders disappear during a transition and come back (at the right frames and colors) when it ends; Pause Tiling in the middle of an animation, then Resume: borders are back.

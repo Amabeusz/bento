@@ -74,8 +74,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func startTiling() {
         let tracker = WindowTracker()
-        tracker.onAdd = { [weak self] info in self?.world?.addWindow(info); self?.applyLayout(animated: true) }
-        tracker.onRemove = { [weak self] id in self?.world?.removeWindow(id); self?.applyLayout(animated: true) }
+        tracker.onAdd = { [weak self] info in
+            self?.world?.addWindow(info)
+            self?.applyLayout(animated: true)
+            self?.animator.refreshContent()
+        }
+        tracker.onRemove = { [weak self] id in
+            self?.world?.removeWindow(id)
+            self?.applyLayout(animated: true)
+            self?.animator.refreshContent()
+        }
         tracker.onFocus = { [weak self] id in self?.world?.externalFocus(id); self?.applyLayout() }
         tracker.start()
         self.tracker = tracker
@@ -101,6 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.world = world
         applier = Applier(tracker: tracker)
         applyLayout()
+        animator.refreshContent()
     }
 
     private func applyLayout(animated: Bool = false) {
