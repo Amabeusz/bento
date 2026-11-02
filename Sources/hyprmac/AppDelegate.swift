@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var watcher: ConfigWatcher?
     private var accessibilityTimer: Timer?
     private var screenRecordingGranted = true
+    private var ioErrorMessage: String?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -41,29 +42,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func writeDefaultConfigIfMissing() {
         guard !FileManager.default.fileExists(atPath: configURL.path) else { return }
-        try? FileManager.default.createDirectory(
-            at: configURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? defaultConfigText.write(to: configURL, atomically: true, encoding: .utf8)
+        do {
+            try FileManager.default.createDirectory(
+                at: configURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try defaultConfigText.write(to: configURL, atomically: true, encoding: .utf8)
+        } catch {
+            ioErrorMessage = "cannot write default config: \(error.localizedDescription)"
+        }
     }
 
     private func reloadFromDisk() {
-        guard let text = try? String(contentsOf: configURL, encoding: .utf8) else { return }
-        loader.reload(text: text)
+        do {
+            let text = try String(contentsOf: configURL, encoding: .utf8)
+            ioErrorMessage = nil
+            loader.reload(text: text)
+        } catch {
+            ioErrorMessage = "cannot read config: \(error.localizedDescription)"
+        }
     }
 
     private func refreshMenu() {
         let menu = NSMenu()
         menu.addItem(item("Reload Config", #selector(reloadConfig)))
         menu.addItem(item("Open Config", #selector(openConfig)))
-        if let error = loader.lastError {
-            let errorItem = NSMenuItem(title: "Config Error: line \(error.line) — \(error.message)", action: nil, keyEquivalent: "")
-            errorItem.isEnabled = false
-            menu.addItem(errorItem)
+        if let ioErrorMessage {
+            menu.addItem(disabledItem("Config Error: \(ioErrorMessage)"))
+        } else if let error = loader.lastError {
+            menu.addItem(disabledItem("Config Error: line \(error.line) — \(error.message)"))
         }
         if !screenRecordingGranted {
-            let note = NSMenuItem(title: "Animations off (no Screen Recording)", action: nil, keyEquivalent: "")
-            note.isEnabled = false
-            menu.addItem(note)
+            menu.addItem(disabledItem("Animations off (no Screen Recording)"))
         }
         menu.addItem(.separator())
         menu.addItem(item(isPaused ? "Resume Tiling" : "Pause Tiling", #selector(togglePause)))
@@ -78,6 +86,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func item(_ title: String, _ action: Selector, key: String = "") -> NSMenuItem {
         let menuItem = NSMenuItem(title: title, action: action, keyEquivalent: key)
         menuItem.target = self
+        return menuItem
+    }
+
+    private func disabledItem(_ title: String) -> NSMenuItem {
+        let menuItem = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        menuItem.isEnabled = false
         return menuItem
     }
 
