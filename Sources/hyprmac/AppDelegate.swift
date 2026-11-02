@@ -24,6 +24,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var keyBinds: [KeyChord: Action] = [:]
     private var unknownKeys: [String] = []
     private var drag: Drag?
+    private var lastFocusDisturbance = ContinuousClock.now - .seconds(1)
+    private var pendingReveal: WindowID?
+    private var refocusScheduled = false
     private let borders = BorderManager()
     private let animator = Animator()
     private var shown: LayoutSnapshot?
@@ -79,12 +82,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.applyLayout(animated: true)
             self?.animator.refreshContent()
         }
-        tracker.onRemove = { [weak self] id in
-            self?.world?.removeWindow(id)
-            self?.applyLayout(animated: true)
-            self?.animator.refreshContent()
-        }
-        tracker.onFocus = { [weak self] id in self?.world?.externalFocus(id); self?.applyLayout() }
+        tracker.onRemove = { [weak self] id in self?.windowRemoved(id) }
+        tracker.onFocus = { [weak self] id in self?.windowFocused(id) }
+        tracker.onAppGone = { [weak self] in self?.noteFocusDisturbance() }
         tracker.start()
         self.tracker = tracker
         effects = Effects(tracker: tracker)
@@ -130,8 +130,67 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func selectWorkspace(_ number: Int) {
         guard !isPaused, let world else { return }
-        world.perform(.workspace(number)).forEach { effects?.run($0) }
+        run(world.perform(.workspace(number)))
         applyLayout(animated: true)
+    }
+
+    private func run(_ list: [SideEffect]) {
+        for effect in list {
+            switch effect {
+            case .focusWindow, .focusNothing: noteFocusDisturbance()
+            default: break
+            }
+            effects?.run(effect)
+        }
+    }
+
+    private func noteFocusDisturbance() {
+        lastFocusDisturbance = .now
+    }
+
+    private func windowRemoved(_ id: WindowID) {
+        noteFocusDisturbance()
+        guard let world else { return }
+        let wasFocused = world.snapshot().focused == id
+        world.removeWindow(id)
+        applyLayout(animated: true)
+        animator.refreshContent()
+        guard wasFocused, !refocusScheduled else { return }
+        refocusScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            self?.refocusScheduled = false
+            self?.reassertFocus()
+        }
+    }
+
+    private func reassertFocus() {
+        guard let world else { return }
+        run([world.snapshot().focused.map { .focusWindow($0) } ?? .focusNothing])
+    }
+
+    private func windowFocused(_ id: WindowID) {
+        guard let world else { return }
+        pendingReveal = nil
+        guard case .parked = world.snapshot().placements[id] else {
+            world.externalFocus(id)
+            applyLayout()
+            return
+        }
+        pendingReveal = id
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(150)) { [weak self] in
+            self?.revealIfIntended(id)
+        }
+    }
+
+    private func revealIfIntended(_ id: WindowID) {
+        guard pendingReveal == id, let world else { return }
+        pendingReveal = nil
+        guard ContinuousClock.now - lastFocusDisturbance >= .milliseconds(400) else {
+            reassertFocus()
+            return
+        }
+        world.externalFocus(id)
+        applyLayout()
     }
 
     private func syncTap() {
@@ -151,7 +210,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func handleKey(_ chord: KeyChord) {
         guard !isPaused, let world, let action = keyBinds[chord] else { return }
-        world.perform(action).forEach { effects?.run($0) }
+        run(world.perform(action))
         applyLayout(animated: true)
     }
 
@@ -207,7 +266,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let snapshot = world.snapshot()
             guard let hit = managedWindow(at: p, in: snapshot), hit.id != snapshot.focused else { return }
             world.externalFocus(hit.id)
-            tracker?.window(hit.id)?.raiseAndFocus()
+            run([.focusWindow(hit.id)])
             applyLayout()
         }
     }

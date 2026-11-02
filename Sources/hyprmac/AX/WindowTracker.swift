@@ -17,6 +17,7 @@ final class WindowTracker {
     var onAdd: (WindowInfo) -> Void = { _ in }
     var onRemove: (WindowID) -> Void = { _ in }
     var onFocus: (WindowID) -> Void = { _ in }
+    var onAppGone: () -> Void = {}
 
     private var windows: [WindowID: AXWindow] = [:]
     private var reported: Set<WindowID> = []
@@ -59,6 +60,7 @@ final class WindowTracker {
     @objc private func appTerminated(_ note: Notification) {
         guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
         let pid = app.processIdentifier
+        onAppGone()
         if let observer = observers.removeValue(forKey: pid) {
             CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .commonModes)
         }
