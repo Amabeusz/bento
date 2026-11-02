@@ -2,6 +2,17 @@
 
 Checks to run by hand after granting permissions (see docs/SETUP.md).
 
+## Anti-goal checks (run first)
+
+Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, then:
+
+- [ ] Quit hyprmac from its menu: every window comes back on screen.
+- [ ] Relaunch, park windows again, Pause Tiling: every window comes back on screen.
+- [ ] Relaunch, park windows again, `kill -TERM <pid>`: every window comes back on screen.
+- [ ] Relaunch, park windows again, `kill -9 <pid>`: the parked windows stay off-screen; launch hyprmac again: every window comes back on screen.
+- [ ] Repeat all four with the external monitor connected (windows parked from both monitors).
+- [ ] With a busy or frozen app (e.g. IntelliJ indexing, or an app beachballing): hyprmac hotkeys still react at once, and typing and clicking in other apps stays responsive.
+
 ## Task 7
 
 - [ ] `scripts/build-app.sh && open build/hyprmac.app` shows a grid icon in the menu bar.
@@ -76,3 +87,23 @@ Checks to run by hand after granting permissions (see docs/SETUP.md).
 - [ ] `animation = workspaces, 1, 3, smooth, fade` cross-fades after saving.
 - [ ] `animations { enabled = false }` turns it all off.
 - [ ] ctrl-alt mouse drags, config reloads and plugging/unplugging a monitor apply instantly without an overlay.
+
+## Final review fixes
+
+- [ ] Close a Ghostty window while another Ghostty window is on a different workspace: hyprmac stays on the current workspace (no jump), and the current workspace's next window gets focus and the active border.
+- [ ] Same with Cmd-Q of an app that has a window on another workspace, and with Cmd-H: no jump to another workspace.
+- [ ] Cmd-Tab (slowly, not right after closing a window) to an app whose window is on a hidden workspace: hyprmac switches to that workspace.
+- [ ] Switch to an empty workspace and type: nothing reaches the previously focused (now parked) window; Finder (or, if Finder has windows, hyprmac) is active.
+- [ ] Send the last window of a workspace to another workspace with ctrl-alt-shift-N and type: nothing reaches the sent window.
+- [ ] Close the focused tiled window: the next window on that workspace gets keyboard focus and the active border together.
+- [ ] Drag a tiled window by its title bar (no mod) and release: it snaps back into its tile. Resize a tiled window from its edge: it snaps back.
+- [ ] An app that resizes its own tiled window (e.g. a terminal changing its size) snaps back once; a window with a minimum size bigger than its tile is left alone after one try (no flicker loop).
+- [ ] Move or resize a floating window by its title bar or edge: it stays where you put it, also after the next layout change.
+- [ ] ctrl-alt + right-drag a floating window very small: it stops at 100×60.
+- [ ] Cmd-H an app with tiled windows: the rest re-tile with no hole; unhide it (Cmd-Tab or Dock): its windows tile again.
+- [ ] An app that starts slowly (its windows don't tile at launch) tiles once you activate it.
+- [ ] Break the config (`gaps_in = x`): each island grows a red "!" at its right end; hovering it shows "line N — message"; fixing the config removes it.
+- [ ] With hyprmac running, turn hyprmac off under Accessibility, then toggle `follow_mouse` in the config and save (this recreates the event tap, which now fails): the menu shows "Hotkeys unavailable — check Accessibility permission". Turn it back on and toggle `follow_mouse` again: the item disappears.
+- [ ] On first launch without Screen Recording, macOS prompts for it and hyprmac appears in System Settings -> Privacy & Security -> Screen Recording; after granting and relaunching, animations run.
+- [ ] mod+drag and mod+right-drag still move/resize windows; a mod+click on the empty desktop does nothing; plain clicks and drags still reach apps.
+- [ ] With `follow_mouse = 1`, focus still follows the mouse; toggling it in the config still takes effect without a relaunch.
