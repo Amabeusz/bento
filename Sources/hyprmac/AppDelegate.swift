@@ -16,6 +16,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var accessibilityTimer: Timer?
     private var screenRecordingGranted = true
     private var ioErrorMessage: String?
+    private var tracker: WindowTracker?
+    private var applier: Applier?
+    private var signalSources: [DispatchSourceSignal] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -28,17 +31,79 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         screenRecordingGranted = CGPreflightScreenCaptureAccess()
         refreshMenu()
 
+        installSignalHandlers()
         NSApp.activate()
         warnAboutConflictingManagers()
         waitForAccessibility()
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        restoreParkedWindows()
+    }
+
     func configDidChange() {
         reloadFromDisk()
         refreshMenu()
+        world?.updateConfig(loader.current)
+        applyLayout()
     }
 
-    func startTiling() {}
+    func startTiling() {
+        let tracker = WindowTracker()
+        tracker.onAdd = { [weak self] info in self?.world?.addWindow(info); self?.applyLayout() }
+        tracker.onRemove = { [weak self] id in self?.world?.removeWindow(id); self?.applyLayout() }
+        tracker.onFocus = { [weak self] id in self?.world?.externalFocus(id); self?.applyLayout() }
+        tracker.start()
+        self.tracker = tracker
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(screensChanged), name: NSApplication.didChangeScreenParametersNotification, object: nil)
+        if !isPaused { buildWorld() }
+    }
+
+    private func buildWorld() {
+        guard let tracker else { return }
+        restoreParkedWindows()
+        let world = World(config: loader.current)
+        world.setMonitors(monitorInfos())
+        tracker.managedWindows.sorted { $0.id < $1.id }.forEach { world.addWindow($0.info) }
+        if let id = tracker.focusedWindowID() { world.externalFocus(id) }
+        self.world = world
+        applier = Applier(tracker: tracker)
+        applyLayout()
+    }
+
+    private func applyLayout() {
+        guard let world, let applier else { return }
+        applier.apply(world.snapshot())
+    }
+
+    private func restoreParkedWindows() {
+        let monitors = monitorInfos()
+        guard let tracker, let main = monitors.first else { return }
+        for w in tracker.allWindows where isParked(w.frame, monitors: monitors) {
+            w.frame = recoveryFrame(for: w.frame, on: main)
+        }
+    }
+
+    private func installSignalHandlers() {
+        for sig in [SIGTERM, SIGINT] {
+            signal(sig, SIG_IGN)
+            let source = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+            source.setEventHandler { [weak self] in
+                MainActor.assumeIsolated {
+                    self?.restoreParkedWindows()
+                    exit(0)
+                }
+            }
+            source.resume()
+            signalSources.append(source)
+        }
+    }
+
+    @objc private func screensChanged() {
+        world?.setMonitors(monitorInfos())
+        applyLayout()
+    }
 
     private func writeDefaultConfigIfMissing() {
         guard !FileManager.default.fileExists(atPath: configURL.path) else { return }
@@ -105,6 +170,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func togglePause() {
         isPaused.toggle()
+        if isPaused {
+            restoreParkedWindows()
+            world = nil
+            applier = nil
+        } else {
+            buildWorld()
+        }
         refreshMenu()
     }
 
@@ -162,5 +234,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         accessibilityTimer?.invalidate()
         accessibilityTimer = nil
         startTiling()
+    }
+}
+
+@MainActor
+func monitorInfos() -> [MonitorInfo] {
+    guard let primaryHeight = NSScreen.screens.first?.frame.height else { return [] }
+    func flip(_ r: NSRect) -> Rect {
+        Rect(x: r.minX, y: primaryHeight - r.maxY, w: r.width, h: r.height)
+    }
+    return NSScreen.screens.compactMap { screen in
+        guard let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { return nil }
+        let id = CGDirectDisplayID(number.uint32Value)
+        return MonitorInfo(id: id, frame: flip(screen.frame), usable: flip(screen.visibleFrame), isBuiltin: CGDisplayIsBuiltin(id) != 0)
     }
 }
