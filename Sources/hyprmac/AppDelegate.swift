@@ -19,6 +19,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var tracker: WindowTracker?
     private var applier: Applier?
     private var signalSources: [DispatchSourceSignal] = []
+    private var effects: Effects?
+    private var eventTap: EventTap?
+    private var keyBinds: [KeyChord: Action] = [:]
+    private var unknownKeys: [String] = []
+    private var drag: Drag?
+
+    private struct Drag {
+        let id: WindowID
+        let button: Int
+        let action: MouseAction
+        let isFloating: Bool
+        var frame: Rect
+        var last: Point
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -55,6 +69,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         tracker.onFocus = { [weak self] id in self?.world?.externalFocus(id); self?.applyLayout() }
         tracker.start()
         self.tracker = tracker
+        effects = Effects(tracker: tracker)
+        let eventTap = EventTap(
+            onKey: { [weak self] mods, code in self?.handleKey(mods, code) ?? false },
+            onMouse: { [weak self] event in self?.handleMouse(event) ?? false })
+        eventTap.start()
+        self.eventTap = eventTap
         NotificationCenter.default.addObserver(
             self, selector: #selector(screensChanged), name: NSApplication.didChangeScreenParametersNotification, object: nil)
         if !isPaused { buildWorld() }
@@ -75,6 +95,85 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func applyLayout() {
         guard let world, let applier else { return }
         applier.apply(world.snapshot())
+    }
+
+    private func handleKey(_ mods: Modifiers, _ code: CGKeyCode) -> Bool {
+        guard !isPaused, let world, let action = keyBinds[KeyChord(mods: mods, code: code)] else { return false }
+        world.perform(action).forEach { effects?.run($0) }
+        applyLayout()
+        return true
+    }
+
+    private func handleMouse(_ event: MouseEvent) -> Bool {
+        guard !isPaused, let world else {
+            drag = nil
+            return false
+        }
+        switch event {
+        case .down(let button, let mods, let p):
+            guard let bind = loader.current.mouseBinds.first(where: { $0.mods == mods && $0.button == button }),
+                  let hit = managedWindow(at: p, in: world.snapshot())
+            else { return false }
+            drag = Drag(id: hit.id, button: button, action: bind.action, isFloating: hit.isFloating, frame: hit.frame, last: p)
+            return true
+        case .dragged(let button, let p):
+            guard var d = drag, d.button == button else { return false }
+            let dx = p.x - d.last.x
+            let dy = p.y - d.last.y
+            d.last = p
+            switch (d.action, d.isFloating) {
+            case (.move, true):
+                d.frame.x += dx
+                d.frame.y += dy
+                world.setFloatingFrame(d.id, d.frame)
+                applyLayout()
+            case (.move, false):
+                d.frame.x += dx
+                d.frame.y += dy
+                tracker?.window(d.id)?.frame = d.frame
+            case (.resize, true):
+                d.frame.w += dx
+                d.frame.h += dy
+                world.setFloatingFrame(d.id, d.frame)
+                applyLayout()
+            case (.resize, false):
+                world.resizeTiled(d.id, dx: dx, dy: dy)
+                applyLayout()
+            }
+            drag = d
+            return true
+        case .up(let button, let p):
+            guard let d = drag, d.button == button else { return false }
+            drag = nil
+            if d.action == .move && !d.isFloating {
+                world.dropTiled(d.id, at: p)
+                applyLayout()
+                if case .tiled(let r) = world.snapshot().placements[d.id] { tracker?.window(d.id)?.frame = r }
+            }
+            return true
+        case .moved(let p):
+            guard loader.current.followMouse else { return false }
+            let snapshot = world.snapshot()
+            guard let hit = managedWindow(at: p, in: snapshot), hit.id != snapshot.focused else { return false }
+            world.externalFocus(hit.id)
+            tracker?.window(hit.id)?.raiseAndFocus()
+            applyLayout()
+            return false
+        }
+    }
+
+    private func managedWindow(at p: Point, in s: LayoutSnapshot) -> (id: WindowID, frame: Rect, isFloating: Bool)? {
+        var floating: [(WindowID, Rect)] = []
+        var tiled: [(WindowID, Rect)] = []
+        for (id, placement) in s.placements {
+            switch placement {
+            case .floating(let r) where r.contains(p): floating.append((id, r))
+            case .tiled(let r) where r.contains(p): tiled.append((id, r))
+            default: break
+            }
+        }
+        if let f = floating.first(where: { $0.0 == s.focused }) ?? floating.first { return (f.0, f.1, true) }
+        return (tiled.first { $0.0 == s.focused } ?? tiled.first).map { ($0.0, $0.1, false) }
     }
 
     private func restoreParkedWindows() {
@@ -124,6 +223,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             ioErrorMessage = "cannot read config: \(error.localizedDescription)"
         }
+        (keyBinds, unknownKeys) = keyTable(for: loader.current.keyBinds)
     }
 
     private func refreshMenu() {
@@ -134,6 +234,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(disabledItem("Config Error: \(ioErrorMessage)"))
         } else if let error = loader.lastError {
             menu.addItem(disabledItem("Config Error: line \(error.line) — \(error.message)"))
+        }
+        for key in unknownKeys {
+            menu.addItem(disabledItem("Config Error: unknown key '\(key)'"))
         }
         if !screenRecordingGranted {
             menu.addItem(disabledItem("Animations off (no Screen Recording)"))
