@@ -25,6 +25,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var unknownKeys: [String] = []
     private var drag: Drag?
     private let borders = BorderManager()
+    private let animator = Animator()
+    private var shown: LayoutSnapshot?
     private lazy var bars = BarManager { [weak self] number in self?.selectWorkspace(number) }
 
     private struct Drag {
@@ -40,6 +42,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem?.button?.image = NSImage(systemSymbolName: "square.grid.2x2", accessibilityDescription: "hyprmac")
 
+        animator.onActiveChange = { [weak self] active in
+            if active { self?.borders.hideAll() } else { self?.borders.showAll() }
+        }
         writeDefaultConfigIfMissing()
         reloadFromDisk()
         watcher = ConfigWatcher(url: configURL) { [weak self] in self?.configDidChange() }
@@ -69,8 +74,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func startTiling() {
         let tracker = WindowTracker()
-        tracker.onAdd = { [weak self] info in self?.world?.addWindow(info); self?.applyLayout() }
-        tracker.onRemove = { [weak self] id in self?.world?.removeWindow(id); self?.applyLayout() }
+        tracker.onAdd = { [weak self] info in self?.world?.addWindow(info); self?.applyLayout(animated: true) }
+        tracker.onRemove = { [weak self] id in self?.world?.removeWindow(id); self?.applyLayout(animated: true) }
         tracker.onFocus = { [weak self] id in self?.world?.externalFocus(id); self?.applyLayout() }
         tracker.start()
         self.tracker = tracker
@@ -98,10 +103,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyLayout()
     }
 
-    private func applyLayout() {
+    private func applyLayout(animated: Bool = false) {
         guard let world, let applier else { return }
         let snapshot = world.snapshot()
-        applier.apply(snapshot)
+        let old = shown
+        shown = snapshot
+        if animated, let old {
+            animator.transition(from: old, to: snapshot, kind: TransitionKind(from: old, to: snapshot)) {
+                applier.apply(snapshot)
+            }
+        } else if snapshot.placements != old?.placements {
+            animator.finish()
+            applier.apply(snapshot)
+        }
         borders.update(snapshot, config: loader.current)
         bars.update(snapshot, monitors: monitorInfos(), config: loader.current)
     }
@@ -109,13 +123,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func selectWorkspace(_ number: Int) {
         guard !isPaused, let world else { return }
         world.perform(.workspace(number)).forEach { effects?.run($0) }
-        applyLayout()
+        applyLayout(animated: true)
     }
 
     private func handleKey(_ mods: Modifiers, _ code: CGKeyCode) -> Bool {
         guard !isPaused, let world, let action = keyBinds[KeyChord(mods: mods, code: code)] else { return false }
         world.perform(action).forEach { effects?.run($0) }
-        applyLayout()
+        applyLayout(animated: true)
         return true
     }
 
@@ -130,6 +144,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let bind = loader.current.mouseBinds.first(where: { $0.mods == mods && $0.button == button }),
                   let hit = managedWindow(at: p, in: world.snapshot())
             else { return false }
+            animator.finish()
             drag = Drag(id: hit.id, button: button, action: bind.action, isFloating: hit.isFloating, frame: hit.frame, last: p)
             return true
         case .dragged(let button, let p):
@@ -241,6 +256,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             ioErrorMessage = "cannot read config: \(error.localizedDescription)"
         }
         (keyBinds, unknownKeys) = keyTable(for: loader.current.keyBinds)
+        animator.config = loader.current
     }
 
     private func refreshMenu() {
@@ -291,6 +307,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func togglePause() {
         isPaused.toggle()
         if isPaused {
+            animator.finish()
+            shown = nil
             borders.removeAll()
             bars.removeAll()
             restoreParkedWindows()

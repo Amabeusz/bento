@@ -63,3 +63,14 @@ Checks to run by hand after granting permissions (see docs/SETUP.md).
 - [ ] Tiled windows never overlap the island; the island stays above other windows and appears on every Space, but not in Mission Control.
 - [ ] Save `bar { height = 40 }`: the island resizes without a relaunch and the tiling area adjusts; save `enabled = false`: the island disappears and tiling grows into the space; `enabled = true` brings it back.
 - [ ] Unplugging / replugging the external monitor removes / recreates its island; Pause Tiling hides the islands, Resume brings them back.
+
+## Task 12
+
+- [ ] Opening and closing windows animates the re-tiling smoothly at 120 Hz on the built-in display; a new window pops in (slightly scaled up and faded in).
+- [ ] ctrl-alt-1 → ctrl-alt-2 slides left, back slides right; clicking a number on the bar slides the same way.
+- [ ] Mashing ctrl-alt-1/2 quickly never lags the keys or leaves an overlay behind; every window ends up at its final frame.
+- [ ] Borders disappear during a transition and come back (at the right frames and colors) when it ends; Pause Tiling in the middle of an animation, then Resume: borders are back.
+- [ ] With Screen Recording revoked, everything still works instantly (no animation).
+- [ ] `animation = workspaces, 1, 3, smooth, fade` cross-fades after saving.
+- [ ] `animations { enabled = false }` turns it all off.
+- [ ] ctrl-alt mouse drags, config reloads and plugging/unplugging a monitor apply instantly without an overlay.

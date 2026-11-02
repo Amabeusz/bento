@@ -138,6 +138,7 @@ final class BorderManager {
         windows.values.forEach { $0.close() }
         windows = [:]
         snapshot = nil
+        hidden = false
     }
 
     private func show(_ id: WindowID, frame: Rect, isFocused: Bool) {
