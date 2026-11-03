@@ -76,8 +76,13 @@ final class AXWindow {
     }
 
     var isDialog: Bool {
-        let subrole: String? = element.value(kAXSubroleAttribute)
-        return subrole != kAXStandardWindowSubrole || !element.isSettable(kAXSizeAttribute)
+        let fullscreenButton: AXUIElement? = element.value(kAXFullScreenButtonAttribute)
+        let fullscreenEnabled: Bool = fullscreenButton?.value(kAXEnabledAttribute) ?? false
+        return looksLikeDialog(
+            subrole: element.value(kAXSubroleAttribute),
+            resizable: element.isSettable(kAXSizeAttribute),
+            hasFullscreenButton: fullscreenEnabled,
+            isModal: element.value(kAXModalAttribute) ?? false)
     }
 
     var isMinimized: Bool {

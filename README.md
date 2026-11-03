@@ -54,6 +54,10 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 
 Gdy do MacBooka podłączony jest monitor zewnętrzny, ekran MacBooka ma na stałe pulpit 0 (ctrl-alt-0), a monitor zewnętrzny pulpity 1–9 (ctrl-alt-1…9) — niezależnie od tego, na którym ekranie jest fokus. Wyspa MacBooka pokazuje tylko 0, wyspa monitora 1–9. Bez monitora MacBook ma pulpity 1–9, a ctrl-alt-0 nic nie robi. Po odłączeniu monitora okna z pulpitu 0 trafiają na najniższy pusty pulpit 1–9, a MacBook pokazuje pulpit, który był na monitorze.
 
+## Okna dialogowe
+
+Okna pomocnicze aplikacji — ustawienia, „O programie”, okna modalne, okna o stałym rozmiarze i okna bez przycisku pełnego ekranu — nie wchodzą do kafelków: pływają i pojawiają się wyśrodkowane nad ostatnio aktywnym oknem tej samej aplikacji, na jego pulpicie. Zwykłe kolejne okno aplikacji dalej idzie do kafelków. Okno, które ma pływać, a nie jest rozpoznane, dopiszesz regułą `windowrule = float, app:…` w konfiguracji.
+
 ## Konfiguracja
 
 Plik `~/.config/hyprmac/hyprmac.conf` powstaje przy pierwszym uruchomieniu. Zmiany działają w sekundę po zapisie; błąd składni z numerem linii pokazuje się w menu i jako „!” na wyspie.

@@ -131,3 +131,9 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Put a window on 0, unplug the monitor: the window lands on the lowest empty workspace 1–9 (its badge is no longer dimmed), the MacBook shows the workspace the monitor was showing; nothing is lost.
 - [ ] Plug the monitor back in: MacBook returns to 0, the monitor shows the workspace the MacBook was on.
 - [ ] Focus a window on workspace 0, unplug the monitor: typing goes to a window visible on the MacBook (or nowhere if its workspace is empty), never to the hidden window from 0.
+
+## App popups float over their app
+
+- [ ] Safari ⌘, (Settings), Finder ⌘I (Get Info), an IntelliJ dialog (e.g. Settings): each opens floating, centered over that app's window, and the tiles don't move.
+- [ ] A second normal window of the same app (e.g. ⌘N in Ghostty) still joins the tiles.
+- [ ] A dialog bigger than the screen stays fully on screen.

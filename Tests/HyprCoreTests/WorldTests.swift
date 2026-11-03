@@ -280,7 +280,7 @@ private func parkedRect(_ p: Placement?) -> Rect? {
     @Test func floatingWindowFollowsWorkspaceToOtherMonitor() {
         let w = makeTwoExternalWorld()
         w.addWindow(window(1, on: E1))
-        w.addWindow(window(2, on: M2, isDialog: true))
+        w.addWindow(window(2, on: M2, app: "Finder", isDialog: true))
         w.externalFocus(2)
         _ = w.perform(.moveCurrentWorkspaceToMonitor)
         let s = w.snapshot()
@@ -626,4 +626,44 @@ private func singleScreenWorld() -> World {
     #expect(s.visibleWorkspace == [1: 3])
     #expect(parkedRect(s.placements[1]) != nil)
     #expect(s.focused == nil)
+}
+
+@Test func dialogCentersOverItsAppWindow() {
+    let w = singleScreenWorld()
+    w.addWindow(window(1, on: M1, app: "Safari"))
+    w.addWindow(window(2, on: M1, app: "Safari", isDialog: true))
+    #expect(w.snapshot().placements[2] == .floating(Rect(x: 556, y: 357.5, w: 400, h: 300)))
+
+    let two = makeWorld()
+    two.addWindow(window(1, on: M2, app: "Safari"))
+    two.addWindow(window(2, on: M1, app: "Ghostty"))
+    two.externalFocus(2)
+    two.addWindow(window(3, on: M1, app: "Safari", isDialog: true))
+    let c = area2.center
+    #expect(two.snapshot().placements[3] == .floating(Rect(x: c.x - 200, y: c.y - 150, w: 400, h: 300)))
+    two.externalFocus(1)
+    _ = two.perform(.workspace(5))
+    #expect(parkedRect(two.snapshot().placements[3]) != nil)
+}
+
+@Test func dialogOverAppStaysOnScreen() {
+    let w = singleScreenWorld()
+    w.addWindow(window(1, on: M1, app: "Safari"))
+    w.addWindow(WindowInfo(id: 2, app: "Safari", title: "", isDialog: true, frame: Rect(x: 0, y: 0, w: 3000, h: 2000)))
+    #expect(w.snapshot().placements[2] == .floating(M1.usable))
+}
+
+@Test func dialogWithoutAppWindowKeepsItsFrame() {
+    let w = singleScreenWorld()
+    w.addWindow(window(1, on: M1, app: "Ghostty"))
+    let dialog = window(2, on: M1, app: "Safari", isDialog: true)
+    w.addWindow(dialog)
+    #expect(w.snapshot().placements[2] == .floating(dialog.frame))
+}
+
+@Test func secondNormalWindowStillTiles() {
+    let w = singleScreenWorld()
+    w.addWindow(window(1, on: M1, app: "Safari"))
+    w.addWindow(window(2, on: M1, app: "Safari"))
+    guard case .tiled = w.snapshot().placements[2] else { Issue.record("not tiled"); return }
 }

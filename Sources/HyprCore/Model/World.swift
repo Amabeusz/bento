@@ -147,6 +147,7 @@ public final class World {
         workspaceOf[w.id] = n
         if shouldFloat(w) {
             floating[w.id] = w.frame
+            if w.isDialog { placeOverItsApp(w) }
         } else {
             insertTiled(w.id, into: n)
         }
@@ -392,6 +393,16 @@ public final class World {
         var effects: [SideEffect] = [focused.map { .focusWindow($0) } ?? .focusNothing]
         if let m, config.warpCursor { effects.append(.warpCursor(m.frame.center)) }
         return effects
+    }
+
+    private func placeOverItsApp(_ w: WindowInfo) {
+        guard let parent = history.first(where: { $0 != w.id && windows[$0]?.app == w.app && floating[$0] == nil }),
+              let n = workspaceOf[parent], let home = homeMonitor(of: n),
+              let p = trees[n]?.frames(in: area(of: n), gapsIn: config.gapsIn)[parent]
+        else { return }
+        workspaceOf[w.id] = n
+        let centered = Rect(x: p.center.x - w.frame.w / 2, y: p.center.y - w.frame.h / 2, w: w.frame.w, h: w.frame.h)
+        floating[w.id] = relocate(centered, from: nil, to: home)
     }
 
     private func shouldFloat(_ w: WindowInfo) -> Bool {
