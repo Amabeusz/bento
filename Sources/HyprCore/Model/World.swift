@@ -311,10 +311,18 @@ public final class World {
             focus(next)
             return [.focusWindow(next)]
         }
-        guard let m = monitor(from: current, toward: dir), let target = visible[m.id] else { return [] }
+        guard let m = monitor(from: current, toward: dir), let target = visible[m.id] else {
+            return adjacentWorkspace(dir, on: current).map { goTo($0, focusing: nil) } ?? []
+        }
         focusedMonitor = m.id
         focus(lastFocused(in: target))
         return focusEffects(warpTo: m)
+    }
+
+    private func adjacentWorkspace(_ dir: Direction, on m: MonitorInfo) -> Int? {
+        guard let n = visible[m.id], dir == .left || dir == .right else { return nil }
+        let others = workspaces(shownOn: m).filter { isHidden($0) && !isEmpty($0) }
+        return dir == .right ? others.filter { $0 > n }.min() : others.filter { $0 < n }.max()
     }
 
     private func moveWindow(_ dir: Direction) -> [SideEffect] {

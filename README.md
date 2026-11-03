@@ -36,7 +36,7 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 
 | Skrót | Działanie |
 |---|---|
-| mod + strzałki / h j k l | przenieś fokus |
+| mod + strzałki / h j k l | przenieś fokus; gdy w lewo/prawo nie ma już okna ani ekranu — poprzedni/następny pulpit z oknami na tym ekranie |
 | mod + shift + strzałki / h j k l | przesuń okno |
 | mod + 1…0 | pulpit 1–10 |
 | mod + shift + 1…0 | wyślij okno na pulpit 1–10 |

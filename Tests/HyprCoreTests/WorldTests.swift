@@ -430,4 +430,70 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         w.setMonitors([M1, M2])
         #expect(w.snapshot().visibleWorkspace == [1: 1, 2: 6])
     }
+
+    @Test func arrowPastLastWindowGoesToNextWorkspace() {
+        let w = singleMonitorWithWindowsOnOneAndThree()
+        let effects = w.perform(.moveFocus(.right))
+        let s = w.snapshot()
+        #expect(s.visibleWorkspace == [1: 3])
+        #expect(s.focused == 2)
+        #expect(effects.contains(.focusWindow(2)))
+    }
+
+    @Test func arrowLeftGoesToPreviousNonEmptyWorkspace() {
+        let w = singleMonitorWithWindowsOnOneAndThree()
+        _ = w.perform(.moveFocus(.right))
+        #expect(w.snapshot().visibleWorkspace == [1: 3])
+        _ = w.perform(.moveFocus(.left))
+        let s = w.snapshot()
+        #expect(s.visibleWorkspace == [1: 1])
+        #expect(s.focused == 1)
+    }
+
+    @Test func arrowWithNoWorkspaceBeyondDoesNothing() {
+        let w = singleMonitorWithWindowsOnOneAndThree()
+        #expect(w.perform(.moveFocus(.left)) == [])
+        _ = w.perform(.moveFocus(.right))
+        #expect(w.perform(.moveFocus(.right)) == [])
+        #expect(w.snapshot().visibleWorkspace == [1: 3])
+    }
+
+    @Test func verticalArrowDoesNotSwitchWorkspace() {
+        let w = singleMonitorWithWindowsOnOneAndThree()
+        _ = w.perform(.moveFocus(.right))
+        #expect(w.perform(.moveFocus(.up)) == [])
+        #expect(w.perform(.moveFocus(.down)) == [])
+        #expect(w.snapshot().visibleWorkspace == [1: 3])
+    }
+
+    @Test func arrowOnExternalStaysWithinItsWorkspaces() {
+        let left = MonitorInfo(id: 2, frame: Rect(x: -2560, y: 0, w: 2560, h: 1440), usable: Rect(x: -2560, y: 25, w: 2560, h: 1415), isBuiltin: false)
+        var config = try! parseConfig(defaultConfigText)
+        config.barEnabled = false
+        let w = World(config: config)
+        w.setMonitors([M1, left])
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: left))
+        w.addWindow(window(3, on: left))
+        w.externalFocus(3)
+        _ = w.perform(.moveToWorkspace(3))
+        w.externalFocus(1)
+        #expect(w.perform(.moveFocus(.right)) == [])
+        #expect(w.snapshot().visibleWorkspace == [1: 1, 2: 6])
+        w.externalFocus(2)
+        _ = w.perform(.moveFocus(.left))
+        #expect(w.snapshot().visibleWorkspace == [1: 1, 2: 3])
+    }
+}
+
+private func singleMonitorWithWindowsOnOneAndThree() -> World {
+    var config = try! parseConfig(defaultConfigText)
+    config.barEnabled = false
+    let w = World(config: config)
+    w.setMonitors([M1])
+    w.addWindow(window(1, on: M1))
+    w.addWindow(window(2, on: M1))
+    w.externalFocus(2)
+    _ = w.perform(.moveToWorkspace(3))
+    return w
 }

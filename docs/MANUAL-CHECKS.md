@@ -117,3 +117,9 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] ctrl-alt-shift-Tab with two screens does nothing.
 - [ ] Unplug the monitor: all 10 workspaces are reachable on the built-in screen and no window is lost.
 - [ ] Lid closed / mirrored displays: note what happens (rule is off when there is no built-in screen in the list).
+
+## Arrow past the last window switches workspace
+
+- [ ] One screen, windows on workspaces 1 and 3: on 1, ctrl-alt-→ past the rightmost window slides to workspace 3; ctrl-alt-← past the leftmost window slides back to 1 (empty 2 skipped).
+- [ ] On the highest non-empty workspace ctrl-alt-→ does nothing; ctrl-alt-↑/↓ never switch workspaces.
+- [ ] Two screens: on the external monitor ctrl-alt-→ past the last window goes to its next non-empty workspace (2–10); the built-in screen stays on 1.
