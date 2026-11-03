@@ -32,7 +32,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let borders = BorderManager()
     private let animator = Animator()
     private var shown: LayoutSnapshot?
-    private lazy var bars = BarManager { [weak self] number in self?.selectWorkspace(number) }
+    private lazy var bars = BarManager(
+        onSelect: { [weak self] number in self?.selectWorkspace(number) },
+        icon: { [weak self] id in
+            self?.tracker?.window(id).flatMap { NSRunningApplication(processIdentifier: $0.pid)?.icon }
+        })
 
     private struct Drag {
         let id: WindowID

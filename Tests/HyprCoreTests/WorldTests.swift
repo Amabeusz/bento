@@ -164,11 +164,30 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         #expect(w.perform(.killActive) == [.closeWindow(1)])
     }
 
+    @Test func badgeIconsOnePerAppInLayoutOrder() {
+        let w = makeWorld()
+        w.addWindow(window(5, on: M1))
+        w.addWindow(window(3, on: M1, app: "Safari"))
+        w.addWindow(window(7, on: M1))
+        w.addWindow(window(1, on: M1, app: "Finder", isDialog: true))
+        #expect(w.snapshot().bars[1]?[0].icons == [5, 3, 1])
+        #expect(w.snapshot().bars[2]?[0].icons == [])
+    }
+
+    @Test func badgeIconsOffInConfig() {
+        var config = try! parseConfig(defaultConfigText)
+        config.barIcons = false
+        let w = World(config: config)
+        w.setMonitors([M1, M2])
+        w.addWindow(window(1, on: M1))
+        #expect(w.snapshot().bars[1]?[0].icons == [])
+    }
+
     @Test func badgesReflectState() {
         let w = makeWorld()
         w.addWindow(window(1, on: M1))
         let bars = w.snapshot().bars
-        #expect(bars[1] == [WorkspaceBadge(number: 0, isHere: true, isOnOtherMonitor: false, isEmpty: false)])
+        #expect(bars[1] == [WorkspaceBadge(number: 0, isHere: true, isOnOtherMonitor: false, isEmpty: false, icons: [1])])
         #expect(bars[2]?.count == 9)
         #expect(bars[2]?[0] == WorkspaceBadge(number: 1, isHere: true, isOnOtherMonitor: false, isEmpty: true))
         #expect(bars[2]?[4] == WorkspaceBadge(number: 5, isHere: false, isOnOtherMonitor: false, isEmpty: true))
@@ -177,7 +196,7 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         e.addWindow(window(1, on: E1))
         let both = e.snapshot().bars
         #expect(both[1]?.count == 9)
-        #expect(both[1]?[0] == WorkspaceBadge(number: 1, isHere: true, isOnOtherMonitor: false, isEmpty: false))
+        #expect(both[1]?[0] == WorkspaceBadge(number: 1, isHere: true, isOnOtherMonitor: false, isEmpty: false, icons: [1]))
         #expect(both[1]?[1] == WorkspaceBadge(number: 2, isHere: false, isOnOtherMonitor: true, isEmpty: true))
     }
 

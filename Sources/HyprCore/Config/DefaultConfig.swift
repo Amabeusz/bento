@@ -17,6 +17,7 @@ decoration {
 
 bar {
     enabled = true
+    icons = true
     height = 30
     font_size = 13
     margin_top = 4

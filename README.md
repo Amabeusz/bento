@@ -85,6 +85,7 @@ decoration {
 }
 
 bar {
+    icons = true                  # ikonki aplikacji obok numeru pulpitu; false = same numery
     height = 30
     font_size = 13
     margin_top = 4                # odstęp wyspy od paska menu

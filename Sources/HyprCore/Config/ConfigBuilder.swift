@@ -22,6 +22,7 @@ private func apply(_ entry: ConfigEntry, to config: inout Config) throws(ConfigE
     case "general:col.inactive_border": config.inactiveBorder = try gradient(value, line)
     case "decoration:rounding": config.rounding = try number(value, line)
     case "bar:enabled": config.barEnabled = try flag(value, line)
+    case "bar:icons": config.barIcons = try flag(value, line)
     case "bar:height": config.barHeight = try number(value, line)
     case "bar:font_size": config.barFontSize = try number(value, line)
     case "bar:font": config.barFont = value

@@ -41,12 +41,14 @@ public struct WorkspaceBadge: Equatable, Sendable {
     public var isHere: Bool
     public var isOnOtherMonitor: Bool
     public var isEmpty: Bool
+    public var icons: [WindowID]
 
-    public init(number: Int, isHere: Bool, isOnOtherMonitor: Bool, isEmpty: Bool) {
+    public init(number: Int, isHere: Bool, isOnOtherMonitor: Bool, isEmpty: Bool, icons: [WindowID] = []) {
         self.number = number
         self.isHere = isHere
         self.isOnOtherMonitor = isOnOtherMonitor
         self.isEmpty = isEmpty
+        self.icons = icons
     }
 }
 
@@ -282,7 +284,8 @@ public final class World {
                     number: n,
                     isHere: visible[m.id] == n,
                     isOnOtherMonitor: visible.contains { $0.key != m.id && $0.value == n },
-                    isEmpty: isEmpty(n)
+                    isEmpty: isEmpty(n),
+                    icons: config.barIcons ? icons(of: n) : []
                 )
             }
         }
@@ -532,6 +535,13 @@ public final class World {
 
     private func isEmpty(_ n: Int) -> Bool {
         !workspaceOf.values.contains(n)
+    }
+
+    private func icons(of n: Int) -> [WindowID] {
+        let tiled = trees[n]?.windows ?? []
+        let floats = workspaceOf.filter { $0.value == n && floating[$0.key] != nil }.keys.sorted()
+        var apps: Set<String> = []
+        return (tiled + floats).filter { windows[$0].map { apps.insert($0.app).inserted } ?? false }
     }
 
     private func lowestHidden() -> Int? {

@@ -139,6 +139,13 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] A dialog bigger than the screen stays fully on screen.
 - [ ] Java Swing menus (e.g. a menu-bar menu and a right-click menu) open where they were clicked, not centered over the window, and get no border.
 
+## App icons on the island
+
+- [ ] Each non-empty workspace shows the icons of its apps next to its number, one per app (3 Ghostty windows = 1 icon), tiles first in layout order, then floating windows; empty workspaces show only the number.
+- [ ] The active workspace's pill covers the number and its icons; clicking anywhere on a workspace (number or icon) switches to it; the island stays centered as it grows and shrinks.
+- [ ] Opening / closing / moving a window (mod+shift+N) updates the icons at once; the red "!" still sits at the right end.
+- [ ] Save `bar { icons = false }`: the island goes back to numbers only, without a relaunch.
+
 ## Native tabs share one tile
 
 - [ ] Ghostty ⌘T: the new tab takes the same tile, no empty tile appears next to it; switching tabs doesn't change the layout.

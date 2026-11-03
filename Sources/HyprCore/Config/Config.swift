@@ -150,6 +150,7 @@ public struct Config: Equatable, Sendable {
     )
     public var inactiveBorder = Gradient(colors: [RGBA(hex: 0x585b70aa)], angleDegrees: 0)
     public var barEnabled = true
+    public var barIcons = true
     public var barHeight = 30.0
     public var barFontSize = 13.0
     public var barFont = "system"

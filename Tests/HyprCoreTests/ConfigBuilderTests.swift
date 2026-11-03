@@ -158,3 +158,8 @@ import Testing
     #expect(try parseConfig("bind = CTRL, a, movetoworkspace, 0").keyBinds[0].action == .moveToWorkspace(0))
     #expect(throws: ConfigError(line: 1, message: "workspace must be 0-9")) { try parseConfig("bind = CTRL, a, workspace, 10") }
 }
+
+@Test func barIconsKey() throws {
+    #expect(try parseConfig("").barIcons)
+    #expect(try !parseConfig("bar {\n    icons = false\n}").barIcons)
+}
