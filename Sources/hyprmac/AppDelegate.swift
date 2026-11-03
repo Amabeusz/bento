@@ -357,8 +357,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func screensChanged() {
+        let focusedBefore = world?.snapshot().focused
         world?.setMonitors(monitorInfos())
         applyLayout()
+        if world?.snapshot().focused != focusedBefore { reassertFocus() }
     }
 
     private func writeDefaultConfigIfMissing() {

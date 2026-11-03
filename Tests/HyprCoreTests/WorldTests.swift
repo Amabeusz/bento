@@ -601,3 +601,29 @@ private func singleScreenWorld() -> World {
     #expect(s.visibleWorkspace == [1: 3])
     #expect(s.placements[2] == .tiled(area1))
 }
+
+@Test func unplugMovesFocusOffTheHiddenZeroWindow() {
+    let w = makeWorld()
+    w.addWindow(window(1, on: M1))
+    w.addWindow(window(2, on: M2))
+    w.externalFocus(1)
+    w.setMonitors([M1])
+    let s = w.snapshot()
+    #expect(parkedRect(s.placements[1]) != nil)
+    #expect(s.focused == 2)
+}
+
+@Test func unplugWithEmptyExternalWorkspaceFocusesNothing() {
+    let w = makeWorld()
+    w.addWindow(window(1, on: M1))
+    w.addWindow(window(2, on: M2))
+    w.externalFocus(2)
+    _ = w.perform(.moveToWorkspace(4))
+    _ = w.perform(.workspace(3))
+    w.externalFocus(1)
+    w.setMonitors([M1])
+    let s = w.snapshot()
+    #expect(s.visibleWorkspace == [1: 3])
+    #expect(parkedRect(s.placements[1]) != nil)
+    #expect(s.focused == nil)
+}

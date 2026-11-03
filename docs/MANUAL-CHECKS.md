@@ -130,3 +130,4 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Laptop alone: island 1–9, ctrl-alt-0 and ctrl-alt-shift-0 do nothing.
 - [ ] Put a window on 0, unplug the monitor: the window lands on the lowest empty workspace 1–9 (its badge is no longer dimmed), the MacBook shows the workspace the monitor was showing; nothing is lost.
 - [ ] Plug the monitor back in: MacBook returns to 0, the monitor shows the workspace the MacBook was on.
+- [ ] Focus a window on workspace 0, unplug the monitor: typing goes to a window visible on the MacBook (or nowhere if its workspace is empty), never to the hidden window from 0.

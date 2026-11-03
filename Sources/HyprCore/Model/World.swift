@@ -132,6 +132,9 @@ public final class World {
             focusedMonitor = first.id
             focus(visible[first.id].flatMap(lastFocused(in:)))
         }
+        if let id = focused, let n = workspaceOf[id], isHidden(n), let m = currentMonitor {
+            focus(visible[m.id].flatMap(lastFocused(in:)))
+        }
     }
 
     public func addWindow(_ w: WindowInfo) {
