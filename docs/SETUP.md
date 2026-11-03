@@ -29,7 +29,7 @@ On launch hyprmac asks for both permissions; enable hyprmac under System Setting
 
 ## 4. Desktops
 
-Keep exactly one macOS Desktop (Space) per display. hyprmac manages its own workspaces 1-10 and cannot see macOS Spaces.
+Keep exactly one macOS Desktop (Space) per display. hyprmac manages its own workspaces 0–9 (0 = MacBook screen when an external monitor is connected, 1–9 otherwise) and cannot see macOS Spaces.
 
 ## 5. Other window managers
 

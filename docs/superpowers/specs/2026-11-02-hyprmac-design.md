@@ -48,6 +48,7 @@ Single user, single machine: MacBook on Apple Silicon, macOS 26.5, sometimes wit
 ### Workspaces
 
 - Workspaces 1–10. `mod+1…0` switches, `mod+shift+1…0` sends the focused window there.
+- **Update 2026-11-03 (user request):** numbering is now 0–9. With an external monitor the MacBook screen is pinned to workspace 0 (`mod+0`) and the external monitor has 1–9; without one the MacBook has 1–9 and `mod+0` does nothing. On unplug, windows on 0 move to the lowest empty workspace 1–9 and the MacBook shows what the external showed. Supersedes the "built-in = 1, external = 2–10" update below.
 - One global pool of 10, with **no fixed home monitor** (the user chose this explicitly). Each monitor shows one workspace at a time.
 - Switching to a **hidden** workspace opens it on the monitor that currently has focus.
 - **Update 2026-11-02 (user request):** with the built-in screen plus an external monitor, the built-in screen is pinned to one workspace (`startupWorkspace[.builtin]`, default 1) and workspaces 2–10 always open on the external monitor, regardless of focus. Plugging the external in moves the workspace the built-in was showing (if not 1) to it. `mod + shift + Tab` does nothing in this setup. The built-in island shows only its workspace, the external one the other nine. With one screen, or two external screens, the rules below apply unchanged.

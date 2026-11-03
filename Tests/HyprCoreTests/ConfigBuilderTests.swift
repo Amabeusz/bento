@@ -5,12 +5,12 @@ import Testing
     let c = try parseConfig(defaultConfigText)
     #expect(c.gapsIn == 10 && c.gapsOut == Insets(all: 12) && c.borderSize == 2 && c.rounding == 16)
     #expect(c.activeBorder == Gradient(colors: [RGBA(hex: 0xf5c2e7ff), RGBA(hex: 0xcba6f7ff), RGBA(hex: 0x89b4faff)], angleDegrees: 135))
-    #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt], key: "0", action: .workspace(10))))
+    #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt], key: "0", action: .workspace(0))))
     #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt, .shift], key: "tab", action: .moveCurrentWorkspaceToMonitor)))
     #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt], key: "minus", action: .resizeActive(dx: -50, dy: -50))))
     #expect(c.mouseBinds == [MouseBind(mods: [.ctrl, .alt], button: 272, action: .move), MouseBind(mods: [.ctrl, .alt], button: 273, action: .resize)])
     #expect(c.animations["workspaces"] == AnimationSpec(enabled: true, duration: 0.3, curve: "smooth", style: "slide"))
-    #expect(c.startupWorkspace == [.builtin: 1, .external: 6])
+    #expect(c.startupWorkspace == [.builtin: 1, .external: 1])
     #expect(c.floatRules.count == 2 && !c.followMouse && c.warpCursor)
 }
 
@@ -47,7 +47,7 @@ import Testing
 }
 
 @Test func workspaceOutOfRange() {
-    #expect(throws: ConfigError(line: 1, message: "workspace must be 1-10")) { try parseConfig("bind = CTRL, a, workspace, 11") }
+    #expect(throws: ConfigError(line: 1, message: "workspace must be 0-9")) { try parseConfig("bind = CTRL, a, workspace, 11") }
 }
 
 @Test func animationReferencesUnknownBezier() {
@@ -151,4 +151,10 @@ import Testing
     let c = try parseConfig("general {\n border_size = 3\n border_size_inactive = 0\n}")
     #expect(c.borderSize(isFocused: true) == 3 && c.borderSize(isFocused: false) == 0)
     #expect(try parseConfig("general {\n border_size = 3\n}").borderSize(isFocused: false) == 3)
+}
+
+@Test func workspaceZeroParsesTenFails() throws {
+    #expect(try parseConfig("bind = CTRL, a, workspace, 0").keyBinds[0].action == .workspace(0))
+    #expect(try parseConfig("bind = CTRL, a, movetoworkspace, 0").keyBinds[0].action == .moveToWorkspace(0))
+    #expect(throws: ConfigError(line: 1, message: "workspace must be 0-9")) { try parseConfig("bind = CTRL, a, workspace, 10") }
 }

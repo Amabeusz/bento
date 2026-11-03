@@ -49,7 +49,7 @@ animations {
 }
 
 workspace = 1, monitor:builtin, default:true
-workspace = 6, monitor:external, default:true
+workspace = 1, monitor:external, default:true
 
 bind = $mod, left, movefocus, l
 bind = $mod, right, movefocus, r
@@ -76,7 +76,7 @@ bind = $mod, 6, workspace, 6
 bind = $mod, 7, workspace, 7
 bind = $mod, 8, workspace, 8
 bind = $mod, 9, workspace, 9
-bind = $mod, 0, workspace, 10
+bind = $mod, 0, workspace, 0
 bind = $mod SHIFT, 1, movetoworkspace, 1
 bind = $mod SHIFT, 2, movetoworkspace, 2
 bind = $mod SHIFT, 3, movetoworkspace, 3
@@ -86,7 +86,7 @@ bind = $mod SHIFT, 6, movetoworkspace, 6
 bind = $mod SHIFT, 7, movetoworkspace, 7
 bind = $mod SHIFT, 8, movetoworkspace, 8
 bind = $mod SHIFT, 9, movetoworkspace, 9
-bind = $mod SHIFT, 0, movetoworkspace, 10
+bind = $mod SHIFT, 0, movetoworkspace, 0
 bind = $mod SHIFT, tab, movecurrentworkspacetomonitor
 bind = $mod, minus, resizeactive, -50 -50
 bind = $mod, equal, resizeactive, 50 50

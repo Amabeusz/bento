@@ -178,8 +178,8 @@ private func direction(_ text: String, _ line: Int) throws(ConfigError) -> Direc
 }
 
 private func workspaceNumber(_ text: String, _ line: Int) throws(ConfigError) -> Int {
-    guard let number = Int(text), (1...10).contains(number) else {
-        throw ConfigError(line: line, message: "workspace must be 1-10")
+    guard let number = Int(text), (0...9).contains(number) else {
+        throw ConfigError(line: line, message: "workspace must be 0-9")
     }
     return number
 }

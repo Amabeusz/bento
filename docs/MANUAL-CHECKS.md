@@ -39,7 +39,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 - [ ] ctrl-alt + arrows and ctrl-alt + h/j/k/l move focus left/down/up/right between tiled windows (and across monitors at the edge).
 - [ ] ctrl-alt-shift + arrows and ctrl-alt-shift + h/j/k/l move the focused window in that direction (and across monitors at the edge).
-- [ ] ctrl-alt + 1…9, 0 switch to workspaces 1–10; ctrl-alt-shift + 1…9, 0 send the focused window to workspaces 1–10.
+- [ ] ctrl-alt + 1…9 switch to workspaces 1–9, ctrl-alt-0 to workspace 0 (MacBook screen, only with an external monitor); ctrl-alt-shift + the same keys send the focused window there.
 - [ ] With two monitors, ctrl-alt-shift-tab moves the current workspace to the other monitor.
 - [ ] ctrl-alt + minus / equal shrink / grow the focused window; holding the key keeps resizing.
 - [ ] ctrl-alt + T toggles the split direction, F fills the tiling area (and back), V toggles floating, Q closes the focused window.
@@ -67,7 +67,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 ## Task 11
 
-- [ ] One centered translucent island per monitor sits right under the macOS menu bar, showing 1–10 (the last label is "10").
+- [ ] One centered translucent island per monitor sits right under the macOS menu bar, showing 1–9 (one screen) or "0" on the MacBook and 1–9 on the external monitor.
 - [ ] The workspace shown on a monitor is a filled pink pill with dark text on that monitor's bar; the workspace shown on the other monitor has a purple outline; empty workspaces are dimmed, others are normal light text.
 - [ ] Switching workspaces with the hotkeys moves the highlights on both monitors' bars.
 - [ ] Clicking a number switches to that workspace without activating hyprmac or stealing focus from the current app.
@@ -110,16 +110,23 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 ## Pinned built-in workspace (two screens)
 
-- [ ] With the external monitor connected: the built-in island shows only "1" and is narrow; the external island shows 2–10 with no empty space at its end.
-- [ ] Focus on the built-in screen, press ctrl-alt-3: workspace 3 opens on the external monitor, focus and cursor move there, the built-in screen still shows workspace 1.
-- [ ] Focus on the external monitor, press ctrl-alt-1: focus and cursor move to the built-in screen.
-- [ ] On the laptop alone switch to workspace 3 with a window on it, then plug the monitor in: the built-in shows 1, the external shows workspace 3 with its window.
+- [ ] With the external monitor connected: the built-in island shows only "0" and is narrow; the external island shows 1–9 with no empty space at its end.
+- [ ] Focus on the built-in screen, press ctrl-alt-3: workspace 3 opens on the external monitor, focus and cursor move there, the built-in screen still shows workspace 0.
+- [ ] Focus on the external monitor, press ctrl-alt-0: focus and cursor move to the built-in screen.
+- [ ] On the laptop alone switch to workspace 3 with a window on it, then plug the monitor in: the built-in shows 0, the external shows workspace 3 with its window.
 - [ ] ctrl-alt-shift-Tab with two screens does nothing.
-- [ ] Unplug the monitor: all 10 workspaces are reachable on the built-in screen and no window is lost.
+- [ ] Unplug the monitor: workspaces 1–9 are reachable on the built-in screen and no window is lost.
 - [ ] Lid closed / mirrored displays: note what happens (rule is off when there is no built-in screen in the list).
 
 ## Arrow past the last window switches workspace
 
 - [ ] One screen, windows on workspaces 1 and 3: on 1, ctrl-alt-→ past the rightmost window slides to workspace 3; ctrl-alt-← past the leftmost window slides back to 1 (empty 2 skipped).
 - [ ] On the highest non-empty workspace ctrl-alt-→ does nothing; ctrl-alt-↑/↓ never switch workspaces.
-- [ ] Two screens: on the external monitor ctrl-alt-→ past the last window goes to its next non-empty workspace (2–10); the built-in screen stays on 1.
+- [ ] Two screens: on the external monitor ctrl-alt-→ past the last window goes to its next non-empty workspace (1–9); the built-in screen stays on 0.
+
+## Workspace 0 on the MacBook
+
+- [ ] With the external monitor: MacBook shows workspace 0 (island "0"), monitor starts on 1 (island 1–9); ctrl-alt-0 focuses the MacBook.
+- [ ] Laptop alone: island 1–9, ctrl-alt-0 and ctrl-alt-shift-0 do nothing.
+- [ ] Put a window on 0, unplug the monitor: the window lands on the lowest empty workspace 1–9 (its badge is no longer dimmed), the MacBook shows the workspace the monitor was showing; nothing is lost.
+- [ ] Plug the monitor back in: MacBook returns to 0, the monitor shows the workspace the MacBook was on.

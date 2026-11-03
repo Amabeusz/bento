@@ -177,7 +177,7 @@ public struct Config: Equatable, Sendable {
         "workspaces": AnimationSpec(enabled: true, duration: 0.3, curve: "smooth", style: "slide"),
         "border": AnimationSpec(enabled: true, duration: 0.5, curve: "default"),
     ]
-    public var startupWorkspace: [MonitorSelector: Int] = [.builtin: 1, .external: 6]
+    public var startupWorkspace: [MonitorSelector: Int] = [.builtin: 1, .external: 1]
     public var keyBinds: [KeyBind] = []
     public var mouseBinds: [MouseBind] = []
     public var floatRules: [WindowRule] = []

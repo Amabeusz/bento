@@ -109,7 +109,11 @@ public final class World {
             shownBeforeUnplug[m.id] = visible.removeValue(forKey: m.id)
         }
         let builtinBefore = monitors.first(where: \.isBuiltin).flatMap { visible[$0.id] }
+        let wasPinned = pinnedMonitors
         monitors = ordered
+        if let was = wasPinned, pinnedMonitors == nil {
+            releasePinned(from: was)
+        }
         if let builtin = pinnedMonitors?.builtin, visible[builtin.id] != pinnedBuiltin {
             visible[builtin.id] = nil
             if let holder = monitorShowing(pinnedBuiltin) { visible[holder.id] = nil }
@@ -121,7 +125,7 @@ public final class World {
         }
         for m in ordered where visible[m.id] == nil {
             let preferred = shownBeforeUnplug[m.id] ?? config.startupWorkspace[m.isBuiltin ? .builtin : .external]
-            guard let n = preferred.flatMap({ isHidden($0) ? $0 : nil }) ?? lowestHidden() else { continue }
+            guard let n = preferred.flatMap({ available.contains($0) && isHidden($0) ? $0 : nil }) ?? lowestHidden() else { continue }
             show(n, on: m.id)
         }
         if let before = focusedBefore, !kept.contains(before), let first = ordered.first {
@@ -240,7 +244,7 @@ public final class World {
 
     public func snapshot() -> LayoutSnapshot {
         var placements: [WindowID: Placement] = [:]
-        for n in 1...10 {
+        for n in World.allWorkspaces {
             guard let home = homeMonitor(of: n) else { continue }
             let area = tilingArea(home)
             let tiles = trees[n]?.frames(in: area, gapsIn: config.gapsIn) ?? [:]
@@ -269,7 +273,7 @@ public final class World {
     }
 
     private func goTo(_ n: Int, focusing window: WindowID?) -> [SideEffect] {
-        guard (1...10).contains(n), let current = currentMonitor else { return [] }
+        guard available.contains(n), let current = currentMonitor else { return [] }
         let target: MonitorInfo
         if let m = monitorShowing(n) {
             target = m
@@ -283,7 +287,7 @@ public final class World {
     }
 
     private func moveToWorkspace(_ n: Int) -> [SideEffect] {
-        guard (1...10).contains(n), let id = focused, let source = workspaceOf[id], source != n else { return [] }
+        guard available.contains(n), let id = focused, let source = workspaceOf[id], source != n else { return [] }
         move(id, to: n)
         focus(lastFocused(in: source))
         return focusEffects(warpTo: nil)
@@ -462,8 +466,22 @@ public final class World {
         lastMonitor[n] = id
     }
 
-    private var pinnedBuiltin: Int {
-        config.startupWorkspace[.builtin] ?? 1
+    private static let allWorkspaces = 0...9
+    private let pinnedBuiltin = 0
+
+    private var available: [Int] {
+        pinnedMonitors == nil ? Array(1...9) : Array(World.allWorkspaces)
+    }
+
+    private func releasePinned(from was: (builtin: MonitorInfo, external: MonitorInfo)) {
+        let stranded = workspaceOf.filter { $0.value == pinnedBuiltin }.map(\.key).sorted()
+        if !stranded.isEmpty, let target = (1...9).first(where: isEmpty) ?? lowestHidden() {
+            stranded.forEach { move($0, to: target) }
+        }
+        for (id, n) in visible where n == pinnedBuiltin {
+            visible[id] = nil
+            if let n = shownBeforeUnplug[was.external.id], isHidden(n) { show(n, on: id) }
+        }
     }
 
     private var pinnedMonitors: (builtin: MonitorInfo, external: MonitorInfo)? {
@@ -477,8 +495,8 @@ public final class World {
     }
 
     private func workspaces(shownOn m: MonitorInfo) -> [Int] {
-        guard pinnedMonitors != nil else { return Array(1...10) }
-        return m.isBuiltin ? [pinnedBuiltin] : (1...10).filter { $0 != pinnedBuiltin }
+        guard pinnedMonitors != nil else { return Array(1...9) }
+        return m.isBuiltin ? [pinnedBuiltin] : Array(1...9)
     }
 
     private func isHidden(_ n: Int) -> Bool {
@@ -490,6 +508,6 @@ public final class World {
     }
 
     private func lowestHidden() -> Int? {
-        (1...10).first(where: isHidden)
+        available.first(where: isHidden)
     }
 }

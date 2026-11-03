@@ -38,8 +38,9 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 |---|---|
 | mod + strzałki / h j k l | przenieś fokus; gdy w lewo/prawo nie ma już okna ani ekranu — poprzedni/następny pulpit z oknami na tym ekranie |
 | mod + shift + strzałki / h j k l | przesuń okno |
-| mod + 1…0 | pulpit 1–10 |
-| mod + shift + 1…0 | wyślij okno na pulpit 1–10 |
+| mod + 1…9 | pulpit 1–9 |
+| mod + 0 | pulpit 0 — ekran MacBooka (tylko przy podłączonym monitorze) |
+| mod + shift + 1…9 / 0 | wyślij okno na pulpit 1–9 / 0 |
 | mod + shift + Tab | przenieś pulpit na drugi ekran (tylko bez ekranu wbudowanego, np. dwa monitory zewnętrzne) |
 | mod + minus / equal | zmniejsz / powiększ okno |
 | mod + T | zmień podział (obok siebie / jedno pod drugim) |
@@ -51,7 +52,7 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 
 ## Dwa ekrany
 
-Gdy do MacBooka podłączony jest monitor zewnętrzny, ekran wbudowany ma na stałe jeden pulpit (1), a pulpity 2–10 zawsze otwierają się na monitorze zewnętrznym — niezależnie od tego, na którym ekranie jest fokus. ctrl-alt-1 przenosi fokus na ekran wbudowany. Wyspa wbudowanego pokazuje tylko 1, wyspa zewnętrznego 2–10. Numer pulpitu wbudowanego bierze się z linii `workspace = 1, monitor:builtin, default:true` w konfiguracji. Przy samym laptopie wszystkie 10 pulpitów jest na jego ekranie.
+Gdy do MacBooka podłączony jest monitor zewnętrzny, ekran MacBooka ma na stałe pulpit 0 (ctrl-alt-0), a monitor zewnętrzny pulpity 1–9 (ctrl-alt-1…9) — niezależnie od tego, na którym ekranie jest fokus. Wyspa MacBooka pokazuje tylko 0, wyspa monitora 1–9. Bez monitora MacBook ma pulpity 1–9, a ctrl-alt-0 nic nie robi. Po odłączeniu monitora okna z pulpitu 0 trafiają na najniższy pusty pulpit 1–9, a MacBook pokazuje pulpit, który był na monitorze.
 
 ## Konfiguracja
 
