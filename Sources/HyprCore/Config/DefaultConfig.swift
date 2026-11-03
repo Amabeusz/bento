@@ -4,8 +4,9 @@ $mod = CTRL ALT
 
 general {
     gaps_in = 10
-    gaps_out = 12
+    gaps_out = 12  # or per side: top right bottom left, e.g. 20 12 12 12
     border_size = 2
+    # border_size_inactive = 1  # unfocused windows; 0 hides their border
     col.active_border = rgba(f5c2e7ff) rgba(cba6f7ff) rgba(89b4faff) 135deg
     col.inactive_border = rgba(585b70aa)
 }
@@ -18,6 +19,17 @@ bar {
     enabled = true
     height = 30
     font_size = 13
+    margin_top = 4
+    margin_bottom = 4
+    # padding = 15   # default: half the height
+    # rounding = 15  # default: half the height
+    col.background = rgba(00000000)
+    col.active = rgba(f5c2e7ff)
+    col.other_monitor = rgba(cba6f7ff)
+    col.text = rgba(cdd6f4ff)
+    col.text_active = rgba(1e1e2eff)
+    col.text_empty = rgba(6c7086ff)
+    col.error = rgba(f38ba8ff)
 }
 
 input {

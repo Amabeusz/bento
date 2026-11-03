@@ -497,3 +497,31 @@ private func singleMonitorWithWindowsOnOneAndThree() -> World {
     _ = w.perform(.moveToWorkspace(3))
     return w
 }
+
+private func singleWindowWorld(_ configure: (inout Config) -> Void) -> World {
+    var config = try! parseConfig(defaultConfigText)
+    configure(&config)
+    let world = World(config: config)
+    world.setMonitors([M1])
+    world.addWindow(window(1, on: M1))
+    return world
+}
+
+@Test func gapsOutApplyPerSide() {
+    let w = singleWindowWorld {
+        $0.barEnabled = false
+        $0.gapsOut = Insets(top: 20, right: 5, bottom: 10, left: 30)
+    }
+    let u = M1.usable
+    #expect(w.snapshot().placements[1] == .tiled(Rect(x: u.x + 30, y: u.y + 20, w: u.w - 35, h: u.h - 30)))
+}
+
+@Test func barMarginsReserveSpaceAboveTiles() {
+    let w = singleWindowWorld {
+        $0.barHeight = 30
+        $0.barMarginTop = 6
+        $0.barMarginBottom = 10
+    }
+    let u = M1.usable
+    #expect(w.snapshot().placements[1] == .tiled(Rect(x: u.x + 12, y: u.y + 46 + 12, w: u.w - 24, h: u.h - 46 - 24)))
+}

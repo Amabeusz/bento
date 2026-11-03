@@ -3,7 +3,7 @@ import Testing
 
 @Test func defaultConfigParses() throws {
     let c = try parseConfig(defaultConfigText)
-    #expect(c.gapsIn == 10 && c.gapsOut == 12 && c.borderSize == 2 && c.rounding == 16)
+    #expect(c.gapsIn == 10 && c.gapsOut == Insets(all: 12) && c.borderSize == 2 && c.rounding == 16)
     #expect(c.activeBorder == Gradient(colors: [RGBA(hex: 0xf5c2e7ff), RGBA(hex: 0xcba6f7ff), RGBA(hex: 0x89b4faff)], angleDegrees: 135))
     #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt], key: "0", action: .workspace(10))))
     #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt, .shift], key: "tab", action: .moveCurrentWorkspaceToMonitor)))
@@ -103,4 +103,52 @@ import Testing
 
 @Test func mouseBinds() throws {
     #expect(try parseConfig("bindm = CTRL, mouse:273, resizewindow").mouseBinds == [MouseBind(mods: [.ctrl], button: 273, action: .resize)])
+}
+
+@Test func gapsOutTakesOneToFourValuesLikeCss() throws {
+    func gaps(_ value: String) throws -> Insets { try parseConfig("general {\n gaps_out = \(value)\n}").gapsOut }
+    #expect(try gaps("12") == Insets(all: 12))
+    #expect(try gaps("10 20") == Insets(top: 10, right: 20, bottom: 10, left: 20))
+    #expect(try gaps("10 20 30") == Insets(top: 10, right: 20, bottom: 30, left: 20))
+    #expect(try gaps("10, 20, 30, 40") == Insets(top: 10, right: 20, bottom: 30, left: 40))
+}
+
+@Test func gapsOutRejectsFiveValues() {
+    #expect(throws: ConfigError(line: 2, message: "gaps_out needs 1-4 numbers")) { try parseConfig("general {\n gaps_out = 1 2 3 4 5\n}") }
+}
+
+@Test func gapsOutRejectsText() {
+    #expect(throws: ConfigError(line: 2, message: "invalid number 'x'")) { try parseConfig("general {\n gaps_out = 10 x\n}") }
+}
+
+@Test func barAppearanceKeys() throws {
+    let c = try parseConfig("""
+    bar {
+        margin_top = 6
+        margin_bottom = 10
+        padding = 8
+        rounding = 4
+        col.background = rgba(11223344)
+        col.active = rgb(010203)
+        col.other_monitor = rgba(0a0b0c0d)
+        col.text = rgba(ffffffff)
+        col.text_active = rgba(000000ff)
+        col.text_empty = rgba(808080ff)
+        col.error = rgba(ff0000ff)
+    }
+    """)
+    #expect(c.barMarginTop == 6 && c.barMarginBottom == 10 && c.barPadding == 8 && c.barRounding == 4)
+    #expect(c.barBackground == RGBA(hex: 0x11223344) && c.barActive == RGBA(hex: 0x010203ff))
+    #expect(c.barOtherMonitor == RGBA(hex: 0x0a0b0c0d) && c.barText == RGBA(hex: 0xffffffff))
+    #expect(c.barTextActive == RGBA(hex: 0x000000ff) && c.barTextEmpty == RGBA(hex: 0x808080ff) && c.barError == RGBA(hex: 0xff0000ff))
+}
+
+@Test func barPaddingAndRoundingAreUnsetByDefault() {
+    #expect(Config().barPadding == nil && Config().barRounding == nil)
+}
+
+@Test func inactiveBorderSizeFallsBackToBorderSize() throws {
+    let c = try parseConfig("general {\n border_size = 3\n border_size_inactive = 0\n}")
+    #expect(c.borderSize(isFocused: true) == 3 && c.borderSize(isFocused: false) == 0)
+    #expect(try parseConfig("general {\n border_size = 3\n}").borderSize(isFocused: false) == 3)
 }

@@ -1,21 +1,37 @@
 import AppKit
 import HyprCore
 
-private func color(_ hex: UInt32) -> NSColor {
-    NSColor(
-        srgbRed: CGFloat((hex >> 16) & 0xff) / 255, green: CGFloat((hex >> 8) & 0xff) / 255,
-        blue: CGFloat(hex & 0xff) / 255, alpha: 1)
+private extension RGBA {
+    var nsColor: NSColor { NSColor(srgbRed: r, green: g, blue: b, alpha: a) }
 }
 
 private struct BarStyle: Equatable {
     var height: Double
     var fontSize: Double
     var fontName: String
+    var padding: Double
+    var rounding: Double
+    var background: RGBA
+    var active: RGBA
+    var otherMonitor: RGBA
+    var text: RGBA
+    var textActive: RGBA
+    var textEmpty: RGBA
+    var errorText: RGBA
 
     init(_ config: Config) {
         height = config.barHeight
         fontSize = config.barFontSize
         fontName = config.barFont
+        padding = config.barPadding ?? config.barHeight / 2
+        rounding = config.barRounding ?? config.barHeight / 2
+        background = config.barBackground
+        active = config.barActive
+        otherMonitor = config.barOtherMonitor
+        text = config.barText
+        textActive = config.barTextActive
+        textEmpty = config.barTextEmpty
+        errorText = config.barError
     }
 
     var font: NSFont {
@@ -41,7 +57,7 @@ private final class WorkspaceStrip: NSView {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
     override func mouseDown(with event: NSEvent) {
-        let x = convert(event.locationInWindow, from: nil).x - style.height / 2
+        let x = convert(event.locationInWindow, from: nil).x - style.padding
         let index = Int((x / style.height).rounded(.down))
         guard badges.indices.contains(index) else { return }
         onSelect(badges[index].number)
@@ -50,30 +66,30 @@ private final class WorkspaceStrip: NSView {
     override func draw(_ dirtyRect: NSRect) {
         let cell = style.height
         for (index, badge) in badges.enumerated() {
-            let rect = NSRect(x: cell / 2 + cell * Double(index), y: 0, width: cell, height: cell)
+            let rect = NSRect(x: style.padding + cell * Double(index), y: 0, width: cell, height: cell)
             let pill = rect.insetBy(dx: 2, dy: 3)
             if badge.isHere {
-                color(0xf5c2e7).setFill()
+                style.active.nsColor.setFill()
                 NSBezierPath(roundedRect: pill, xRadius: pill.height / 2, yRadius: pill.height / 2).fill()
             } else if badge.isOnOtherMonitor {
                 let outline = pill.insetBy(dx: 0.75, dy: 0.75)
                 let path = NSBezierPath(roundedRect: outline, xRadius: outline.height / 2, yRadius: outline.height / 2)
                 path.lineWidth = 1.5
-                color(0xcba6f7).setStroke()
+                style.otherMonitor.nsColor.setStroke()
                 path.stroke()
             }
             let text = NSAttributedString(
                 string: String(badge.number),
                 attributes: [
                     .font: style.font,
-                    .foregroundColor: badge.isHere ? color(0x1e1e2e) : badge.isEmpty ? color(0x6c7086) : color(0xcdd6f4),
+                    .foregroundColor: (badge.isHere ? style.textActive : badge.isEmpty ? style.textEmpty : style.text).nsColor,
                 ])
             let size = text.size()
             text.draw(at: NSPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2))
         }
         if error != nil {
-            let rect = NSRect(x: cell / 2 + cell * Double(badges.count), y: 0, width: cell, height: cell)
-            let text = NSAttributedString(string: "!", attributes: [.font: style.font, .foregroundColor: color(0xf38ba8)])
+            let rect = NSRect(x: style.padding + cell * Double(badges.count), y: 0, width: cell, height: cell)
+            let text = NSAttributedString(string: "!", attributes: [.font: style.font, .foregroundColor: style.errorText.nsColor])
             let size = text.size()
             text.draw(at: NSPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2))
         }
@@ -107,7 +123,9 @@ private final class BarPanel {
             self.frame = frame
             panel.setFrame(frame, display: true)
         }
-        if glass.cornerRadius != style.height / 2 { glass.cornerRadius = style.height / 2 }
+        if glass.cornerRadius != style.rounding { glass.cornerRadius = style.rounding }
+        let tint = style.background.a > 0 ? style.background.nsColor : nil
+        if glass.tintColor != tint { glass.tintColor = tint }
         if strip.style != style { strip.style = style }
         if strip.badges != badges { strip.badges = badges }
         if strip.error != error { strip.error = error }
@@ -139,9 +157,10 @@ final class BarManager {
         var live: Set<MonitorID> = []
         for monitor in monitors {
             guard let badges = s.bars[monitor.id] else { continue }
-            let width = height * Double(badges.count + (error == nil ? 1 : 2))
+            let width = style.padding * 2 + height * Double(badges.count + (error == nil ? 0 : 1))
             guard let frame = appKitFrame(Rect(
-                      x: monitor.frame.x + (monitor.frame.w - width) / 2, y: monitor.usable.y + 4, w: width, h: height))
+                      x: monitor.frame.x + (monitor.frame.w - width) / 2, y: monitor.usable.y + config.barMarginTop,
+                      w: width, h: height))
             else { continue }
             live.insert(monitor.id)
             let panel = panels[monitor.id] ?? BarPanel(onSelect: onSelect)

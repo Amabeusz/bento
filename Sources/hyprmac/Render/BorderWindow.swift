@@ -142,11 +142,16 @@ final class BorderManager {
     }
 
     private func show(_ id: WindowID, frame: Rect, isFocused: Bool) {
-        guard let appKit = appKitFrame(frame.inset(by: -config.borderSize)) else { return }
+        let borderSize = config.borderSize(isFocused: isFocused)
+        guard borderSize > 0 else {
+            windows.removeValue(forKey: id)?.close()
+            return
+        }
+        guard let appKit = appKitFrame(frame.inset(by: -borderSize)) else { return }
         let border = windows[id] ?? BorderWindow()
         windows[id] = border
         border.configure(
-            frame: appKit, borderSize: config.borderSize, rounding: config.rounding,
+            frame: appKit, borderSize: borderSize, rounding: config.rounding,
             angleDegrees: (isFocused ? config.activeBorder : config.inactiveBorder).angleDegrees,
             colors: colors(isFocused: isFocused), fade: fade())
         if !hidden { border.place(above: id) }

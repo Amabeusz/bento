@@ -15,8 +15,9 @@ private func apply(_ entry: ConfigEntry, to config: inout Config) throws(ConfigE
     let value = entry.value
     switch entry.key {
     case "general:gaps_in": config.gapsIn = try number(value, line)
-    case "general:gaps_out": config.gapsOut = try number(value, line)
+    case "general:gaps_out": config.gapsOut = try insets(value, line)
     case "general:border_size": config.borderSize = try number(value, line)
+    case "general:border_size_inactive": config.borderSizeInactive = try number(value, line)
     case "general:col.active_border": config.activeBorder = try gradient(value, line)
     case "general:col.inactive_border": config.inactiveBorder = try gradient(value, line)
     case "decoration:rounding": config.rounding = try number(value, line)
@@ -24,6 +25,17 @@ private func apply(_ entry: ConfigEntry, to config: inout Config) throws(ConfigE
     case "bar:height": config.barHeight = try number(value, line)
     case "bar:font_size": config.barFontSize = try number(value, line)
     case "bar:font": config.barFont = value
+    case "bar:margin_top": config.barMarginTop = try number(value, line)
+    case "bar:margin_bottom": config.barMarginBottom = try number(value, line)
+    case "bar:padding": config.barPadding = try number(value, line)
+    case "bar:rounding": config.barRounding = try number(value, line)
+    case "bar:col.background": config.barBackground = try color(value, line)
+    case "bar:col.active": config.barActive = try color(value, line)
+    case "bar:col.other_monitor": config.barOtherMonitor = try color(value, line)
+    case "bar:col.text": config.barText = try color(value, line)
+    case "bar:col.text_active": config.barTextActive = try color(value, line)
+    case "bar:col.text_empty": config.barTextEmpty = try color(value, line)
+    case "bar:col.error": config.barError = try color(value, line)
     case "input:follow_mouse": config.followMouse = try flag(value, line)
     case "cursor:warp_to_monitor": config.warpCursor = try flag(value, line)
     case "animations:enabled": config.animationsEnabled = try flag(value, line)
@@ -189,6 +201,20 @@ private func modifiers(_ text: String, _ line: Int) throws(ConfigError) -> Modif
 private func number(_ text: String, _ line: Int) throws(ConfigError) -> Double {
     guard let number = Double(text) else { throw ConfigError(line: line, message: "invalid number '\(text)'") }
     return number
+}
+
+private func insets(_ text: String, _ line: Int) throws(ConfigError) -> Insets {
+    var values: [Double] = []
+    for token in text.split(whereSeparator: { $0 == "," || $0.isWhitespace }) {
+        values.append(try number(String(token), line))
+    }
+    switch values.count {
+    case 1: return Insets(all: values[0])
+    case 2: return Insets(top: values[0], right: values[1], bottom: values[0], left: values[1])
+    case 3: return Insets(top: values[0], right: values[1], bottom: values[2], left: values[1])
+    case 4: return Insets(top: values[0], right: values[1], bottom: values[2], left: values[3])
+    default: throw ConfigError(line: line, message: "gaps_out needs 1-4 numbers")
+    }
 }
 
 private func flag(_ text: String, _ line: Int) throws(ConfigError) -> Bool {

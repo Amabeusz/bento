@@ -8,6 +8,24 @@ public struct Point: Equatable, Sendable {
     }
 }
 
+public struct Insets: Equatable, Sendable {
+    public var top: Double
+    public var right: Double
+    public var bottom: Double
+    public var left: Double
+
+    public init(top: Double, right: Double, bottom: Double, left: Double) {
+        self.top = top
+        self.right = right
+        self.bottom = bottom
+        self.left = left
+    }
+
+    public init(all d: Double) {
+        self.init(top: d, right: d, bottom: d, left: d)
+    }
+}
+
 public struct Rect: Equatable, Hashable, Sendable {
     public var x: Double
     public var y: Double
@@ -29,6 +47,10 @@ public struct Rect: Equatable, Hashable, Sendable {
 
     public func inset(by d: Double) -> Rect {
         Rect(x: x + d, y: y + d, w: w - 2 * d, h: h - 2 * d)
+    }
+
+    public func inset(by i: Insets) -> Rect {
+        Rect(x: x + i.left, y: y + i.top, w: w - i.left - i.right, h: h - i.top - i.bottom)
     }
 
     public func intersection(_ o: Rect) -> Rect? {

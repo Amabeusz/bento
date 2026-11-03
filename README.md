@@ -63,6 +63,41 @@ Skrót do aplikacji (przełącza na nią, a jeśli nie działa — uruchamia):
 bind = $mod, b, focusorlaunch, Safari
 ```
 
+### Wygląd
+
+```
+general {
+    gaps_in = 10                  # szczelina między oknami
+    gaps_out = 20 12 12 12        # marginesy od krawędzi ekranu: 1–4 liczby jak w CSS (góra prawo dół lewo)
+    border_size = 2
+    border_size_inactive = 1      # ramka okien bez fokusu; brak = border_size, 0 = bez ramki
+    col.active_border = rgba(f5c2e7ff) rgba(89b4faff) 135deg
+    col.inactive_border = rgba(585b70aa)   # ostatnia para cyfr to przezroczystość
+}
+
+decoration {
+    rounding = 16                 # zaokrąglenie ramki
+}
+
+bar {
+    height = 30
+    font_size = 13
+    margin_top = 4                # odstęp wyspy od paska menu
+    margin_bottom = 4             # odstęp wyspy od okien
+    padding = 15                  # odstęp numerów od brzegu wyspy; domyślnie połowa height
+    rounding = 15                 # zaokrąglenie wyspy; domyślnie połowa height
+    col.background = rgba(1e1e2e80)        # zabarwienie szkła; rgba(00000000) = bez
+    col.active = rgba(f5c2e7ff)            # bieżący pulpit
+    col.other_monitor = rgba(cba6f7ff)     # obrys pulpitu widocznego na drugim ekranie
+    col.text = rgba(cdd6f4ff)
+    col.text_active = rgba(1e1e2eff)
+    col.text_empty = rgba(6c7086ff)
+    col.error = rgba(f38ba8ff)
+}
+```
+
+Kolory zapisuje się tylko jako `rgba(RRGGBBAA)` albo `rgb(RRGGBB)` — `#` zaczyna komentarz.
+
 ## Wyjście i bezpieczeństwo okien
 
 Okna z ukrytych pulpitów są „zaparkowane” poza ekranem. Przy wyjściu, pauzie i `kill -TERM` wracają na ekran; po awarii (`kill -9`) wracają przy następnym uruchomieniu.

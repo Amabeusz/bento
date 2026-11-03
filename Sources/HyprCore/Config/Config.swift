@@ -140,8 +140,9 @@ public struct WindowRule: Equatable, Sendable {
 
 public struct Config: Equatable, Sendable {
     public var gapsIn = 10.0
-    public var gapsOut = 12.0
+    public var gapsOut = Insets(all: 12)
     public var borderSize = 2.0
+    public var borderSizeInactive: Double?
     public var rounding = 16.0
     public var activeBorder = Gradient(
         colors: [RGBA(hex: 0xf5c2e7ff), RGBA(hex: 0xcba6f7ff), RGBA(hex: 0x89b4faff)],
@@ -152,6 +153,17 @@ public struct Config: Equatable, Sendable {
     public var barHeight = 30.0
     public var barFontSize = 13.0
     public var barFont = "system"
+    public var barMarginTop = 4.0
+    public var barMarginBottom = 4.0
+    public var barPadding: Double?
+    public var barRounding: Double?
+    public var barBackground = RGBA(hex: 0x00000000)
+    public var barActive = RGBA(hex: 0xf5c2e7ff)
+    public var barOtherMonitor = RGBA(hex: 0xcba6f7ff)
+    public var barText = RGBA(hex: 0xcdd6f4ff)
+    public var barTextActive = RGBA(hex: 0x1e1e2eff)
+    public var barTextEmpty = RGBA(hex: 0x6c7086ff)
+    public var barError = RGBA(hex: 0xf38ba8ff)
     public var followMouse = false
     public var warpCursor = true
     public var animationsEnabled = true
@@ -171,4 +183,8 @@ public struct Config: Equatable, Sendable {
     public var floatRules: [WindowRule] = []
 
     public init() {}
+
+    public func borderSize(isFocused: Bool) -> Double {
+        isFocused ? borderSize : borderSizeInactive ?? borderSize
+    }
 }

@@ -440,8 +440,9 @@ public final class World {
     private func tilingArea(_ m: MonitorInfo) -> Rect {
         var a = m.usable
         if config.barEnabled {
-            a.y += config.barHeight + 8
-            a.h -= config.barHeight + 8
+            let reserve = config.barHeight + config.barMarginTop + config.barMarginBottom
+            a.y += reserve
+            a.h -= reserve
         }
         return a.inset(by: config.gapsOut)
     }
