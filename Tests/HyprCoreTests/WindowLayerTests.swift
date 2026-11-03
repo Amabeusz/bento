@@ -11,3 +11,14 @@ import Testing
     #expect(!isManagedWindowLayer(101))
     #expect(!isManagedWindowLayer(200))
 }
+
+@Test func appWithANewWindowWaitsUntilItSettles() {
+    #expect(!isSettled(windowAges: [5, 0]))
+    #expect(!isSettled(windowAges: [5, windowSettleTime / 2]))
+    #expect(isSettled(windowAges: [5, windowSettleTime]))
+}
+
+@Test func appWithoutNewWindowsIsSettled() {
+    #expect(isSettled(windowAges: []))
+    #expect(isSettled(windowAges: [5, 10]))
+}

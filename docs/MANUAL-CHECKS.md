@@ -138,6 +138,8 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] A second normal window of the same app (e.g. ⌘N in Ghostty) still joins the tiles.
 - [ ] A dialog bigger than the screen stays fully on screen.
 - [ ] Java Swing menus (e.g. a menu-bar menu and a right-click menu) open where they were clicked, not centered over the window, and get no border.
+- [ ] IntelliJ popups (the run-configuration picker, a right-click menu in the editor) open where they were invoked, every time including the first, not centered.
+- [ ] A new normal window (Ghostty ⌘N) still joins the tiles right away (about 0.1 s later, no visible delay).
 
 ## App icons on the island
 

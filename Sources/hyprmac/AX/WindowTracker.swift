@@ -27,6 +27,7 @@ final class WindowTracker {
     private var retrying: Set<pid_t> = []
     private var hidden: Set<pid_t> = []
     private var lastFrame: [WindowID: Rect] = [:]
+    private var seenAt: [WindowID: TimeInterval] = [:]
     private static let appNotifications = [kAXWindowCreatedNotification, kAXFocusedWindowChangedNotification]
     private static let windowNotifications = [
         kAXWindowMiniaturizedNotification, kAXWindowDeminiaturizedNotification, kAXMovedNotification, kAXResizedNotification,
@@ -128,12 +129,12 @@ final class WindowTracker {
         CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .commonModes)
         observers[pid] = observer
         let elements: [AXUIElement] = appElement.value(kAXWindowsAttribute) ?? []
-        elements.forEach { discover($0) }
+        elements.forEach { discover($0, settled: true) }
         recheck(pid: pid)
     }
 
     @discardableResult
-    private func discover(_ element: AXUIElement) -> AXWindow? {
+    private func discover(_ element: AXUIElement, settled: Bool = false) -> AXWindow? {
         guard let id = windowID(of: element) else { return nil }
         if let known = windows[id] { return known }
         var pid: pid_t = 0
@@ -149,6 +150,12 @@ final class WindowTracker {
         Self.windowNotifications.forEach { _ = AXObserverAddNotification(observer, element, $0 as CFString, refcon) }
         windows[id] = w
         lastFrame[id] = w.frame
+        if !settled {
+            seenAt[id] = ProcessInfo.processInfo.systemUptime
+            DispatchQueue.main.asyncAfter(deadline: .now() + windowSettleTime) { [weak self] in
+                MainActor.assumeIsolated { self?.recheck(pid: pid) }
+            }
+        }
         return w
     }
 
@@ -158,8 +165,13 @@ final class WindowTracker {
         return (list?.first?[kCGWindowLayer as String] as? NSNumber)?.intValue ?? 0
     }
 
+    private func settled(_ pid: pid_t) -> Bool {
+        let now = ProcessInfo.processInfo.systemUptime
+        return isSettled(windowAges: windows.values.filter { $0.pid == pid }.compactMap { w in seenAt[w.id].map { now - $0 } })
+    }
+
     private func isEligible(_ w: AXWindow, onScreen: Set<WindowID>, shown: [TabCandidate]) -> Bool {
-        !hidden.contains(w.pid) && !w.isMinimized && !w.isFullscreen
+        isManagedWindowLayer(layer(of: w.id)) && !hidden.contains(w.pid) && !w.isMinimized && !w.isFullscreen
             && !isHiddenTab(candidate(w), onScreen: onScreen.contains(w.id), shown: shown)
     }
 
@@ -181,7 +193,7 @@ final class WindowTracker {
 
     private func recheck(pid: pid_t? = nil) {
         let onScreen = onScreenIDs()
-        let checked = windows.values.filter { pid == nil || $0.pid == pid }
+        let checked = windows.values.filter { (pid == nil || $0.pid == pid) && settled($0.pid) }
         checked.forEach { lastFrame[$0.id] = $0.frame }
         let shown = checked.filter { onScreen.contains($0.id) }.map(candidate)
         var lost: [AXWindow] = []
@@ -215,6 +227,7 @@ final class WindowTracker {
         swapTab(swap)
         windows[w.id] = nil
         lastFrame[w.id] = nil
+        seenAt[w.id] = nil
         recheckSoon(pid: w.pid)
     }
 
@@ -233,6 +246,7 @@ final class WindowTracker {
     private func forget(_ id: WindowID) {
         windows[id] = nil
         lastFrame[id] = nil
+        seenAt[id] = nil
         if reported.remove(id) != nil { onRemove(id) }
     }
 
