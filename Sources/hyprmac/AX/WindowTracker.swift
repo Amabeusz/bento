@@ -138,7 +138,8 @@ final class WindowTracker {
         if let known = windows[id] { return known }
         var pid: pid_t = 0
         let role: String? = element.value(kAXRoleAttribute)
-        guard AXUIElementGetPid(element, &pid) == .success, role == kAXWindowRole, let observer = observers[pid],
+        guard AXUIElementGetPid(element, &pid) == .success, role == kAXWindowRole, isManagedWindowLayer(layer(of: id)),
+              let observer = observers[pid],
               let app = NSRunningApplication(processIdentifier: pid),
               let w = AXWindow(element: element, pid: pid, app: app.localizedName ?? "")
         else { return nil }
@@ -149,6 +150,12 @@ final class WindowTracker {
         windows[id] = w
         lastFrame[id] = w.frame
         return w
+    }
+
+    private func layer(of id: WindowID) -> Int {
+        var value = UnsafeRawPointer(bitPattern: UInt(id))
+        let list = CGWindowListCreateDescriptionFromArray(CFArrayCreate(nil, &value, 1, nil)) as? [[String: Any]]
+        return (list?.first?[kCGWindowLayer as String] as? NSNumber)?.intValue ?? 0
     }
 
     private func isEligible(_ w: AXWindow, onScreen: Set<WindowID>, shown: [TabCandidate]) -> Bool {
