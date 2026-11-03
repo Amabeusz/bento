@@ -24,6 +24,9 @@ if security find-identity -p codesigning | grep -q "hyprmac-dev"; then
 else
     echo "WARNING: 'hyprmac-dev' signing identity not found (see docs/SETUP.md)." >&2
     echo "WARNING: signing ad-hoc; macOS will re-request permissions after each build." >&2
+    echo "WARNING: if System Settings shows hyprmac enabled but it reports missing permissions, reset the stale entries and grant again:" >&2
+    echo "    tccutil reset Accessibility pl.amadeusz.hyprmac" >&2
+    echo "    tccutil reset ScreenCapture pl.amadeusz.hyprmac" >&2
     codesign --force --sign - "$APP"
 fi
 
