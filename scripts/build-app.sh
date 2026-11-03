@@ -6,6 +6,14 @@ swift build -c release
 BIN="$(swift build -c release --show-bin-path)/hyprmac"
 
 APP=build/hyprmac.app
+if pgrep -x hyprmac >/dev/null; then
+    echo "Stopping the running hyprmac before replacing its bundle (it restores parked windows)." >&2
+    pkill -TERM -x hyprmac || true
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        pgrep -x hyprmac >/dev/null || break
+        sleep 0.5
+    done
+fi
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/hyprmac"

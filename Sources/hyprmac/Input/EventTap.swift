@@ -1,3 +1,4 @@
+import ApplicationServices
 import CoreGraphics
 import Foundation
 import HyprCore
@@ -12,6 +13,7 @@ enum MouseEvent: Sendable {
 enum TapEvent: Sendable {
     case key(KeyChord)
     case mouse(MouseEvent)
+    case permissions(PermissionChange)
 }
 
 struct MouseChord: Hashable, Sendable {
@@ -47,6 +49,7 @@ final class EventTap: @unchecked Sendable {
     private var followMouse = false
     private var gesture: Int?
     private var port: CFMachPort?
+    private var gate = InputPermissionGate()
 
     init(onEvent: @escaping @MainActor @Sendable (TapEvent) -> Void) {
         self.onEvent = onEvent
@@ -85,7 +88,16 @@ final class EventTap: @unchecked Sendable {
             let port = handoff.port
             guard let source = CFMachPortCreateRunLoopSource(nil, port, 0) else { return }
             CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
-            CGEvent.tapEnable(tap: port, enable: true)
+            let check = CFRunLoopTimerCreateWithHandler(nil, CFAbsoluteTimeGetCurrent() + 0.5, 0.5, 0, 0) { [weak self] timer in
+                guard let self, self.isCurrent(port) else {
+                    CFRunLoopTimerInvalidate(timer)
+                    CFRunLoopStop(CFRunLoopGetCurrent())
+                    return
+                }
+                self.checkPermissions(port)
+            }
+            CFRunLoopAddTimer(CFRunLoopGetCurrent(), check, .commonModes)
+            CGEvent.tapEnable(tap: port, enable: self.lock.withLock { self.gate.allowed })
             CFRunLoopRun()
         }
         thread.name = "hyprmac event tap"
@@ -104,11 +116,23 @@ final class EventTap: @unchecked Sendable {
         CFMachPortInvalidate(port)
     }
 
+    private func isCurrent(_ port: CFMachPort) -> Bool {
+        lock.withLock { self.port === port }
+    }
+
+    private func checkPermissions(_ port: CFMachPort) {
+        let accessibility = AXIsProcessTrusted()
+        let postEvent = CGPreflightPostEventAccess()
+        guard let change = lock.withLock({ gate.update(accessibility: accessibility, postEvent: postEvent) }) else { return }
+        CGEvent.tapEnable(tap: port, enable: change == .regained)
+        send(.permissions(change))
+    }
+
     fileprivate func handle(_ type: CGEventType, _ event: CGEvent) -> Bool {
         let p = Point(x: event.location.x, y: event.location.y)
         switch type {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
-            if let port = lock.withLock({ port }) { CGEvent.tapEnable(tap: port, enable: true) }
+            if let port = lock.withLock({ gate.allowed ? port : nil }) { CGEvent.tapEnable(tap: port, enable: true) }
             return false
         case .keyDown:
             let chord = KeyChord(

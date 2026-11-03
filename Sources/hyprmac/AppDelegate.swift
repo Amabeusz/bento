@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var watcher: ConfigWatcher?
     private var accessibilityTimer: Timer?
     private var screenRecordingGranted = true
+    private var permissionsLost = false
     private var ioErrorMessage: String?
     private var tracker: WindowTracker?
     private var applier: Applier?
@@ -241,7 +242,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         switch event {
         case .key(let chord): handleKey(chord)
         case .mouse(let mouse): handleMouse(mouse)
+        case .permissions(let change): permissionsChanged(change)
         }
+    }
+
+    private func permissionsChanged(_ change: PermissionChange) {
+        permissionsLost = change == .lost
+        if permissionsLost {
+            tearDownTiling()
+        } else if !isPaused {
+            buildWorld()
+        }
+        refreshMenu()
     }
 
     private func handleKey(_ chord: KeyChord) {
@@ -379,6 +391,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for error in configErrors {
             menu.addItem(disabledItem("Config Error: \(error)"))
         }
+        if permissionsLost {
+            menu.addItem(disabledItem("Permissions lost — hotkeys and tiling stopped"))
+        }
         if eventTap?.isRunning == false {
             menu.addItem(disabledItem("Hotkeys unavailable — check Accessibility permission"))
         }
@@ -429,17 +444,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         isPaused.toggle()
         syncTap()
         if isPaused {
-            animator.finish()
-            shown = nil
-            borders.removeAll()
-            bars.removeAll()
-            restoreParkedWindows()
-            world = nil
-            applier = nil
-        } else {
+            tearDownTiling()
+        } else if !permissionsLost {
             buildWorld()
         }
         refreshMenu()
+    }
+
+    private func tearDownTiling() {
+        animator.finish()
+        shown = nil
+        borders.removeAll()
+        bars.removeAll()
+        restoreParkedWindows()
+        world = nil
+        applier = nil
     }
 
     @objc private func toggleLaunchAtLogin() {
