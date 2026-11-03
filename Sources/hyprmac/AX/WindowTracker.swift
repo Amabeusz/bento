@@ -19,12 +19,14 @@ final class WindowTracker {
     var onFocus: (WindowID) -> Void = { _ in }
     var onAppGone: () -> Void = {}
     var onFrameChange: (WindowID) -> Void = { _ in }
+    var onReplace: (WindowID, WindowInfo) -> Void = { _, _ in }
 
     private var windows: [WindowID: AXWindow] = [:]
     private var reported: Set<WindowID> = []
     private var observers: [pid_t: AXObserver] = [:]
     private var retrying: Set<pid_t> = []
     private var hidden: Set<pid_t> = []
+    private var lastFrame: [WindowID: Rect] = [:]
     private static let appNotifications = [kAXWindowCreatedNotification, kAXFocusedWindowChangedNotification]
     private static let windowNotifications = [
         kAXWindowMiniaturizedNotification, kAXWindowDeminiaturizedNotification, kAXMovedNotification, kAXResizedNotification,
@@ -92,7 +94,7 @@ final class WindowTracker {
         guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
               hidden.remove(app.processIdentifier) != nil
         else { return }
-        for w in windows.values where w.pid == app.processIdentifier { report(w, eligible: isEligible(w)) }
+        recheck(pid: app.processIdentifier)
         if let id = focusedWindowID() { onFocus(id) }
     }
 
@@ -127,6 +129,7 @@ final class WindowTracker {
         observers[pid] = observer
         let elements: [AXUIElement] = appElement.value(kAXWindowsAttribute) ?? []
         elements.forEach { discover($0) }
+        recheck(pid: pid)
     }
 
     @discardableResult
@@ -144,12 +147,68 @@ final class WindowTracker {
         else { return nil }
         Self.windowNotifications.forEach { _ = AXObserverAddNotification(observer, element, $0 as CFString, refcon) }
         windows[id] = w
-        report(w, eligible: isEligible(w))
+        lastFrame[id] = w.frame
         return w
     }
 
-    private func isEligible(_ w: AXWindow) -> Bool {
+    private func isEligible(_ w: AXWindow, onScreen: Set<WindowID>, shown: [TabCandidate]) -> Bool {
         !hidden.contains(w.pid) && !w.isMinimized && !w.isFullscreen
+            && !isHiddenTab(candidate(w), onScreen: onScreen.contains(w.id), shown: shown)
+    }
+
+    private func onScreenIDs() -> Set<WindowID> {
+        let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
+        return Set(list.compactMap { ($0[kCGWindowNumber as String] as? NSNumber)?.uint32Value })
+    }
+
+    private func candidate(_ w: AXWindow) -> TabCandidate {
+        TabCandidate(id: w.id, pid: w.pid, frame: lastFrame[w.id] ?? w.frame)
+    }
+
+    private func swapTab(_ swap: TabSwap) {
+        guard let new = windows[swap.new] else { return }
+        reported.remove(swap.old)
+        reported.insert(swap.new)
+        onReplace(swap.old, new.info)
+    }
+
+    private func recheck(pid: pid_t? = nil) {
+        let onScreen = onScreenIDs()
+        let checked = windows.values.filter { pid == nil || $0.pid == pid }
+        checked.forEach { lastFrame[$0.id] = $0.frame }
+        let shown = checked.filter { onScreen.contains($0.id) }.map(candidate)
+        var lost: [AXWindow] = []
+        var gained: [AXWindow] = []
+        for w in checked {
+            let eligible = isEligible(w, onScreen: onScreen, shown: shown)
+            if eligible && !reported.contains(w.id) { gained.append(w) }
+            if !eligible && reported.contains(w.id) { lost.append(w) }
+        }
+        let swaps = pairTabSwaps(lost: lost.map(candidate), gained: gained.map(candidate))
+        swaps.forEach(swapTab)
+        let swapped = Set(swaps.flatMap { [$0.old, $0.new] })
+        for w in lost + gained where !swapped.contains(w.id) { report(w, eligible: gained.contains { $0 === w }) }
+    }
+
+    private func recheckSoon(pid: pid_t) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(250)) { [weak self] in
+            MainActor.assumeIsolated { self?.recheck(pid: pid) }
+        }
+    }
+
+    private func closed(_ w: AXWindow) {
+        let siblings = windows.values.filter { $0.pid == w.pid && $0.id != w.id && !reported.contains($0.id) && !$0.isMinimized }
+        guard reported.contains(w.id),
+              let swap = pairTabSwaps(lost: [candidate(w)], gained: siblings.map(candidate)).first
+        else {
+            forget(w.id)
+            recheckSoon(pid: w.pid)
+            return
+        }
+        swapTab(swap)
+        windows[w.id] = nil
+        lastFrame[w.id] = nil
+        recheckSoon(pid: w.pid)
     }
 
     private func report(_ w: AXWindow, eligible: Bool) {
@@ -161,30 +220,35 @@ final class WindowTracker {
     }
 
     private func recheckAll() {
-        windows.values.forEach { report($0, eligible: isEligible($0)) }
+        recheck()
     }
 
     private func forget(_ id: WindowID) {
         windows[id] = nil
+        lastFrame[id] = nil
         if reported.remove(id) != nil { onRemove(id) }
     }
 
     fileprivate func handle(_ element: AXUIElement, _ notification: String) {
         switch notification {
         case kAXWindowCreatedNotification:
-            discover(element)
+            guard let w = discover(element) else { return }
+            recheck(pid: w.pid)
+            recheckSoon(pid: w.pid)
         case kAXFocusedWindowChangedNotification:
             guard let w = discover(element) else { return }
-            report(w, eligible: isEligible(w))
+            recheck(pid: w.pid)
             if reported.contains(w.id) { onFocus(w.id) }
         case kAXUIElementDestroyedNotification:
-            if let w = windows.values.first(where: { CFEqual($0.element, element) }) { forget(w.id) }
+            if let w = windows.values.first(where: { CFEqual($0.element, element) }) { closed(w) }
         case kAXWindowMiniaturizedNotification:
             if let id = windowID(of: element), let w = windows[id] { report(w, eligible: false) }
         case kAXWindowDeminiaturizedNotification:
             if let id = windowID(of: element), let w = windows[id] { report(w, eligible: !w.isFullscreen) }
         case kAXMovedNotification, kAXResizedNotification:
-            if let id = windowID(of: element), reported.contains(id) { onFrameChange(id) }
+            guard let id = windowID(of: element), let w = windows[id] else { return }
+            lastFrame[id] = w.frame
+            if reported.contains(id) { onFrameChange(id) }
         default:
             break
         }

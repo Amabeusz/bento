@@ -164,6 +164,19 @@ public final class World {
         if focused == id { focused = lastFocused(in: n) }
     }
 
+    public func replaceWindow(_ old: WindowID, with new: WindowInfo) {
+        guard let n = workspaceOf[old], windows[new.id] == nil else { return }
+        windows[new.id] = new
+        workspaceOf[new.id] = n
+        trees[n]?.replace(old, with: new.id)
+        floating[new.id] = floating.removeValue(forKey: old)
+        if fullscreen.remove(old) != nil { fullscreen.insert(new.id) }
+        history = history.map { $0 == old ? new.id : $0 }
+        if focused == old { focused = new.id }
+        windows[old] = nil
+        workspaceOf[old] = nil
+    }
+
     public func externalFocus(_ id: WindowID) {
         guard let n = workspaceOf[id] else { return }
         if let m = monitorShowing(n) {

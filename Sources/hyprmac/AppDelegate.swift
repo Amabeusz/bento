@@ -86,6 +86,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.animator.refreshContent()
         }
         tracker.onRemove = { [weak self] id in self?.windowRemoved(id) }
+        tracker.onReplace = { [weak self] old, new in
+            self?.world?.replaceWindow(old, with: new)
+            self?.applyLayout()
+        }
         tracker.onFocus = { [weak self] id in self?.windowFocused(id) }
         tracker.onAppGone = { [weak self] in self?.noteFocusDisturbance() }
         tracker.onFrameChange = { [weak self] id in self?.scheduleFrameCheck(id) }

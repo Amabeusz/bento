@@ -131,3 +131,13 @@ private func tree(_ ids: [WindowID]) -> DwindleTree {
         #expect(t.frames(in: A, gapsIn: 10) == tree([1, 2]).frames(in: A, gapsIn: 10))
     }
 }
+
+@Test func replaceKeepsTheTileSlot() {
+    let a = Rect(x: 0, y: 0, w: 1000, h: 600)
+    var t = DwindleTree()
+    t.insert(1, splitting: nil, area: a, gapsIn: 10)
+    t.insert(2, splitting: 1, area: a, gapsIn: 10)
+    let before = t.frames(in: a, gapsIn: 10)
+    t.replace(2, with: 3)
+    #expect(t.frames(in: a, gapsIn: 10) == [1: before[1]!, 3: before[2]!])
+}

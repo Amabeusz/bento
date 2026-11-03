@@ -38,6 +38,11 @@ public struct DwindleTree: Sendable {
         root = Self.splitting(current, resolved, with: id, horizontal: box.w >= box.h)
     }
 
+    public mutating func replace(_ old: WindowID, with new: WindowID) {
+        guard let root, contains(old), !contains(new) else { return }
+        self.root = Self.swapping(root, old, new)
+    }
+
     public mutating func remove(_ id: WindowID) {
         guard let current = root else { return }
         root = Self.removing(current, id)
