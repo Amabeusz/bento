@@ -6,17 +6,17 @@ Checks to run by hand after granting permissions (see docs/SETUP.md).
 
 Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, then:
 
-- [ ] Quit hyprmac from its menu: every window comes back on screen.
+- [ ] Quit bento from its menu: every window comes back on screen.
 - [ ] Relaunch, park windows again, Pause Tiling: every window comes back on screen.
 - [ ] Relaunch, park windows again, `kill -TERM <pid>`: every window comes back on screen.
-- [ ] Relaunch, park windows again, `kill -9 <pid>`: the parked windows stay off-screen; launch hyprmac again: every window comes back on screen.
+- [ ] Relaunch, park windows again, `kill -9 <pid>`: the parked windows stay off-screen; launch bento again: every window comes back on screen.
 - [ ] Repeat all four with the external monitor connected (windows parked from both monitors).
-- [ ] With a busy or frozen app (e.g. IntelliJ indexing, or an app beachballing): hyprmac hotkeys still react at once, and typing and clicking in other apps stays responsive.
+- [ ] With a busy or frozen app (e.g. IntelliJ indexing, or an app beachballing): bento hotkeys still react at once, and typing and clicking in other apps stays responsive.
 
 ## Task 7
 
-- [ ] `scripts/build-app.sh && open build/hyprmac.app` shows a grid icon in the menu bar.
-- [ ] `~/.config/hyprmac/hyprmac.conf` is created on first launch.
+- [ ] `scripts/build-app.sh && open build/bento.app` shows a grid icon in the menu bar.
+- [ ] `~/.config/bento/bento.conf` is created on first launch.
 - [ ] Break the config (`gaps_in = x`): the menu shows "Config Error: line N - message" within a second.
 - [ ] Fix the config: the error disappears from the menu.
 - [ ] With OmniWM (or Rectangle) running at launch, an alert names it.
@@ -32,7 +32,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Plug and unplug the external monitor: no window is lost (every window is still reachable on a visible screen).
 - [ ] `kill -9` the app with nothing parked, relaunch: the layout is rebuilt.
 - [ ] Put a tiled Ghostty window into native fullscreen: the other windows re-tile to fill its space. Leave fullscreen: it tiles again.
-- [ ] Launch hyprmac while a window is in native fullscreen; leave fullscreen: the window joins the layout.
+- [ ] Launch bento while a window is in native fullscreen; leave fullscreen: the window joins the layout.
 - [ ] Minimize a tiled window: the rest re-tile. Restore it from the Dock: it tiles again.
 
 ## Task 9
@@ -70,7 +70,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] One centered translucent island per monitor sits right under the macOS menu bar, showing 1–9 (one screen) or "0" on the MacBook and 1–9 on the external monitor.
 - [ ] The workspace shown on a monitor is a filled pink pill with dark text on that monitor's bar; the workspace shown on the other monitor has a purple outline; empty workspaces are dimmed, others are normal light text.
 - [ ] Switching workspaces with the hotkeys moves the highlights on both monitors' bars.
-- [ ] Clicking a number switches to that workspace without activating hyprmac or stealing focus from the current app.
+- [ ] Clicking a number switches to that workspace without activating bento or stealing focus from the current app.
 - [ ] Tiled windows never overlap the island; the island stays above other windows and appears on every Space, but not in Mission Control.
 - [ ] Save `bar { height = 40 }`: the island resizes without a relaunch and the tiling area adjusts; save `enabled = false`: the island disappears and tiling grows into the space; `enabled = true` brings it back.
 - [ ] Unplugging / replugging the external monitor removes / recreates its island; Pause Tiling hides the islands, Resume brings them back.
@@ -79,7 +79,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 - [ ] Opening and closing windows animates the re-tiling smoothly at 120 Hz on the built-in display; a new window pops in (slightly scaled up and faded in), or, if it is too new to capture, fades in at the end. During the animation the final layout never shows through behind the moving snapshots (no full-size windows behind growing snapshots, no flickering slivers in the gaps).
 - [ ] Switching from an empty workspace to a populated one never shows the new windows at once: windows with a cached snapshot slide in, others fade in at the end; switching to a workspace for the first time after launch fades its windows in at the end.
-- [ ] The desktop (wallpaper, icons) and unmoved windows look unchanged during an animation; no hyprmac border or bar is doubled in it.
+- [ ] The desktop (wallpaper, icons) and unmoved windows look unchanged during an animation; no bento border or bar is doubled in it.
 - [ ] ctrl-alt-1 → ctrl-alt-2 slides left, back slides right; clicking a number on the bar slides the same way.
 - [ ] Mashing ctrl-alt-1/2 quickly never lags the keys or leaves an overlay behind; every window ends up at its final frame.
 - [ ] Borders disappear during a transition and come back (at the right frames and colors) when it ends; Pause Tiling in the middle of an animation, then Resume: borders are back.
@@ -90,10 +90,10 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 ## Final review fixes
 
-- [ ] Close a Ghostty window while another Ghostty window is on a different workspace: hyprmac stays on the current workspace (no jump), and the current workspace's next window gets focus and the active border.
+- [ ] Close a Ghostty window while another Ghostty window is on a different workspace: bento stays on the current workspace (no jump), and the current workspace's next window gets focus and the active border.
 - [ ] Same with Cmd-Q of an app that has a window on another workspace, and with Cmd-H: no jump to another workspace.
-- [ ] Cmd-Tab (slowly, not right after closing a window) to an app whose window is on a hidden workspace: hyprmac switches to that workspace.
-- [ ] Switch to an empty workspace and type: nothing reaches the previously focused (now parked) window; Finder (or, if Finder has windows, hyprmac) is active.
+- [ ] Cmd-Tab (slowly, not right after closing a window) to an app whose window is on a hidden workspace: bento switches to that workspace.
+- [ ] Switch to an empty workspace and type: nothing reaches the previously focused (now parked) window; Finder (or, if Finder has windows, bento) is active.
 - [ ] Send the last window of a workspace to another workspace with ctrl-alt-shift-N and type: nothing reaches the sent window.
 - [ ] Close the focused tiled window: the next window on that workspace gets keyboard focus and the active border together.
 - [ ] Drag a tiled window by its title bar (no mod) and release: it snaps back into its tile. Resize a tiled window from its edge: it snaps back.
@@ -103,8 +103,8 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Cmd-H an app with tiled windows: the rest re-tile with no hole; unhide it (Cmd-Tab or Dock): its windows tile again.
 - [ ] An app that starts slowly (its windows don't tile at launch) tiles once you activate it.
 - [ ] Break the config (`gaps_in = x`): each island grows a red "!" at its right end; hovering it shows "line N — message"; fixing the config removes it.
-- [ ] With hyprmac running, turn hyprmac off under Accessibility, then toggle `follow_mouse` in the config and save (this recreates the event tap, which now fails): the menu shows "Hotkeys unavailable — check Accessibility permission". Turn it back on and toggle `follow_mouse` again: the item disappears.
-- [ ] On first launch without Screen Recording, macOS prompts for it and hyprmac appears in System Settings -> Privacy & Security -> Screen Recording; after granting and relaunching, animations run.
+- [ ] With bento running, turn bento off under Accessibility, then toggle `follow_mouse` in the config and save (this recreates the event tap, which now fails): the menu shows "Hotkeys unavailable — check Accessibility permission". Turn it back on and toggle `follow_mouse` again: the item disappears.
+- [ ] On first launch without Screen Recording, macOS prompts for it and bento appears in System Settings -> Privacy & Security -> Screen Recording; after granting and relaunching, animations run.
 - [ ] mod+drag and mod+right-drag still move/resize windows; a mod+click on the empty desktop does nothing; plain clicks and drags still reach apps.
 - [ ] With `follow_mouse = 1`, focus still follows the mouse; toggling it in the config still takes effect without a relaunch.
 
@@ -164,10 +164,10 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 ## Windows keep their workspaces across a restart
 
-- [ ] Spread windows over three workspaces (mod+shift+N), quit hyprmac from the menu, start it again: every window is back on its workspace and the islands show the same icons as before.
-- [ ] Same after `kill <pid>` of hyprmac, and after Pause / Resume in the menu.
-- [ ] Quit an app and reopen it while hyprmac runs: its new window lands on the visible workspace (memory follows the window, not the app).
-- [ ] `~/Library/Application Support/hyprmac/workspaces.json` exists; `~/.config/hyprmac/` gets no new files and the config is not reloaded on window moves.
+- [ ] Spread windows over three workspaces (mod+shift+N), quit bento from the menu, start it again: every window is back on its workspace and the islands show the same icons as before.
+- [ ] Same after `kill <pid>` of bento, and after Pause / Resume in the menu.
+- [ ] Quit an app and reopen it while bento runs: its new window lands on the visible workspace (memory follows the window, not the app).
+- [ ] `~/Library/Application Support/bento/workspaces.json` exists; `~/.config/bento/` gets no new files and the config is not reloaded on window moves.
 
 ## Window overview on F3
 

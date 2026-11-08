@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>hyprmac cheatsheet</title>
+<title>bento cheatsheet</title>
 <style>
   :root { --bg:#1e1e2e; --card:#313244; --text:#cdd6f4; --dim:#a6adc8; --pink:#f5c2e7; --mauve:#cba6f7; --blue:#89b4fa; }
   * { box-sizing:border-box; }
@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<h1>hyprmac</h1>
+<h1>bento</h1>
 <div class="sub">mod = <kbd>ctrl</kbd> <kbd>⌥</kbd></div>
 
 <h2>Okna</h2>
@@ -50,22 +50,22 @@
 <p>Z monitorem: MacBook = pulpit <b>1</b>, monitor = <b>2–10</b>. Sam laptop: 1–10.</p>
 
 <h2>Konfiguracja</h2>
-<p><code>~/.config/hyprmac/hyprmac.conf</code> — działa po zapisie, błąd = „!” na wyspie i w menu.</p>
+<p><code>~/.config/bento/bento.conf</code> — działa po zapisie, błąd = „!” na wyspie i w menu.</p>
 <pre>bind = $mod, b, focusorlaunch, Safari
 bind = $mod, i, focusorlaunch, IntelliJ IDEA
 windowrule = float, app:^Kalkulator$</pre>
 
 <h2>Gdy coś nie działa</h2>
 <ul>
-<li>„Nie ma uprawnień”, a w Ustawieniach są włączone → zakończ hyprmac i:</li>
+<li>„Nie ma uprawnień”, a w Ustawieniach są włączone → zakończ bento i:</li>
 </ul>
-<pre>tccutil reset Accessibility pl.amadeusz.hyprmac
-tccutil reset ScreenCapture pl.amadeusz.hyprmac
-open build/hyprmac.app</pre>
+<pre>tccutil reset Accessibility pl.amadeusz.bento
+tccutil reset ScreenCapture pl.amadeusz.bento
+open build/bento.app</pre>
 <ul>
 <li>Menu „Permissions lost” → nadaj uprawnienia, wznowi się samo.</li>
-<li>Okna zniknęły → uruchom hyprmac (przywraca zaparkowane).</li>
-<li>Nie przebudowuj, gdy działa; załóż certyfikat <code>hyprmac-dev</code>.</li>
+<li>Okna zniknęły → uruchom bento (przywraca zaparkowane).</li>
+<li>Nie przebudowuj, gdy działa; załóż certyfikat <code>bento-dev</code>.</li>
 </ul>
 </body>
 </html>

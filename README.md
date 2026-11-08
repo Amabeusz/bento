@@ -1,6 +1,6 @@
-# hyprmac
+# bento
 
-Kafelkowy menedżer okien dla macOS w stylu Hyprlanda: układ dwindle, 10 pulpitów, gradientowe ramki, wyspa z pulpitami pod paskiem menu, animacje i konfiguracja w składni Hyprlanda przeładowywana po zapisie.
+Zestaw narzędzi do macOS w jednej aplikacji z paska menu. Pierwszy moduł to kafelkowy menedżer okien w stylu Hyprlanda: układ dwindle, 10 pulpitów, gradientowe ramki, wyspa z pulpitami pod paskiem menu, animacje i konfiguracja w składni Hyprlanda przeładowywana po zapisie.
 
 ## Wymagania
 
@@ -11,7 +11,7 @@ Kafelkowy menedżer okien dla macOS w stylu Hyprlanda: układ dwindle, 10 pulpit
 ## Pierwsze uruchomienie
 
 1. **Certyfikat do podpisu (raz).** Pęk kluczy → Asystent certyfikatów → Utwórz certyfikat…
-   Nazwa `hyprmac-dev`, typ tożsamości *Self Signed Root*, typ certyfikatu *Code Signing*.
+   Nazwa `bento-dev`, typ tożsamości *Self Signed Root*, typ certyfikatu *Code Signing*.
    Bez niego macOS po każdej przebudowie pyta o uprawnienia od nowa.
 2. **Wyłącz inne menedżery okien:** zamknij OmniWM i Rectangle (Rectangle też używa ctrl-alt + strzałek).
 3. **Zbuduj aplikację:**
@@ -23,12 +23,12 @@ Kafelkowy menedżer okien dla macOS w stylu Hyprlanda: układ dwindle, 10 pulpit
 4. **Uruchom ją:**
 
    ```bash
-   open build/hyprmac.app
+   open build/bento.app
    ```
 
 5. **Nadaj uprawnienia** w Ustawienia systemowe → Prywatność i ochrona:
    - **Dostępność** (wymagana) — kafelkowanie startuje kilka sekund po nadaniu.
-   - **Nagrywanie ekranu** (opcjonalne) — bez niego wszystko działa, tylko bez animacji. Po nadaniu zamknij hyprmac z jego menu i uruchom ponownie.
+   - **Nagrywanie ekranu** (opcjonalne) — bez niego wszystko działa, tylko bez animacji. Po nadaniu zamknij bento z jego menu i uruchom ponownie.
 
 W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie konfiguracji, błędy konfiguracji, pauzę, uruchamianie przy logowaniu i wyjście.
 
@@ -51,7 +51,7 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 | mod + Q | zamknij okno |
 | mod + przeciągnij / prawy przycisk | przesuń / zmień rozmiar myszką |
 | mod + Return | otwórz Ghostty |
-| F3 (Mission Control) / ctrl + ↑ | podgląd okien wszystkich pulpitów na każdym ekranie; strzałki — zaznacz okno (także na drugim ekranie), Return / spacja / klik — przejdź do okna, Esc / F3 / klik w tło — zamknij. W starszym `hyprmac.conf` dopisz `bind = , mission_control, overview` i `bind = CTRL, up, overview` |
+| F3 (Mission Control) / ctrl + ↑ | podgląd okien wszystkich pulpitów na każdym ekranie; strzałki — zaznacz okno (także na drugim ekranie), Return / spacja / klik — przejdź do okna, Esc / F3 / klik w tło — zamknij. W starszym `bento.conf` dopisz `bind = , mission_control, overview` i `bind = CTRL, up, overview` |
 
 ## Dwa ekrany
 
@@ -63,7 +63,7 @@ Okna pomocnicze aplikacji — ustawienia, „O programie”, okna modalne, okna 
 
 ## Konfiguracja
 
-Plik `~/.config/hyprmac/hyprmac.conf` powstaje przy pierwszym uruchomieniu. Zmiany działają w sekundę po zapisie; błąd składni z numerem linii pokazuje się w menu i jako „!” na wyspie.
+Plik `~/.config/bento/bento.conf` powstaje przy pierwszym uruchomieniu. Zmiany działają w sekundę po zapisie; błąd składni z numerem linii pokazuje się w menu i jako „!” na wyspie.
 
 Skrót do aplikacji (przełącza na nią, a jeśli nie działa — uruchamia):
 
@@ -123,4 +123,4 @@ scripts/test.sh
 
 - [docs/SETUP.md](docs/SETUP.md) — szczegóły konfiguracji systemu
 - [docs/MANUAL-CHECKS.md](docs/MANUAL-CHECKS.md) — lista ręcznych testów; zacznij od sekcji „Anti-goal checks”
-- [docs/superpowers/specs/2026-11-02-hyprmac-design.md](docs/superpowers/specs/2026-11-02-hyprmac-design.md) — projekt
+- [docs/superpowers/specs/2026-11-02-bento-design.md](docs/superpowers/specs/2026-11-02-bento-design.md) — projekt

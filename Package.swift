@@ -2,11 +2,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "hyprmac",
+    name: "bento",
     platforms: [.macOS(.v26)],
     targets: [
-        .target(name: "HyprCore"),
-        .executableTarget(name: "hyprmac", dependencies: ["HyprCore"]),
-        .testTarget(name: "HyprCoreTests", dependencies: ["HyprCore"]),
+        .target(name: "BentoCore"),
+        .executableTarget(name: "bento", dependencies: ["BentoCore"]),
+        .testTarget(name: "BentoCoreTests", dependencies: ["BentoCore"]),
     ]
 )

@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>pl.amadeusz.hyprmac</string>
+    <string>pl.amadeusz.bento</string>
     <key>CFBundleName</key>
-    <string>hyprmac</string>
+    <string>bento</string>
     <key>CFBundleExecutable</key>
-    <string>hyprmac</string>
+    <string>bento</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
