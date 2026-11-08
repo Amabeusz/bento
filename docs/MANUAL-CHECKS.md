@@ -37,8 +37,8 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 ## Task 9
 
-- [ ] ctrl-alt + arrows and ctrl-alt + h/j/k/l move focus left/down/up/right between tiled windows (and across monitors at the edge).
-- [ ] ctrl-alt-shift + arrows and ctrl-alt-shift + h/j/k/l move the focused window in that direction (and across monitors at the edge).
+- [ ] ctrl-alt + ←/→ and ctrl-alt + h/l move focus left/right between tiled windows (and to the previous/next workspace at the edge); ctrl-alt + ↑/↓ and ctrl-alt + k/j move focus to the window above/below, and to the other monitor at the edge.
+- [ ] ctrl-alt-shift + arrows and ctrl-alt-shift + h/j/k/l move the focused window in that direction (at the edge: ←/→ to the previous/next workspace of the same monitor, ↑/↓ to the other monitor).
 - [ ] ctrl-alt + 1…9 switch to workspaces 1–9, ctrl-alt-0 to workspace 0 (MacBook screen, only with an external monitor); ctrl-alt-shift + the same keys send the focused window there.
 - [ ] With two monitors, ctrl-alt-shift-tab moves the current workspace to the other monitor.
 - [ ] ctrl-alt + minus / equal shrink / grow the focused window; holding the key keeps resizing.
@@ -122,7 +122,14 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 - [ ] One screen, windows on workspaces 1 and 3: on 1, ctrl-alt-→ past the rightmost window slides to workspace 3; ctrl-alt-← past the leftmost window slides back to 1 (empty 2 skipped).
 - [ ] On the highest non-empty workspace ctrl-alt-→ does nothing; ctrl-alt-↑/↓ never switch workspaces.
-- [ ] Two screens: on the external monitor ctrl-alt-→ past the last window goes to its next non-empty workspace (1–9); the built-in screen stays on 0.
+- [ ] Two screens: on the external monitor ctrl-alt-→ past the last window goes to its next non-empty workspace (1–9), never to the MacBook; the built-in screen stays on 0.
+
+## Up/down arrows switch monitors at the edge
+
+- [ ] External monitor left of the MacBook: on the MacBook ctrl-alt-↑ moves focus and cursor to the external monitor (its last focused window); ctrl-alt-↓ goes back; ↑ on the external and ↓ on the MacBook also switch (wrap-around).
+- [ ] Three windows (one left, two stacked on the right): from the top-right window ctrl-alt-↓ focuses the one below it; ctrl-alt-↓ again switches to the other monitor.
+- [ ] After ctrl-alt-↑ to the external monitor, ctrl-alt-→ past its last window switches the external monitor's workspace; the MacBook stays on 0.
+- [ ] Laptop alone: ctrl-alt-↑/↓ do nothing.
 
 ## Workspace 0 on the MacBook
 
@@ -140,6 +147,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Java Swing menus (e.g. a menu-bar menu and a right-click menu) open where they were clicked, not centered over the window, and get no border.
 - [ ] IntelliJ popups (the run-configuration picker, a right-click menu in the editor) open where they were invoked, every time including the first, not centered.
 - [ ] A new normal window (Ghostty ⌘N) still joins the tiles right away (about 0.1 s later, no visible delay).
+- [ ] Safari tab hover previews (hover a tab, then move to the next one) stay under the hovered tab, are never centered over the window, and get no border.
 
 ## App icons on the island
 
@@ -153,3 +161,27 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Ghostty ⌘T: the new tab takes the same tile, no empty tile appears next to it; switching tabs doesn't change the layout.
 - [ ] ⌘W on a tab leaves the tile to the remaining tab; closing the last tab removes the tile.
 - [ ] Same with Safari tabs.
+
+## Windows keep their workspaces across a restart
+
+- [ ] Spread windows over three workspaces (mod+shift+N), quit hyprmac from the menu, start it again: every window is back on its workspace and the islands show the same icons as before.
+- [ ] Same after `kill <pid>` of hyprmac, and after Pause / Resume in the menu.
+- [ ] Quit an app and reopen it while hyprmac runs: its new window lands on the visible workspace (memory follows the window, not the app).
+- [ ] `~/Library/Application Support/hyprmac/workspaces.json` exists; `~/.config/hyprmac/` gets no new files and the config is not reloaded on window moves.
+
+## Window overview on F3
+
+- [ ] F3 opens the overview on every screen and Mission Control does not open; each screen shows the windows of all its non-empty workspaces (MacBook: workspace 0; external: 1–9) as screenshots in a grid, each with its workspace number.
+- [ ] Windows of hidden workspaces show their content, not a blank image; thumbnails are much larger than in Mission Control.
+- [ ] Clicking a thumbnail closes the overview, switches to that window's workspace and focuses it; Esc, F3 again or a click on the background just close it.
+- [ ] Without Screen Recording each thumbnail shows the app icon and window title instead of a screenshot.
+- [ ] ctrl+↑ opens and closes the same overview and Mission Control does not open.
+- [ ] The focused window's thumbnail has an accent ring when the overview opens; arrows move the ring to the nearest thumbnail in that direction, also onto the other screen; Return or space goes to the ringed window.
+- [ ] Text in the thumbnails is sharp on both the Retina and the external screen.
+- [ ] Above each thumbnail: the app icon and the window title (the active tab in Safari, Chrome, Ghostty), cut with "…" at the thumbnail's width; a window without a title shows the app name; titles never overlap the thumbnail above.
+
+## Moving windows with mod+shift+arrows follows the focus axes
+
+- [ ] One window on workspace 1 of the external screen: mod+shift+→ takes it to workspace 2 and shows workspace 2 with the window focused; mod+shift+← brings it back; at workspace 9 (→) or 1 (←) nothing happens.
+- [ ] mod+shift+→/← never sends a window to the other screen; on the MacBook (workspace 0) they do nothing past the last window.
+- [ ] mod+shift+↓/↑ past the last window moves it to the other screen's visible workspace, focus and cursor follow; with windows stacked (1 | 2/3) the first press swaps with the window below.

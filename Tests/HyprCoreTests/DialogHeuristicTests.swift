@@ -21,3 +21,14 @@ import Testing
 @Test func fixedSizeWindowIsADialog() {
     #expect(looksLikeDialog(subrole: "AXStandardWindow", resizable: false, hasFullscreenButton: true, isModal: false))
 }
+
+@Test func buttonlessUnknownWindowIsAPopup() {
+    #expect(looksLikePopup(subrole: "AXUnknown", hasWindowButtons: false))
+}
+
+@Test func windowsWithButtonsOrAWindowSubroleAreNotPopups() {
+    #expect(!looksLikePopup(subrole: "AXUnknown", hasWindowButtons: true))
+    #expect(!looksLikePopup(subrole: "AXStandardWindow", hasWindowButtons: true))
+    #expect(!looksLikePopup(subrole: "AXDialog", hasWindowButtons: true))
+    #expect(!looksLikePopup(subrole: "AXDialog", hasWindowButtons: false))
+}

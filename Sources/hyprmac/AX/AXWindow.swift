@@ -85,6 +85,13 @@ final class AXWindow {
             isModal: element.value(kAXModalAttribute) ?? false)
     }
 
+    var isPopup: Bool {
+        let buttons = [kAXCloseButtonAttribute, kAXMinimizeButtonAttribute, kAXZoomButtonAttribute, kAXFullScreenButtonAttribute]
+        return looksLikePopup(
+            subrole: element.value(kAXSubroleAttribute),
+            hasWindowButtons: buttons.contains { (element.value($0) as AXUIElement?) != nil })
+    }
+
     var isMinimized: Bool {
         element.value(kAXMinimizedAttribute) ?? false
     }

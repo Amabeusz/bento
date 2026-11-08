@@ -96,6 +96,8 @@ bind = $mod, f, fullscreen
 bind = $mod, v, togglefloating
 bind = $mod, q, killactive
 bind = $mod, return, exec, open -na Ghostty
+bind = , mission_control, overview
+bind = CTRL, up, overview
 
 # app shortcuts: focus the app if running, launch it if not
 # bind = $mod, b, focusorlaunch, Safari

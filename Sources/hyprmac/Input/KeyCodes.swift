@@ -15,6 +15,7 @@ private let keyCodes: [String: Int] = [
     "escape": kVK_Escape, "backspace": kVK_Delete,
     "f1": kVK_F1, "f2": kVK_F2, "f3": kVK_F3, "f4": kVK_F4, "f5": kVK_F5, "f6": kVK_F6,
     "f7": kVK_F7, "f8": kVK_F8, "f9": kVK_F9, "f10": kVK_F10, "f11": kVK_F11, "f12": kVK_F12,
+    "mission_control": 160,
 ]
 
 func keyCode(for name: String) -> CGKeyCode? {

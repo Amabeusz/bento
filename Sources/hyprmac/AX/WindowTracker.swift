@@ -171,7 +171,7 @@ final class WindowTracker {
     }
 
     private func isEligible(_ w: AXWindow, onScreen: Set<WindowID>, shown: [TabCandidate]) -> Bool {
-        isManagedWindowLayer(layer(of: w.id)) && !hidden.contains(w.pid) && !w.isMinimized && !w.isFullscreen
+        isManagedWindowLayer(layer(of: w.id)) && !w.isPopup && !hidden.contains(w.pid) && !w.isMinimized && !w.isFullscreen
             && !isHiddenTab(candidate(w), onScreen: onScreen.contains(w.id), shown: shown)
     }
 

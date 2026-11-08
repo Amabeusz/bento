@@ -30,6 +30,18 @@ public struct WindowInfo: Equatable, Sendable {
     }
 }
 
+public struct WindowMemory: Codable, Equatable, Sendable {
+    public var id: WindowID
+    public var app: String
+    public var workspace: Int
+
+    public init(id: WindowID, app: String, workspace: Int) {
+        self.id = id
+        self.app = app
+        self.workspace = workspace
+    }
+}
+
 public enum Placement: Equatable, Sendable {
     case tiled(Rect)
     case floating(Rect)
@@ -76,6 +88,7 @@ public enum SideEffect: Equatable, Sendable {
     case focusWindow(WindowID)
     case focusNothing
     case warpCursor(Point)
+    case toggleOverview
 }
 
 public final class World {
@@ -93,6 +106,7 @@ public final class World {
     private var history: [WindowID] = []
     private var focused: WindowID?
     private var focusedMonitor: MonitorID?
+    private var remembered: [WindowID: WindowMemory] = [:]
 
     public init(config: Config) {
         self.config = config
@@ -139,12 +153,23 @@ public final class World {
         }
     }
 
+    public func remember(_ entries: [WindowMemory]) {
+        remembered = Dictionary(entries.map { ($0.id, $0) }) { _, last in last }
+    }
+
+    public var memory: [WindowMemory] {
+        let live = workspaceOf.compactMap { id, n in windows[id].map { WindowMemory(id: id, app: $0.app, workspace: n) } }
+        return (live + remembered.values.filter { windows[$0.id] == nil }).sorted { $0.id < $1.id }
+    }
+
     public func addWindow(_ w: WindowInfo) {
         guard windows[w.id] == nil else { return }
         let monitor = focusedMonitor == nil
             ? monitors.first { $0.frame.contains(w.frame.center) } ?? monitors.first
             : currentMonitor
-        let n = monitor.flatMap { visible[$0.id] } ?? 1
+        let saved = remembered.removeValue(forKey: w.id)
+            .flatMap { $0.app == w.app && available.contains($0.workspace) ? $0.workspace : nil }
+        let n = saved ?? monitor.flatMap { visible[$0.id] } ?? 1
         windows[w.id] = w
         workspaceOf[w.id] = n
         if shouldFloat(w) {
@@ -153,7 +178,11 @@ public final class World {
         } else {
             insertTiled(w.id, into: n)
         }
-        focus(w.id)
+        if saved != nil, isHidden(n) {
+            history.append(w.id)
+        } else {
+            focus(w.id)
+        }
     }
 
     public func removeWindow(_ id: WindowID) {
@@ -236,6 +265,8 @@ public final class World {
                 trees[n]?.remove(id)
             }
             return []
+        case .overview:
+            return [.toggleOverview]
         }
     }
 
@@ -265,12 +296,9 @@ public final class World {
         var placements: [WindowID: Placement] = [:]
         for n in World.allWorkspaces {
             guard let home = homeMonitor(of: n) else { continue }
-            let area = tilingArea(home)
-            let tiles = trees[n]?.frames(in: area, gapsIn: config.gapsIn) ?? [:]
             let shown = monitorShowing(n) != nil
-            for (id, ws) in workspaceOf where ws == n {
+            for (id, frame) in layoutFrames(of: n, on: home) {
                 let isFullscreen = fullscreen.contains(id)
-                let frame = isFullscreen ? area : floating[id] ?? tiles[id] ?? area
                 placements[id] =
                     if !shown { .parked(parkFrame(for: frame, on: home, monitors: monitors)) }
                     else if floating[id] != nil && !isFullscreen { .floating(frame) }
@@ -290,6 +318,27 @@ public final class World {
             }
         }
         return LayoutSnapshot(placements: placements, focused: focused, bars: bars, visibleWorkspace: visible)
+    }
+
+    public func overview(on monitor: MonitorID) -> [OverviewItem] {
+        World.allWorkspaces.flatMap { n -> [OverviewItem] in
+            guard let home = pinnedTarget(for: n) ?? homeMonitor(of: n), home.id == monitor else { return [] }
+            let frames = layoutFrames(of: n, on: home)
+            let floats = frames.keys.filter { floating[$0] != nil }.sorted()
+            return ((trees[n]?.windows ?? []) + floats).compactMap { id in
+                frames[id].map { OverviewItem(id: id, workspace: n, frame: $0) }
+            }
+        }
+    }
+
+    private func layoutFrames(of n: Int, on home: MonitorInfo) -> [WindowID: Rect] {
+        let area = tilingArea(home)
+        let tiles = trees[n]?.frames(in: area, gapsIn: config.gapsIn) ?? [:]
+        var frames: [WindowID: Rect] = [:]
+        for (id, ws) in workspaceOf where ws == n {
+            frames[id] = fullscreen.contains(id) ? area : floating[id] ?? tiles[id] ?? area
+        }
+        return frames
     }
 
     private func goTo(_ n: Int, focusing window: WindowID?) -> [SideEffect] {
@@ -335,12 +384,23 @@ public final class World {
             focus(next)
             return [.focusWindow(next)]
         }
-        guard let m = monitor(from: current, toward: dir), let target = visible[m.id] else {
-            return adjacentWorkspace(dir, on: current).map { goTo($0, focusing: nil) } ?? []
+        if dir == .up || dir == .down {
+            return cycleMonitor(from: current, by: dir == .down ? 1 : -1)
         }
+        return adjacentWorkspace(dir, on: current).map { goTo($0, focusing: nil) } ?? []
+    }
+
+    private func cycleMonitor(from current: MonitorInfo, by step: Int) -> [SideEffect] {
+        guard let m = monitor(after: current, by: step) else { return [] }
         focusedMonitor = m.id
-        focus(lastFocused(in: target))
+        focus(visible[m.id].flatMap(lastFocused(in:)))
         return focusEffects(warpTo: m)
+    }
+
+    private func monitor(after current: MonitorInfo, by step: Int) -> MonitorInfo? {
+        let order = monitors.sorted { ($0.frame.x, $0.frame.y) < ($1.frame.x, $1.frame.y) }
+        guard order.count > 1, let i = order.firstIndex(of: current) else { return nil }
+        return order[(i + step + order.count) % order.count]
     }
 
     private func adjacentWorkspace(_ dir: Direction, on m: MonitorInfo) -> Int? {
@@ -355,10 +415,16 @@ public final class World {
             trees[n]?.swap(id, next)
             return []
         }
-        guard let m = monitor(from: current, toward: dir), let target = visible[m.id] else { return [] }
+        if dir == .up || dir == .down {
+            guard let m = monitor(after: current, by: dir == .down ? 1 : -1), let target = visible[m.id] else { return [] }
+            move(id, to: target)
+            focusedMonitor = m.id
+            return focusEffects(warpTo: m)
+        }
+        let target = dir == .right ? n + 1 : n - 1
+        guard workspaces(shownOn: current).contains(target), isHidden(target) else { return [] }
         move(id, to: target)
-        focusedMonitor = m.id
-        return focusEffects(warpTo: m)
+        return goTo(target, focusing: id)
     }
 
     private func move(_ id: WindowID, to n: Int) {
@@ -451,24 +517,6 @@ public final class World {
 
     private func homeMonitor(of n: Int) -> MonitorInfo? {
         monitorShowing(n) ?? lastMonitor[n].flatMap(monitor(_:)) ?? monitors.first
-    }
-
-    private func monitor(from current: MonitorInfo, toward dir: Direction) -> MonitorInfo? {
-        let c = current.frame.center
-        func distance(_ m: MonitorInfo) -> Double {
-            let o = m.frame.center
-            return (o.x - c.x) * (o.x - c.x) + (o.y - c.y) * (o.y - c.y)
-        }
-        return monitors.filter { m in
-            let dx = m.frame.center.x - c.x
-            let dy = m.frame.center.y - c.y
-            switch dir {
-            case .left: return -dx > abs(dy)
-            case .right: return dx > abs(dy)
-            case .up: return -dy > abs(dx)
-            case .down: return dy > abs(dx)
-            }
-        }.min { distance($0) < distance($1) }
     }
 
     private func tilingArea(_ m: MonitorInfo) -> Rect {

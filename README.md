@@ -36,8 +36,10 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 
 | Skrót | Działanie |
 |---|---|
-| mod + strzałki / h j k l | przenieś fokus; gdy w lewo/prawo nie ma już okna ani ekranu — poprzedni/następny pulpit z oknami na tym ekranie |
-| mod + shift + strzałki / h j k l | przesuń okno |
+| mod + ←/→ / h l | fokus na okno obok; za ostatnim oknem — poprzedni/następny pulpit z oknami na tym ekranie (nigdy drugi ekran) |
+| mod + ↑/↓ / k j | fokus na okno nad/pod; na krawędzi — poprzedni/następny ekran (od lewej, z zawijaniem) |
+| mod + shift + ←/→ / h l | zamień okno z sąsiadem; za ostatnim oknem — przenieś je na poprzedni/następny pulpit tego ekranu (także pusty, bez zawijania) i przejdź tam z nim |
+| mod + shift + ↑/↓ / k j | zamień okno z sąsiadem nad/pod; na krawędzi — przenieś je na poprzedni/następny ekran (od lewej, z zawijaniem) |
 | mod + 1…9 | pulpit 1–9 |
 | mod + 0 | pulpit 0 — ekran MacBooka (tylko przy podłączonym monitorze) |
 | mod + shift + 1…9 / 0 | wyślij okno na pulpit 1–9 / 0 |
@@ -49,6 +51,7 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 | mod + Q | zamknij okno |
 | mod + przeciągnij / prawy przycisk | przesuń / zmień rozmiar myszką |
 | mod + Return | otwórz Ghostty |
+| F3 (Mission Control) / ctrl + ↑ | podgląd okien wszystkich pulpitów na każdym ekranie; strzałki — zaznacz okno (także na drugim ekranie), Return / spacja / klik — przejdź do okna, Esc / F3 / klik w tło — zamknij. W starszym `hyprmac.conf` dopisz `bind = , mission_control, overview` i `bind = CTRL, up, overview` |
 
 ## Dwa ekrany
 

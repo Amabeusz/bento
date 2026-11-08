@@ -31,11 +31,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var frameChecks: Set<WindowID> = []
     private let borders = BorderManager()
     private let animator = Animator()
+    private let workspaceMemory = WorkspaceMemoryStore()
     private var shown: LayoutSnapshot?
     private lazy var bars = BarManager(
         onSelect: { [weak self] number in self?.selectWorkspace(number) },
         icon: { [weak self] id in
             self?.tracker?.window(id).flatMap { NSRunningApplication(processIdentifier: $0.pid)?.icon }
+        })
+    private lazy var overview = OverviewManager(
+        onPick: { [weak self] id in self?.pickFromOverview(id) },
+        icon: { [weak self] id in
+            self?.tracker?.window(id).flatMap { NSRunningApplication(processIdentifier: $0.pid)?.icon }
+        },
+        title: { [weak self] id in
+            self?.tracker?.window(id).map { $0.title.isEmpty ? $0.app : $0.title }
         })
 
     private struct Drag {
@@ -115,6 +124,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         restoreParkedWindows()
         let world = World(config: loader.current)
         world.setMonitors(monitorInfos())
+        world.remember(workspaceMemory.load())
         tracker.managedWindows.sorted { $0.id < $1.id }.forEach { world.addWindow($0.info) }
         if let id = tracker.focusedWindowID() { world.externalFocus(id) }
         self.world = world
@@ -126,6 +136,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func applyLayout(animated: Bool = false) {
         guard let world, let applier else { return }
         let snapshot = world.snapshot()
+        workspaceMemory.save(world.memory)
         let old = shown
         shown = snapshot
         if animated, let old {
@@ -153,10 +164,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for effect in list {
             switch effect {
             case .focusWindow, .focusNothing: noteFocusDisturbance()
+            case .toggleOverview: toggleOverview()
             default: break
             }
             effects?.run(effect)
         }
+    }
+
+    private func toggleOverview() {
+        guard !overview.isOpen, let world else { return overview.close() }
+        overview.show(monitorInfos().compactMap { m in
+            appKitFrame(m.frame).map { OverviewScreen(monitor: m, frame: $0, items: world.overview(on: m.id)) }
+        }, focused: world.snapshot().focused)
+    }
+
+    private func pickFromOverview(_ id: WindowID) {
+        guard !isPaused, let world else { return }
+        world.externalFocus(id)
+        run([.focusWindow(id)])
+        applyLayout(animated: true)
     }
 
     private func noteFocusDisturbance() {

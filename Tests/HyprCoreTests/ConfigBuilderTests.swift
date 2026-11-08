@@ -163,3 +163,9 @@ import Testing
     #expect(try parseConfig("").barIcons)
     #expect(try !parseConfig("bar {\n    icons = false\n}").barIcons)
 }
+
+@Test func overviewDispatcherBindsWithoutModifiers() throws {
+    #expect(try parseConfig("bind = , mission_control, overview").keyBinds == [KeyBind(mods: [], key: "mission_control", action: .overview)])
+    #expect(try parseConfig(defaultConfigText).keyBinds.contains(KeyBind(mods: [], key: "mission_control", action: .overview)))
+    #expect(try parseConfig(defaultConfigText).keyBinds.contains(KeyBind(mods: [.ctrl], key: "up", action: .overview)))
+}

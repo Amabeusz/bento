@@ -200,30 +200,153 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         #expect(both[1]?[1] == WorkspaceBadge(number: 2, isHere: false, isOnOtherMonitor: true, isEmpty: true))
     }
 
-    @Test func moveFocusAcrossMonitorsFollowsDirection() {
+    @Test func verticalArrowCyclesMonitors() {
         let w = makeWorld()
         w.addWindow(window(1, on: M1))
         w.addWindow(window(2, on: M2))
         w.externalFocus(1)
-        #expect(w.perform(.moveFocus(.down)) == [])
+        #expect(w.perform(.moveFocus(.right)) == [])
         #expect(w.snapshot().focused == 1)
-        #expect(w.perform(.moveFocus(.right)) == [.focusWindow(2), .warpCursor(M2.frame.center)])
-        #expect(w.snapshot().focused == 2)
-        #expect(w.perform(.moveFocus(.up)) == [])
-        #expect(w.snapshot().focused == 2)
+        #expect(w.perform(.moveFocus(.up)) == [.focusWindow(2), .warpCursor(M2.frame.center)])
+        #expect(w.perform(.moveFocus(.up)) == [.focusWindow(1), .warpCursor(M1.frame.center)])
+        #expect(w.perform(.moveFocus(.down)) == [.focusWindow(2), .warpCursor(M2.frame.center)])
+        #expect(w.perform(.moveFocus(.down)) == [.focusWindow(1), .warpCursor(M1.frame.center)])
+        #expect(w.snapshot().visibleWorkspace == [1: 0, 2: 1])
     }
 
-    @Test func moveWindowToMonitorInDirection() {
+    @Test func verticalArrowToEmptyMonitorFocusesNothing() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.externalFocus(1)
+        #expect(w.perform(.moveFocus(.down)) == [.focusNothing, .warpCursor(M2.frame.center)])
+        #expect(w.snapshot().focused == nil)
+    }
+
+    @Test func verticalArrowOnSingleScreenDoesNothing() {
+        let w = singleScreenWorld()
+        w.addWindow(window(1, on: M1))
+        #expect(w.perform(.moveFocus(.up)) == [])
+        #expect(w.perform(.moveFocus(.down)) == [])
+        #expect(w.snapshot().focused == 1)
+    }
+
+    @Test func verticalArrowFollowsLeftToRightOrder() {
+        let right = MonitorInfo(id: 2, frame: M2.frame, usable: M2.usable, isBuiltin: false)
+        let left = MonitorInfo(id: 3, frame: leftExternal.frame, usable: leftExternal.usable, isBuiltin: false)
+        let w = World(config: try! parseConfig(defaultConfigText))
+        w.setMonitors([right, E1, left])
+        w.addWindow(window(1, on: E1))
+        w.externalFocus(1)
+        #expect(w.perform(.moveFocus(.down)) == [.focusNothing, .warpCursor(right.frame.center)])
+        #expect(w.perform(.moveFocus(.down)) == [.focusNothing, .warpCursor(left.frame.center)])
+        #expect(w.perform(.moveFocus(.up)) == [.focusNothing, .warpCursor(right.frame.center)])
+    }
+
+    @Test func verticalArrowGoesToWindowBelowBeforeMonitor() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M1))
+        w.addWindow(window(3, on: M1))
+        w.addWindow(window(4, on: M2))
+        w.externalFocus(2)
+        #expect(w.perform(.moveFocus(.down)) == [.focusWindow(3)])
+        #expect(w.perform(.moveFocus(.down)) == [.focusWindow(4), .warpCursor(M2.frame.center)])
+    }
+
+    @Test func moveWindowVerticallyCyclesMonitors() {
         let w = makeWorld()
         w.addWindow(window(1, on: M1))
         w.addWindow(window(2, on: M2))
         w.externalFocus(1)
-        #expect(w.perform(.moveWindow(.down)) == [])
-        #expect(w.perform(.moveWindow(.right)) == [.focusWindow(1), .warpCursor(M2.frame.center)])
-        let s = w.snapshot()
+        #expect(w.perform(.moveWindow(.down)) == [.focusWindow(1), .warpCursor(M2.frame.center)])
+        var s = w.snapshot()
         #expect(s.focused == 1)
         #expect(s.bars[1]?[0].isEmpty == true)
         if case .tiled(let r) = s.placements[1] { #expect(M2.frame.contains(r.center)) } else { Issue.record("not tiled") }
+        #expect(w.perform(.moveWindow(.down)) == [.focusWindow(1), .warpCursor(M1.frame.center)])
+        s = w.snapshot()
+        #expect(s.placements[1] == .tiled(area1))
+        #expect(w.perform(.moveWindow(.up)) == [.focusWindow(1), .warpCursor(M2.frame.center)])
+        #expect(w.snapshot().bars[2]?[0].isEmpty == false)
+
+        let one = singleScreenWorld()
+        one.addWindow(window(1, on: M1))
+        #expect(one.perform(.moveWindow(.down)) == [])
+        #expect(one.perform(.moveWindow(.up)) == [])
+    }
+
+    @Test func moveWindowDownSwapsWithWindowBelowFirst() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M1))
+        w.addWindow(window(3, on: M1))
+        w.externalFocus(2)
+        let before = w.snapshot()
+        #expect(w.perform(.moveWindow(.down)) == [])
+        let after = w.snapshot()
+        #expect(after.placements[2] == before.placements[3])
+        #expect(after.placements[3] == before.placements[2])
+    }
+
+    @Test func moveWindowRightGoesToNextWorkspaceOnSameMonitor() {
+        let w = singleScreenWorld()
+        w.addWindow(window(1, on: M1))
+        #expect(w.perform(.moveWindow(.right)) == [.focusWindow(1)])
+        var s = w.snapshot()
+        #expect(s.visibleWorkspace[1] == 2)
+        #expect(s.focused == 1)
+        #expect(s.bars[1]?.filter { !$0.isEmpty }.map(\.number) == [2])
+        #expect(w.perform(.moveWindow(.left)) == [.focusWindow(1)])
+        s = w.snapshot()
+        #expect(s.visibleWorkspace[1] == 1)
+        #expect(s.bars[1]?.filter { !$0.isEmpty }.map(\.number) == [1])
+        #expect(w.perform(.moveWindow(.left)) == [])
+        _ = w.perform(.moveToWorkspace(9))
+        _ = w.perform(.workspace(9))
+        #expect(w.perform(.moveWindow(.right)) == [])
+        #expect(w.snapshot().bars[1]?.filter { !$0.isEmpty }.map(\.number) == [9])
+    }
+
+    @Test func moveWindowHorizontallyNeverLeavesMonitor() {
+        let w = makeWorld()
+        w.addWindow(window(1, on: M1))
+        w.addWindow(window(2, on: M2))
+        w.externalFocus(1)
+        #expect(w.perform(.moveWindow(.right)) == [])
+        #expect(w.snapshot().bars[1]?[0].isEmpty == false)
+        w.externalFocus(2)
+        #expect(w.perform(.moveWindow(.left)) == [])
+        #expect(w.perform(.moveWindow(.right)) == [.focusWindow(2)])
+        let s = w.snapshot()
+        #expect(s.visibleWorkspace == [1: 0, 2: 2])
+        #expect(s.placements[2] == .tiled(area2))
+
+        let e = makeTwoExternalWorld()
+        e.addWindow(window(1, on: E1))
+        e.externalFocus(1)
+        #expect(e.perform(.moveWindow(.right)) == [])
+        #expect(e.snapshot().visibleWorkspace[1] == 1)
+
+        let p = makeWorld()
+        p.addWindow(window(1, on: M1))
+        p.addWindow(window(2, on: M2))
+        p.externalFocus(2)
+        _ = p.perform(.workspace(3))
+        p.externalFocus(1)
+        #expect(p.perform(.moveWindow(.right)) == [])
+        #expect(p.snapshot().bars[1]?[0].isEmpty == false)
+    }
+
+    @Test func moveWindowUpGoesToPreviousMonitorInLeftToRightOrder() {
+        let right = MonitorInfo(id: 2, frame: M2.frame, usable: M2.usable, isBuiltin: false)
+        let left = MonitorInfo(id: 3, frame: leftExternal.frame, usable: leftExternal.usable, isBuiltin: false)
+        let w = World(config: try! parseConfig(defaultConfigText))
+        w.setMonitors([right, E1, left])
+        w.addWindow(window(1, on: E1))
+        w.externalFocus(1)
+        #expect(w.perform(.moveWindow(.up)) == [.focusWindow(1), .warpCursor(left.frame.center)])
+        #expect(w.perform(.moveWindow(.down)) == [.focusWindow(1), .warpCursor(E1.frame.center)])
+        #expect(w.perform(.moveWindow(.down)) == [.focusWindow(1), .warpCursor(right.frame.center)])
     }
 
     @Test func removingFocusedFallsBackToRecentInWorkspace() {
@@ -502,6 +625,46 @@ private func parkedRect(_ p: Placement?) -> Rect? {
         _ = w.perform(.moveFocus(.left))
         #expect(w.snapshot().visibleWorkspace == [1: 0, 2: 3])
     }
+
+    @Test func horizontalArrowNeverLeavesMonitor() {
+        let w = externalLeftOfMacBookWithWindowsOnOneAndThree()
+        w.externalFocus(2)
+        _ = w.perform(.moveFocus(.right))
+        #expect(w.snapshot().visibleWorkspace == [1: 0, 2: 3])
+        #expect(w.snapshot().focused == 3)
+        _ = w.perform(.moveFocus(.left))
+        #expect(w.snapshot().visibleWorkspace == [1: 0, 2: 1])
+        #expect(w.snapshot().focused == 2)
+        w.externalFocus(1)
+        #expect(w.perform(.moveFocus(.left)) == [])
+        #expect(w.perform(.moveFocus(.right)) == [])
+        #expect(w.snapshot().focused == 1)
+    }
+
+    @Test func horizontalArrowActsOnMonitorReachedByVerticalArrow() {
+        let w = externalLeftOfMacBookWithWindowsOnOneAndThree()
+        w.externalFocus(1)
+        #expect(w.perform(.moveFocus(.up)) == [.focusWindow(2), .warpCursor(leftExternal.frame.center)])
+        _ = w.perform(.moveFocus(.right))
+        let s = w.snapshot()
+        #expect(s.visibleWorkspace == [1: 0, 2: 3])
+        #expect(s.focused == 3)
+    }
+}
+
+private let leftExternal = MonitorInfo(id: 2, frame: Rect(x: -2560, y: 0, w: 2560, h: 1440), usable: Rect(x: -2560, y: 25, w: 2560, h: 1415), isBuiltin: false)
+
+private func externalLeftOfMacBookWithWindowsOnOneAndThree() -> World {
+    var config = try! parseConfig(defaultConfigText)
+    config.barEnabled = false
+    let w = World(config: config)
+    w.setMonitors([M1, leftExternal])
+    w.addWindow(window(1, on: M1))
+    w.addWindow(window(2, on: leftExternal))
+    w.addWindow(window(3, on: leftExternal))
+    w.externalFocus(3)
+    _ = w.perform(.moveToWorkspace(3))
+    return w
 }
 
 private func singleMonitorWithWindowsOnOneAndThree() -> World {
@@ -685,4 +848,76 @@ private func singleScreenWorld() -> World {
     w.addWindow(window(1, on: M1, app: "Safari"))
     w.addWindow(window(2, on: M1, app: "Safari"))
     guard case .tiled = w.snapshot().placements[2] else { Issue.record("not tiled"); return }
+}
+
+@Test func rememberedWindowReturnsToItsWorkspace() {
+    let w = makeWorld()
+    w.remember([WindowMemory(id: 1, app: "Ghostty", workspace: 5)])
+    w.addWindow(window(1, on: M2))
+    let s = w.snapshot()
+    #expect(parkedRect(s.placements[1]) != nil)
+    #expect(s.bars[2]?.filter { !$0.isEmpty }.map(\.number) == [5])
+}
+
+@Test func rememberedIdOfAnotherAppIsIgnored() {
+    let w = makeWorld()
+    w.remember([WindowMemory(id: 1, app: "Safari", workspace: 5)])
+    w.addWindow(window(1, on: M2))
+    #expect(w.snapshot().placements[1] == .tiled(area2))
+}
+
+@Test func rememberedUnavailableWorkspaceIsIgnored() {
+    let w = singleScreenWorld()
+    w.remember([WindowMemory(id: 1, app: "Ghostty", workspace: 0)])
+    w.addWindow(window(1, on: M1))
+    #expect(w.snapshot().placements[1] == .tiled(area1))
+}
+
+@Test func memoryFollowsMovesAndKeepsUnseen() {
+    let w = makeWorld()
+    w.remember([WindowMemory(id: 1, app: "Ghostty", workspace: 5), WindowMemory(id: 9, app: "Safari", workspace: 7)])
+    w.addWindow(window(1, on: M2))
+    w.addWindow(window(2, on: M2))
+    _ = w.perform(.moveToWorkspace(3))
+    #expect(w.memory == [
+        WindowMemory(id: 1, app: "Ghostty", workspace: 5),
+        WindowMemory(id: 2, app: "Ghostty", workspace: 3),
+        WindowMemory(id: 9, app: "Safari", workspace: 7),
+    ])
+}
+
+@Test func overviewListsEveryWorkspaceOfTheMonitorInLayoutOrder() {
+    let w = makeWorld()
+    w.addWindow(window(1, on: M1))
+    w.addWindow(window(5, on: M2))
+    w.addWindow(window(3, on: M2))
+    w.addWindow(window(9, on: M2))
+    w.externalFocus(9)
+    _ = w.perform(.moveToWorkspace(3))
+    w.addWindow(window(2, on: M2, app: "Finder", isDialog: true))
+    let s = w.snapshot()
+    func tiled(_ p: Placement?) -> Rect? { if case .tiled(let r) = p { r } else { nil } }
+    func floated(_ p: Placement?) -> Rect? { if case .floating(let r) = p { r } else { nil } }
+    #expect(w.overview(on: 2) == [
+        OverviewItem(id: 5, workspace: 1, frame: tiled(s.placements[5])!),
+        OverviewItem(id: 3, workspace: 1, frame: tiled(s.placements[3])!),
+        OverviewItem(id: 2, workspace: 1, frame: floated(s.placements[2])!),
+        OverviewItem(id: 9, workspace: 3, frame: area2),
+    ])
+    #expect(w.overview(on: 1) == [OverviewItem(id: 1, workspace: 0, frame: area1)])
+}
+
+@Test func overviewActionTogglesOverview() {
+    #expect(makeWorld().perform(.overview) == [.toggleOverview])
+}
+
+@Test func rememberedHiddenWindowDoesNotTakeFocus() {
+    let w = makeWorld()
+    w.remember([WindowMemory(id: 2, app: "Ghostty", workspace: 5)])
+    w.addWindow(window(1, on: M2))
+    w.addWindow(window(2, on: M2))
+    #expect(w.snapshot().focused == 1)
+    #expect(w.perform(.killActive) == [.closeWindow(1)])
+    _ = w.perform(.workspace(5))
+    #expect(w.snapshot().focused == 2)
 }
