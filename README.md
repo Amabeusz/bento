@@ -52,7 +52,7 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 | mod + przeciągnij / prawy przycisk | przesuń / zmień rozmiar myszką |
 | mod + Return | otwórz Ghostty |
 | F3 (Mission Control) / ctrl + ↑ | podgląd okien wszystkich pulpitów na każdym ekranie; strzałki — zaznacz okno (także na drugim ekranie), Return / spacja / klik — przejdź do okna, Esc / F3 / klik w tło — zamknij. W starszym `bento.conf` dopisz `bind = , mission_control, overview` i `bind = CTRL, up, overview` |
-| shift + cmd + C | historia schowka (200 ostatnich tekstów): pisanie filtruje, ↑/↓ zaznacza, Return / klik wkleja do aplikacji, w której byłeś, Esc zamyka. Hasła z menedżerów haseł są pomijane. Działa, gdy kafelkowanie nie jest zapauzowane. W starszym `bento.conf` dopisz `bind = SUPER SHIFT, c, clipboard` |
+| shift + cmd + C | historia schowka (200 ostatnich wpisów + przypięte): teksty ze stylami, obrazki, pliki z Findera; w wierszu ikonka aplikacji i „5m temu”, po prawej podgląd z aplikacją, pierwszą i ostatnią kopią i liczbą kopii. Pisanie filtruje (też po nazwie aplikacji), ↑/↓ zaznacza, Return / klik wkleja do aplikacji, w której byłeś, shift+Return wkleja jako czysty tekst, ⌘1–⌘9 wkleja n-ty wpis, ⌥P przypina, ⌥⌫ usuwa, Esc zamyka. Hasła z menedżerów haseł i tokeny (`sk-…`, `ghp_…`, JWT, klucze prywatne) są widoczne jako `••••••••` i nie trafiają na dysk. „Clear Clipboard History” w menu czyści wszystko poza przypiętymi. Działa, gdy kafelkowanie nie jest zapauzowane. W starszym `bento.conf` dopisz `bind = SUPER SHIFT, c, clipboard` |
 
 ## Keep Awake
 

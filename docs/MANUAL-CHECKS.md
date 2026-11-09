@@ -196,12 +196,20 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 - [ ] Copy three different texts in any apps, press shift+cmd+C: a panel opens in the middle of the screen with the mouse, newest text on top, the app you were in stays focused (its menu bar stays).
 - [ ] Copying a text that is already in the history moves it to the top instead of adding a second copy.
-- [ ] Typing filters the list (case does not matter); ↑/↓ move the highlight and stop at the first/last row; with more than 12 entries the list scrolls with the highlight.
-- [ ] Return closes the panel and pastes the highlighted text into the app you were in; the text is also on the clipboard (cmd+V pastes it again) and is now at the top of the history.
+- [ ] Typing filters the list (case does not matter); ↑/↓ move the highlight and stop at the first/last row; with more than 14 entries the list scrolls with the highlight.
+- [ ] Return closes the panel and pastes the highlighted text into the app you were in; the text is also on the clipboard (cmd+V pastes it again) and is now at the top of the history; its copy count in the preview did not grow.
 - [ ] Clicking a row pastes it the same way; Esc, shift+cmd+C again, or a click in another window close the panel without pasting.
-- [ ] A password copied from a password manager (1Password, Keychain Access "Copy Password") does not show up in the history.
+- [ ] A password copied from a password manager (1Password, Keychain Access "Copy Password") shows up as `••••••••` in the list and the preview, does not match a search for its text, pastes the real password, and is gone from the history after restarting bento (not in `clipboard.json`).
+- [ ] A token copied from a terminal (`ghp_…`, `sk-…`, a JWT) is masked the same way; an ordinary sentence is not.
 - [ ] Quit bento and start it again: the history is still there (`~/Library/Application Support/bento/clipboard.json`).
 - [ ] After Pause Tiling, shift+cmd+C does nothing (decision D2 A); after Resume it works again.
+- [ ] First start after the update: the history from the old version (plain texts) is still there, in the same order.
+- [ ] Each row shows the source app's icon, the text, how long ago it was copied ("now", "5m", "3h", "2d") and ⌘1–⌘9 on the first nine rows; the preview on the right shows the full text and App / First copied / Last copied / Copies; copying the same text again raises Copies and keeps First copied.
+- [ ] Copy an image (cmd+ctrl+shift+4 screenshot, "Copy Image" in Preview): the row shows a thumbnail and "Image W×H", the preview shows it large, Return pastes the image (e.g. into Notes).
+- [ ] Copy two files in Finder: the row shows the file icon and "name + 1 more", the preview lists the paths, Return in a Finder window pastes copies of the files; typing part of a file name finds it.
+- [ ] Copy styled text (Safari, Notes): Return pastes it with styles into Notes / TextEdit, shift+Return pastes plain text.
+- [ ] In the panel: ⌘3 pastes the third row; ⌥P pins the highlighted row (pin icon, row jumps to the top, no "π" in the search field), ⌥P again unpins it; ⌥⌫ removes the highlighted row.
+- [ ] Pinned rows stay on top after new copies; menu → Clear Clipboard History removes everything except pinned rows (also from `clipboard.json` and `~/Library/Application Support/bento/clipboard/`).
 
 ## Keep Awake
 

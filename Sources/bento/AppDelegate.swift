@@ -34,9 +34,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let workspaceMemory = WorkspaceMemoryStore()
     private let clipboard = ClipboardWatcher()
     private let keepAwake = KeepAwake()
-    private lazy var clipboardPanel = ClipboardPanel(
+    private lazy var clipboardPanel = ClipboardPanel(actions: ClipboardActions(
         entries: { [weak self] query in self?.clipboard.matching(query) ?? [] },
-        onPick: { [weak self] text in self?.paste(text) })
+        image: { [weak self] entry in self?.clipboard.image(for: entry) },
+        pick: { [weak self] entry, plain in self?.paste(entry, plain: plain) },
+        togglePin: { [weak self] key in self?.clipboard.togglePin(key) },
+        remove: { [weak self] key in self?.clipboard.remove(key) }))
     private var shown: LayoutSnapshot?
     private lazy var bars = BarManager(
         onSelect: { [weak self] number in self?.selectWorkspace(number) },
@@ -453,6 +456,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let awake = item("Keep Awake", #selector(toggleKeepAwake))
         awake.state = keepAwake.isOn ? .on : .off
         menu.addItem(awake)
+        menu.addItem(item("Clear Clipboard History", #selector(clearClipboard)))
         menu.addItem(.separator())
         menu.addItem(item("Quit bento", #selector(quit), key: "q"))
         statusItem?.menu = menu
@@ -526,6 +530,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refreshMenu()
     }
 
+    @objc private func clearClipboard() {
+        clipboard.clear()
+    }
+
     @objc private func toggleKeepAwake() {
         keepAwake.toggle()
         statusItem?.button?.image = NSImage(
@@ -533,8 +541,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refreshMenu()
     }
 
-    private func paste(_ text: String) {
-        clipboard.put(text)
+    private func paste(_ entry: ClipEntry, plain: Bool) {
+        clipboard.put(entry, plain: plain)
         guard let v = keyCode(for: "v") else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             let source = CGEventSource(stateID: .combinedSessionState)
