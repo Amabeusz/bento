@@ -925,3 +925,68 @@ private func singleScreenWorld() -> World {
     _ = w.perform(.workspace(5))
     #expect(w.snapshot().focused == 2)
 }
+
+private func workspace(of id: WindowID, in w: World) -> Int? {
+    w.memory.first { $0.id == id }?.workspace
+}
+
+private func closeOn(_ n: Int, _ id: WindowID, app: String = "Claude", in w: World, at t: Double) {
+    w.addWindow(window(id, on: M2, app: app))
+    _ = w.perform(.moveToWorkspace(n))
+    w.removeWindow(id, closedAt: t)
+}
+
+@Test func reopenedWindowReturnsToClosedWorkspace() {
+    let w = makeWorld()
+    closeOn(3, 1, in: w, at: 10)
+    w.addWindow(window(2, on: M2, app: "Claude"), at: 14)
+    #expect(workspace(of: 2, in: w) == 3)
+}
+
+@Test func reopenAfterTimeoutLandsOnVisibleWorkspace() {
+    let w = makeWorld()
+    closeOn(3, 1, in: w, at: 10)
+    w.addWindow(window(2, on: M2, app: "Claude"), at: 16)
+    #expect(workspace(of: 2, in: w) == 1)
+}
+
+@Test func reopenedWindowsTakeClosedWorkspacesInOrder() {
+    let w = makeWorld()
+    closeOn(2, 1, in: w, at: 10)
+    closeOn(6, 2, in: w, at: 10.1)
+    closeOn(6, 3, in: w, at: 10.2)
+    for id: WindowID in 11...14 { w.addWindow(window(id, on: M2, app: "Claude"), at: 11) }
+    #expect([11, 12, 13, 14].map { workspace(of: $0, in: w) } == [2, 6, 6, 1])
+}
+
+@Test func reopenMatchesOnlySameAppAndAvailableWorkspace() {
+    let w = makeWorld()
+    closeOn(3, 1, in: w, at: 10)
+    w.addWindow(window(2, on: M2, app: "Safari"), at: 11)
+    #expect(workspace(of: 2, in: w) == 1)
+
+    let single = makeWorld()
+    single.addWindow(window(5, on: M1, app: "Claude"))
+    single.removeWindow(5, closedAt: 10)
+    single.setMonitors([M1])
+    single.addWindow(window(6, on: M1, app: "Claude"), at: 11)
+    #expect(workspace(of: 6, in: single) == 1)
+}
+
+@Test func reopenedHiddenWindowDoesNotTakeFocus() {
+    let w = makeWorld()
+    closeOn(3, 1, in: w, at: 10)
+    w.addWindow(window(2, on: M2, app: "Ghostty"))
+    w.addWindow(window(3, on: M2, app: "Claude"), at: 11)
+    #expect(workspace(of: 3, in: w) == 3)
+    #expect(w.snapshot().focused == 2)
+}
+
+@Test func removalWithoutCloseLeavesNoReopenEntry() {
+    let w = makeWorld()
+    w.addWindow(window(1, on: M2, app: "Claude"))
+    _ = w.perform(.moveToWorkspace(3))
+    w.removeWindow(1)
+    w.addWindow(window(2, on: M2, app: "Claude"), at: 11)
+    #expect(workspace(of: 2, in: w) == 1)
+}

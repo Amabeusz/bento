@@ -101,11 +101,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func startTiling() {
         let tracker = WindowTracker()
         tracker.onAdd = { [weak self] info in
-            self?.world?.addWindow(info)
+            self?.world?.addWindow(info, at: ProcessInfo.processInfo.systemUptime)
             self?.applyLayout(animated: true)
             self?.animator.refreshContent()
         }
         tracker.onRemove = { [weak self] id in self?.windowRemoved(id) }
+        tracker.onClose = { [weak self] id in self?.windowRemoved(id, closedAt: ProcessInfo.processInfo.systemUptime) }
         tracker.onReplace = { [weak self] old, new in
             self?.world?.replaceWindow(old, with: new)
             self?.applyLayout()
@@ -197,11 +198,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         lastFocusDisturbance = .now
     }
 
-    private func windowRemoved(_ id: WindowID) {
+    private func windowRemoved(_ id: WindowID, closedAt: Double? = nil) {
         noteFocusDisturbance()
         guard let world else { return }
         let wasFocused = world.snapshot().focused == id
-        world.removeWindow(id)
+        world.removeWindow(id, closedAt: closedAt)
         applyLayout(animated: true)
         animator.refreshContent()
         guard wasFocused, !refocusScheduled else { return }

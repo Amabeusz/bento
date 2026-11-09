@@ -108,6 +108,8 @@ public final class World {
     private var focused: WindowID?
     private var focusedMonitor: MonitorID?
     private var remembered: [WindowID: WindowMemory] = [:]
+    private var recentlyClosed: [(app: String, workspace: Int, at: Double)] = []
+    public static let reopenTime = 5.0
 
     public init(config: Config) {
         self.config = config
@@ -163,13 +165,14 @@ public final class World {
         return (live + remembered.values.filter { windows[$0.id] == nil }).sorted { $0.id < $1.id }
     }
 
-    public func addWindow(_ w: WindowInfo) {
+    public func addWindow(_ w: WindowInfo, at now: Double? = nil) {
         guard windows[w.id] == nil else { return }
         let monitor = focusedMonitor == nil
             ? monitors.first { $0.frame.contains(w.frame.center) } ?? monitors.first
             : currentMonitor
         let saved = remembered.removeValue(forKey: w.id)
             .flatMap { $0.app == w.app && available.contains($0.workspace) ? $0.workspace : nil }
+            ?? now.flatMap { reopened(w.app, at: $0) }
         let n = saved ?? monitor.flatMap { visible[$0.id] } ?? 1
         windows[w.id] = w
         workspaceOf[w.id] = n
@@ -186,14 +189,21 @@ public final class World {
         }
     }
 
-    public func removeWindow(_ id: WindowID) {
+    public func removeWindow(_ id: WindowID, closedAt: Double? = nil) {
         guard let n = workspaceOf[id] else { return }
+        if let closedAt, let w = windows[id] { recentlyClosed.append((w.app, n, closedAt)) }
         detach(id)
         windows[id] = nil
         workspaceOf[id] = nil
         floating[id] = nil
         history.removeAll { $0 == id }
         if focused == id { focused = lastFocused(in: n) }
+    }
+
+    private func reopened(_ app: String, at now: Double) -> Int? {
+        recentlyClosed.removeAll { now - $0.at > Self.reopenTime }
+        guard let i = recentlyClosed.firstIndex(where: { $0.app == app && available.contains($0.workspace) }) else { return nil }
+        return recentlyClosed.remove(at: i).workspace
     }
 
     public func replaceWindow(_ old: WindowID, with new: WindowInfo) {

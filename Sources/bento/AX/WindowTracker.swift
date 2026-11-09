@@ -16,6 +16,7 @@ private func axCallback(
 final class WindowTracker {
     var onAdd: (WindowInfo) -> Void = { _ in }
     var onRemove: (WindowID) -> Void = { _ in }
+    var onClose: (WindowID) -> Void = { _ in }
     var onFocus: (WindowID) -> Void = { _ in }
     var onAppGone: () -> Void = {}
     var onFrameChange: (WindowID) -> Void = { _ in }
@@ -203,6 +204,7 @@ final class WindowTracker {
             if eligible && !reported.contains(w.id) { gained.append(w) }
             if !eligible && reported.contains(w.id) { lost.append(w) }
         }
+        gained.sort { $0.id < $1.id }
         let swaps = pairTabSwaps(lost: lost.map(candidate), gained: gained.map(candidate))
         swaps.forEach(swapTab)
         let swapped = Set(swaps.flatMap { [$0.old, $0.new] })
@@ -220,7 +222,7 @@ final class WindowTracker {
         guard reported.contains(w.id),
               let swap = pairTabSwaps(lost: [candidate(w)], gained: siblings.map(candidate)).first
         else {
-            forget(w.id)
+            forget(w.id, closed: true)
             recheckSoon(pid: w.pid)
             return
         }
@@ -243,11 +245,11 @@ final class WindowTracker {
         recheck()
     }
 
-    private func forget(_ id: WindowID) {
+    private func forget(_ id: WindowID, closed: Bool = false) {
         windows[id] = nil
         lastFrame[id] = nil
         seenAt[id] = nil
-        if reported.remove(id) != nil { onRemove(id) }
+        if reported.remove(id) != nil { closed ? onClose(id) : onRemove(id) }
     }
 
     fileprivate func handle(_ element: AXUIElement, _ notification: String) {

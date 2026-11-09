@@ -169,6 +169,12 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Quit an app and reopen it while bento runs: its new window lands on the visible workspace (memory follows the window, not the app).
 - [ ] `~/Library/Application Support/bento/workspaces.json` exists; `~/.config/bento/` gets no new files and the config is not reloaded on window moves.
 
+## Windows return to their workspace after an app reloads them
+
+- [ ] Claude windows on workspaces 2 and 6, you are on 1: cmd+R in a Claude window (reload) — afterwards the windows are back on 2 and 6, workspace 1 shows what it showed before, focus stays on 1.
+- [ ] Close a window on the visible workspace and wait more than 5 s before opening a new window of the same app: the new window opens on the visible workspace.
+- [ ] Minimize a window and restore it from the Dock, or hide its app with cmd+H: no other window of that app opened right after jumps to the minimized window's workspace.
+
 ## Window overview on F3
 
 - [ ] F3 opens the overview on every screen and Mission Control does not open; each screen shows the windows of all its non-empty workspaces (MacBook: workspace 0; external: 1–9) as screenshots in a grid, each with its workspace number.
