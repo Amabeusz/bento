@@ -33,7 +33,7 @@ final class Effects {
         case .warpCursor(let p):
             CGWarpMouseCursorPosition(CGPoint(x: p.x, y: p.y))
             CGAssociateMouseAndMouseCursorPosition(1)
-        case .toggleOverview:
+        case .toggleOverview, .toggleClipboard:
             break
         }
     }

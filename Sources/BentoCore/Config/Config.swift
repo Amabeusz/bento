@@ -65,6 +65,7 @@ public enum Action: Equatable, Sendable {
     case toggleFloating
     case killActive
     case overview
+    case clipboard
 }
 
 public enum MouseAction: Equatable, Sendable {

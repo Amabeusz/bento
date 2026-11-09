@@ -32,6 +32,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let borders = BorderManager()
     private let animator = Animator()
     private let workspaceMemory = WorkspaceMemoryStore()
+    private let clipboard = ClipboardWatcher()
+    private let keepAwake = KeepAwake()
+    private lazy var clipboardPanel = ClipboardPanel(
+        entries: { [weak self] query in self?.clipboard.matching(query) ?? [] },
+        onPick: { [weak self] text in self?.paste(text) })
     private var shown: LayoutSnapshot?
     private lazy var bars = BarManager(
         onSelect: { [weak self] number in self?.selectWorkspace(number) },
@@ -63,6 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         animator.onActiveChange = { [weak self] active in
             if active { self?.borders.hideAll() } else { self?.borders.showAll() }
         }
+        clipboard.start()
         writeDefaultConfigIfMissing()
         reloadFromDisk()
         watcher = ConfigWatcher(url: configURL) { [weak self] in self?.configDidChange() }
@@ -78,6 +84,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        keepAwake.stop()
         borders.removeAll()
         bars.removeAll()
         restoreParkedWindows()
@@ -165,6 +172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             switch effect {
             case .focusWindow, .focusNothing: noteFocusDisturbance()
             case .toggleOverview: toggleOverview()
+            case .toggleClipboard: clipboardPanel.isOpen ? clipboardPanel.close() : clipboardPanel.show()
             default: break
             }
             effects?.run(effect)
@@ -441,6 +449,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let login = item("Launch at Login", #selector(toggleLaunchAtLogin))
         login.state = SMAppService.mainApp.status == .enabled ? .on : .off
         menu.addItem(login)
+        let awake = item("Keep Awake", #selector(toggleKeepAwake))
+        awake.state = keepAwake.isOn ? .on : .off
+        menu.addItem(awake)
         menu.addItem(.separator())
         menu.addItem(item("Quit bento", #selector(quit), key: "q"))
         statusItem?.menu = menu
@@ -512,6 +523,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             alert.runModal()
         }
         refreshMenu()
+    }
+
+    @objc private func toggleKeepAwake() {
+        keepAwake.toggle()
+        statusItem?.button?.image = NSImage(
+            systemSymbolName: keepAwake.isOn ? "cup.and.saucer.fill" : "square.grid.2x2", accessibilityDescription: "bento")
+        refreshMenu()
+    }
+
+    private func paste(_ text: String) {
+        clipboard.put(text)
+        guard let v = keyCode(for: "v") else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            let source = CGEventSource(stateID: .combinedSessionState)
+            for down in [true, false] {
+                let event = CGEvent(keyboardEventSource: source, virtualKey: v, keyDown: down)
+                event?.flags = .maskCommand
+                event?.post(tap: .cgSessionEventTap)
+            }
+        }
     }
 
     @objc private func quit() {

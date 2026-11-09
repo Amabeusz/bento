@@ -911,6 +911,10 @@ private func singleScreenWorld() -> World {
     #expect(makeWorld().perform(.overview) == [.toggleOverview])
 }
 
+@Test func clipboardActionTogglesClipboard() {
+    #expect(makeWorld().perform(.clipboard) == [.toggleClipboard])
+}
+
 @Test func rememberedHiddenWindowDoesNotTakeFocus() {
     let w = makeWorld()
     w.remember([WindowMemory(id: 2, app: "Ghostty", workspace: 5)])

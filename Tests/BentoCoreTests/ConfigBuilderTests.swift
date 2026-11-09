@@ -169,3 +169,9 @@ import Testing
     #expect(try parseConfig(defaultConfigText).keyBinds.contains(KeyBind(mods: [], key: "mission_control", action: .overview)))
     #expect(try parseConfig(defaultConfigText).keyBinds.contains(KeyBind(mods: [.ctrl], key: "up", action: .overview)))
 }
+
+@Test func clipboardDispatcherBinds() throws {
+    let bind = KeyBind(mods: [.cmd, .shift], key: "c", action: .clipboard)
+    #expect(try parseConfig("bind = SUPER SHIFT, c, clipboard").keyBinds == [bind])
+    #expect(try parseConfig(defaultConfigText).keyBinds.contains(bind))
+}

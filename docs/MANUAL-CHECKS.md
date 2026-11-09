@@ -185,3 +185,21 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] One window on workspace 1 of the external screen: mod+shift+→ takes it to workspace 2 and shows workspace 2 with the window focused; mod+shift+← brings it back; at workspace 9 (→) or 1 (←) nothing happens.
 - [ ] mod+shift+→/← never sends a window to the other screen; on the MacBook (workspace 0) they do nothing past the last window.
 - [ ] mod+shift+↓/↑ past the last window moves it to the other screen's visible workspace, focus and cursor follow; with windows stacked (1 | 2/3) the first press swaps with the window below.
+
+## Clipboard history
+
+- [ ] Copy three different texts in any apps, press shift+cmd+C: a panel opens in the middle of the screen with the mouse, newest text on top, the app you were in stays focused (its menu bar stays).
+- [ ] Copying a text that is already in the history moves it to the top instead of adding a second copy.
+- [ ] Typing filters the list (case does not matter); ↑/↓ move the highlight and stop at the first/last row; with more than 12 entries the list scrolls with the highlight.
+- [ ] Return closes the panel and pastes the highlighted text into the app you were in; the text is also on the clipboard (cmd+V pastes it again) and is now at the top of the history.
+- [ ] Clicking a row pastes it the same way; Esc, shift+cmd+C again, or a click in another window close the panel without pasting.
+- [ ] A password copied from a password manager (1Password, Keychain Access "Copy Password") does not show up in the history.
+- [ ] Quit bento and start it again: the history is still there (`~/Library/Application Support/bento/clipboard.json`).
+- [ ] After Pause Tiling, shift+cmd+C does nothing (decision D2 A); after Resume it works again.
+
+## Keep Awake
+
+- [ ] Menu → Keep Awake: the item gets a ✓, the menu bar icon becomes a cup, `pmset -g assertions` lists `PreventUserIdleDisplaySleep` named "bento Keep Awake".
+- [ ] Menu → Keep Awake again: no ✓, grid icon back, the assertion is gone from `pmset -g assertions`.
+- [ ] With Keep Awake on, Quit bento and separately `kill <pid>` of bento: in both cases the assertion is gone afterwards.
+- [ ] With Keep Awake on, the screen does not dim or sleep after the display-sleep time from System Settings.

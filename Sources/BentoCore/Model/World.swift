@@ -89,6 +89,7 @@ public enum SideEffect: Equatable, Sendable {
     case focusNothing
     case warpCursor(Point)
     case toggleOverview
+    case toggleClipboard
 }
 
 public final class World {
@@ -267,6 +268,8 @@ public final class World {
             return []
         case .overview:
             return [.toggleOverview]
+        case .clipboard:
+            return [.toggleClipboard]
         }
     }
 

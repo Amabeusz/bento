@@ -168,6 +168,7 @@ private func action(dispatcher: String, argument: String, _ line: Int) throws(Co
     case "togglefloating": return .toggleFloating
     case "killactive": return .killActive
     case "overview": return .overview
+    case "clipboard": return .clipboard
     default: throw ConfigError(line: line, message: "unknown dispatcher '\(dispatcher)'")
     }
 }
