@@ -29,8 +29,10 @@ A set of macOS tools in a single menu bar app. The first module is a Hyprland-st
    ```
 
 5. **Grant permissions** in System Settings → Privacy & Security:
-   - **Accessibility** (required) — tiling starts a few seconds after it is granted.
-   - **Screen Recording** (optional) — everything works without it, just without animations. After granting it, quit bento from its menu and start it again.
+   - **Accessibility** — needed for tiling, shortcuts, the window overview, the command palette and pasting from clipboard history. Without it bento still runs: clipboard history (open it from the menu; picking an entry copies it), Keep Awake and Settings work. Tiling starts a few seconds after it is granted.
+   - **Screen Recording** (optional) — everything works without it, just without animations and overview thumbnails. After granting it, quit bento from its menu and start it again.
+
+   Settings → Permissions shows what is granted, what each permission is for, and opens the right System Settings pane.
 
 A grid icon appears in the menu bar. Its menu has: settings, config errors, pause, launch at login, and quit.
 

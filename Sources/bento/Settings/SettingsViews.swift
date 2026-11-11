@@ -4,20 +4,19 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var model: SettingsModel
-    @State private var tab = SettingsTab.appearance
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 2) {
                 ForEach(SettingsTab.allCases, id: \.self) { item in
-                    Button { tab = item } label: {
+                    Button { model.tab = item } label: {
                         VStack(spacing: 3) {
                             Image(systemName: item.symbol).font(.system(size: 17)).frame(height: 20)
                             Text(item.rawValue).font(.caption)
                         }
                         .frame(width: 80, height: 46)
-                        .foregroundStyle(tab == item ? Color.accentColor : .secondary)
-                        .background(tab == item ? Color.primary.opacity(0.08) : .clear, in: .rect(cornerRadius: 8))
+                        .foregroundStyle(model.tab == item ? Color.accentColor : .secondary)
+                        .background(model.tab == item ? Color.primary.opacity(0.08) : .clear, in: .rect(cornerRadius: 8))
                         .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
@@ -31,11 +30,12 @@ struct SettingsView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
             }
-            switch tab {
+            switch model.tab {
             case .appearance: AppearanceTab(model: model)
             case .behavior: BehaviorTab(model: model)
             case .shortcuts: ShortcutsTab(model: model)
             case .clipboard: ClipboardTab(model: model)
+            case .permissions: PermissionsTab(model: model)
             case .about: AboutTab()
             }
         }
@@ -43,8 +43,9 @@ struct SettingsView: View {
     }
 }
 
-private enum SettingsTab: String, CaseIterable {
-    case appearance = "Appearance", behavior = "Behavior", shortcuts = "Shortcuts", clipboard = "Clipboard", about = "About"
+enum SettingsTab: String, CaseIterable {
+    case appearance = "Appearance", behavior = "Behavior", shortcuts = "Shortcuts", clipboard = "Clipboard"
+    case permissions = "Permissions", about = "About"
 
     var symbol: String {
         switch self {
@@ -52,7 +53,67 @@ private enum SettingsTab: String, CaseIterable {
         case .behavior: "gearshape.2"
         case .shortcuts: "keyboard"
         case .clipboard: "clipboard"
+        case .permissions: "lock.shield"
         case .about: "info.circle"
+        }
+    }
+}
+
+private struct PermissionsTab: View {
+    let model: SettingsModel
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { _ in
+            Form {
+                ForEach(Permission.allCases, id: \.self) { permission in
+                    PermissionSection(permission: permission, granted: model.permissionGranted(permission), model: model)
+                }
+                Section("Works without permissions") {
+                    Text(Feature.allCases.filter { $0.permission == nil }.map(\.rawValue).joined(separator: ", "))
+                }
+            }
+            .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
+        }
+    }
+}
+
+private struct PermissionSection: View {
+    let permission: Permission
+    let granted: Bool
+    let model: SettingsModel
+
+    var body: some View {
+        Section(permission.rawValue) {
+            LabeledContent("Status") {
+                Label(granted ? "Granted" : "Not granted",
+                      systemImage: granted ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                    .foregroundStyle(granted ? .green : .orange)
+            }
+            Text(purpose).foregroundStyle(.secondary)
+            LabeledContent("Needed for") {
+                Text(features(needing: permission).map(\.rawValue).joined(separator: "\n"))
+                    .multilineTextAlignment(.trailing)
+            }
+            HStack {
+                if !granted { Text(afterGranting).foregroundStyle(.secondary) }
+                Spacer()
+                Button("Open System Settings") { model.openSystemSettings(for: permission) }
+            }
+        }
+    }
+
+    private var purpose: String {
+        switch permission {
+        case .accessibility: "Lets bento move and resize windows of other apps and react to its shortcuts."
+        case .screenRecording: "Lets bento take pictures of windows for animations and overview thumbnails."
+        }
+    }
+
+    private var afterGranting: String {
+        switch permission {
+        case .accessibility: "Tiling starts on its own once granted."
+        case .screenRecording: "Restart bento after granting it."
         }
     }
 }

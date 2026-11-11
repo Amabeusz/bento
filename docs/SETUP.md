@@ -24,7 +24,7 @@ open build/bento.app
 
 On launch bento asks for both permissions; enable bento under System Settings -> Privacy & Security:
 
-- Accessibility (required; bento does not tile until it is granted). Tiling starts within a couple of seconds of granting it.
+- Accessibility (needed for tiling, shortcuts, overview, palette and pasting; without it bento opens Settings → Permissions and keeps clipboard history, Keep Awake and Settings working). Tiling starts within a couple of seconds of granting it.
 - Screen Recording (optional; without it animations are off). bento requests it at launch, which adds it to the Screen Recording list. macOS applies the grant only after a relaunch: quit bento from its menu and open it again.
 
 ## 4. Desktops

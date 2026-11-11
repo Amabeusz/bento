@@ -20,7 +20,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Break the config (`gaps_in = x`): the menu shows "Config Error: line N - message" within a second.
 - [ ] Fix the config: the error disappears from the menu.
 - [ ] With OmniWM (or Rectangle) running at launch, an alert names it.
-- [ ] Without Accessibility permission, an alert explains it and nothing tiles; after granting, tiling starts within about 2 seconds.
+- [ ] Without Accessibility permission, no alert blocks the launch: Settings opens on Permissions (Accessibility "Not granted", Screen Recording as it is), the menu shows "Accessibility needed — tiling and shortcuts off" (clicking it opens Permissions), clipboard history keeps collecting, "Clipboard History…" opens the panel and picking an entry copies it without pasting; after granting, tiling starts within about 2 seconds, the menu item disappears and Permissions shows "Granted" within a second.
 - [ ] Without Screen Recording permission, the menu shows "Animations off (no Screen Recording)".
 - [ ] Launch at Login toggles the checkmark; Pause Tiling / Resume Tiling toggles the label.
 
@@ -227,6 +227,8 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Change a key the file does not have yet (e.g. island Padding off Auto): a new line appears inside `bar { }`; turning Auto back on removes it.
 - [ ] Island opacity slider from Glass to Solid makes the island tint go from clear to opaque; the Tint color picker changes its color.
 - [ ] Focused/unfocused border colors: a single color shows a color picker; the default gradient shows a text field that accepts `rgba(…) rgba(…) 135deg`.
+- [ ] Permissions tab: each permission shows its status, what it is for and what needs it; "Open System Settings" opens Privacy & Security → Accessibility / Screen Recording; toggling it there changes the status within a second.
+- [ ] Menu → "Clipboard History…" opens the clipboard panel.
 - [ ] Every color row (focused/unfocused border, island colors) has a ↺ button, greyed out while the color is the default; after changing a color it lights up, and clicking it writes the default back into its line in `bento.conf` (e.g. `col.active_border = rgba(3d9dffff)`) and greys out again; with an invalid border value (text field) ↺ brings back the color picker.
 - [ ] Behavior toggles (focus follows mouse, cursor warp, animations) take effect without restarting; Launch at login matches the menu item.
 - [ ] Shortcuts: click a shortcut and press ctrl+alt+← (already bound): it records instead of moving focus; pressing keys that include $mod saves them as `$mod …`; Esc cancels; changing the action and argument updates the line; − removes it; Add shortcut adds `bind = $mod, b, focusorlaunch, Safari` under the last bind.

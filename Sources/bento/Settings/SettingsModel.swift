@@ -12,9 +12,11 @@ final class SettingsModel {
     var recording = false {
         didSet { onRecording(recording) }
     }
+    var tab = SettingsTab.appearance
     @ObservationIgnored var launchAtLogin: () -> Bool = { false }
     @ObservationIgnored var setLaunchAtLogin: (Bool) -> Void = { _ in }
     @ObservationIgnored var onRecording: (Bool) -> Void = { _ in }
+    @ObservationIgnored var permissionGranted: (Permission) -> Bool = { _ in false }
     @ObservationIgnored private let url: URL
     @ObservationIgnored private var pending: DispatchWorkItem?
     @ObservationIgnored let defaults = Config()
@@ -35,6 +37,12 @@ final class SettingsModel {
         guard !NSWorkspace.shared.open(url),
               let textEditor = NSWorkspace.shared.urlForApplication(toOpen: .plainText) else { return }
         NSWorkspace.shared.open([url], withApplicationAt: textEditor, configuration: NSWorkspace.OpenConfiguration())
+    }
+
+    func openSystemSettings(for permission: Permission) {
+        let pane = permission == .accessibility ? "Privacy_Accessibility" : "Privacy_ScreenCapture"
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)") else { return }
+        NSWorkspace.shared.open(url)
     }
 
     func string(_ key: String) -> String? { editor.value(key) }

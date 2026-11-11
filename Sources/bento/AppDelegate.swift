@@ -4,7 +4,7 @@ import BentoCore
 import ServiceManagement
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     let loader = ConfigLoader()
     var world: World?
     private(set) var isPaused = false
@@ -14,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var watcher: ConfigWatcher?
     private var accessibilityTimer: Timer?
-    private var screenRecordingGranted = true
+    private var screenRecordingItem: NSMenuItem?
     private var permissionsLost = false
     private var ioErrorMessage: String?
     private var tracker: WindowTracker?
@@ -89,8 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if loader.current.keepAwakeOnLaunch { toggleKeepAwake() }
         watcher = ConfigWatcher(url: configURL) { [weak self] in self?.configDidChange() }
 
-        screenRecordingGranted = CGPreflightScreenCaptureAccess()
-        if !screenRecordingGranted { CGRequestScreenCaptureAccess() }
+        if !CGPreflightScreenCaptureAccess() { CGRequestScreenCaptureAccess() }
         refreshMenu()
 
         installSignalHandlers()
@@ -458,12 +457,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if permissionsLost {
             menu.addItem(disabledItem("Permissions lost — hotkeys and tiling stopped", symbol: "lock"))
         }
+        if accessibilityTimer != nil {
+            menu.addItem(item("Accessibility needed — tiling and shortcuts off", #selector(openPermissions), symbol: "lock"))
+        }
         if eventTap?.isRunning == false {
             menu.addItem(disabledItem("Hotkeys unavailable — check Accessibility permission", symbol: "keyboard"))
         }
-        if !screenRecordingGranted {
-            menu.addItem(disabledItem("Animations off (no Screen Recording)", symbol: "video.slash"))
-        }
+        screenRecordingItem = disabledItem("Animations off (no Screen Recording)", symbol: "video.slash")
+        screenRecordingItem?.isHidden = CGPreflightScreenCaptureAccess()
+        menu.addItem(screenRecordingItem!)
         menu.addItem(.separator())
         menu.addItem(item(isPaused ? "Resume Tiling" : "Pause Tiling", #selector(togglePause),
                             symbol: isPaused ? "play.circle" : "pause.circle"))
@@ -473,10 +475,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let awake = item("Keep Awake", #selector(toggleKeepAwake), symbol: "cup.and.saucer")
         awake.state = keepAwake.isOn ? .on : .off
         menu.addItem(awake)
+        menu.addItem(item("Clipboard History…", #selector(showClipboardHistory), symbol: "list.clipboard"))
         menu.addItem(item("Clear Clipboard History", #selector(clearClipboard), symbol: "clipboard"))
         menu.addItem(.separator())
         menu.addItem(item("Quit bento", #selector(quit), key: "q", symbol: "xmark.circle"))
+        menu.delegate = self
         statusItem?.menu = menu
+    }
+
+    func menuWillOpen(_ menu: NSMenu) {
+        screenRecordingItem?.isHidden = CGPreflightScreenCaptureAccess()
     }
 
     private var configErrors: [String] {
@@ -525,10 +533,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openSettings() {
+        showSettings(tab: nil)
+    }
+
+    @objc private func openPermissions() {
+        showSettings(tab: .permissions)
+    }
+
+    @objc private func showClipboardHistory() {
+        clipboardPanel.show()
+    }
+
+    private func showSettings(tab: SettingsTab?) {
         if settings == nil {
             let model = SettingsModel(url: configURL)
             model.launchAtLogin = { SMAppService.mainApp.status == .enabled }
             model.setLaunchAtLogin = { [weak self] on in self?.setLaunchAtLogin(on) }
+            model.permissionGranted = { permission in
+                switch permission {
+                case .accessibility: AXIsProcessTrusted()
+                case .screenRecording: CGPreflightScreenCaptureAccess()
+                }
+            }
             model.onRecording = { [weak self] on in
                 self?.recordingShortcut = on
                 self?.syncTap()
@@ -536,6 +562,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settings = SettingsWindow(model: model)
         }
         settings?.model.configError = configErrors.first
+        if let tab { settings?.model.tab = tab }
         settings?.show()
     }
 
@@ -610,7 +637,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func paste(_ entry: ClipEntry, plain: Bool) {
         clipboard.put(entry, plain: plain)
-        guard let v = keyCode(for: "v") else { return }
+        guard pasteMode(postEventAllowed: CGPreflightPostEventAccess()) == .paste, let v = keyCode(for: "v") else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             let source = CGEventSource(stateID: .combinedSessionState)
             for down in [true, false] {
@@ -659,13 +686,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             startTiling()
             return
         }
-        let alert = NSAlert()
-        alert.messageText = "Accessibility permission needed"
-        alert.informativeText = "bento needs Accessibility access to move and resize windows. Grant it in System Settings > Privacy & Security > Accessibility. Tiling starts automatically once it is granted."
-        alert.runModal()
         accessibilityTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.pollAccessibility() }
         }
+        refreshMenu()
+        openPermissions()
     }
 
     private func pollAccessibility() {
