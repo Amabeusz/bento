@@ -3,11 +3,11 @@ import Testing
 
 @Suite struct PermissionsTests {
     @Test func accessibilityGatesWindowAndShortcutFeatures() {
-        #expect(features(needing: .accessibility) == [.tiling, .shortcuts, .overview, .palette, .paste])
+        #expect(Feature.allCases.filter { $0.permission == .accessibility } == [.tiling, .shortcuts, .overview, .palette, .paste])
     }
 
     @Test func screenRecordingGatesOnlyCaptures() {
-        #expect(features(needing: .screenRecording) == [.animations, .thumbnails])
+        #expect(Feature.allCases.filter { $0.permission == .screenRecording } == [.animations, .thumbnails])
     }
 
     @Test func clipboardHistoryKeepAwakeAndSettingsNeedNoPermission() {

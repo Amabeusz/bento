@@ -84,21 +84,20 @@ private struct PermissionSection: View {
     let model: SettingsModel
 
     var body: some View {
-        Section(permission.rawValue) {
-            LabeledContent("Status") {
-                Label(granted ? "Granted" : "Not granted",
-                      systemImage: granted ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                    .foregroundStyle(granted ? .green : .orange)
-            }
+        Section {
             Text(purpose).foregroundStyle(.secondary)
-            LabeledContent("Needed for") {
-                Text(features(needing: permission).map(\.rawValue).joined(separator: "\n"))
-                    .multilineTextAlignment(.trailing)
-            }
             HStack {
                 if !granted { Text(afterGranting).foregroundStyle(.secondary) }
                 Spacer()
                 Button("Open System Settings") { model.openSystemSettings(for: permission) }
+            }
+        } header: {
+            HStack {
+                Text(permission.rawValue)
+                Spacer()
+                Label(granted ? "Granted" : "Not granted",
+                      systemImage: granted ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                    .foregroundStyle(granted ? .green : .orange)
             }
         }
     }

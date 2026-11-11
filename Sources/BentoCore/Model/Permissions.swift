@@ -24,10 +24,6 @@ public enum Feature: String, CaseIterable, Sendable {
     }
 }
 
-public func features(needing permission: Permission) -> [Feature] {
-    Feature.allCases.filter { $0.permission == permission }
-}
-
 public enum PasteMode: Equatable, Sendable { case paste, copyOnly }
 
 public func pasteMode(postEventAllowed: Bool) -> PasteMode {
