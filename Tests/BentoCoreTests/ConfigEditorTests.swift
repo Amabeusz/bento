@@ -141,6 +141,14 @@ windowrule = float, app:^Calculator$
                  config.barTextActive, config.barTextEmpty, config.barError] == island.map(\.1))
     }
 
+    @Test func colorIsDefaultOnlyForMissingOrDefaultValue() {
+        let fallback = Config().barText
+        #expect(colorIsDefault(nil, fallback))
+        #expect(colorIsDefault(formatColor(fallback), fallback))
+        #expect(!colorIsDefault("rgba(dd)", fallback))
+        #expect(!colorIsDefault("rgba(ff0000ff)", fallback))
+    }
+
     @Test func invalidGradientAndInsetsParseToNil() {
         #expect(parseGradient("rgba(f5c2e7ff) rgba(dd) rgba(89b4faff) 135deg") == nil)
         #expect(parseGradient("") == nil)

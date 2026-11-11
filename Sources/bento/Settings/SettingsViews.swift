@@ -119,7 +119,7 @@ private struct ColorRow: View {
                     get: { model.color(key, fallback).color },
                     set: { model.set(key, color: RGBA($0)) }), supportsOpacity: true)
                     .labelsHidden()
-                ResetButton(isDefault: model.color(key, fallback) == fallback) { model.set(key, color: fallback) }
+                ResetButton(isDefault: colorIsDefault(model.string(key), fallback)) { model.set(key, color: fallback) }
             }
         }
     }

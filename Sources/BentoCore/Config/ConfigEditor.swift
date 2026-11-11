@@ -154,6 +154,10 @@ public func formatColor(_ color: RGBA) -> String {
     return "rgba(\(hex(color.r))\(hex(color.g))\(hex(color.b))\(hex(color.a)))"
 }
 
+public func colorIsDefault(_ value: String?, _ fallback: RGBA) -> Bool {
+    value.map { parseColor($0) == fallback } ?? true
+}
+
 public func formatGradient(_ gradient: Gradient) -> String {
     let colors = gradient.colors.map(formatColor).joined(separator: " ")
     guard gradient.colors.count > 1 else { return colors }
