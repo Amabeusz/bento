@@ -21,7 +21,7 @@ private func ids(_ list: [PaletteCommand]) -> [String] { list.map(\.id) }
         }
         for t in ["Move workspace to other monitor", "Toggle split", "Toggle fullscreen", "Toggle floating", "Close window",
                   "Grow window", "Shrink window", "Window overview", "Clipboard history", "Settings…", "Pause tiling",
-                  "Keep Awake", "Launch at login", "Clear clipboard history", "Quit bento"] {
+                  "Keep Awake", "Launch at login", "Clear clipboard history", "Quit Bento"] {
             #expect(titles.contains(t), "\(t)")
         }
         #expect(!titles.contains("Reload config"))

@@ -1,4 +1,4 @@
-# bento setup
+# Bento setup
 
 ## 1. Create the signing certificate (once)
 
@@ -22,18 +22,18 @@ open build/bento.app
 
 ## 3. Grant permissions
 
-On launch bento asks for both permissions; enable bento under System Settings -> Privacy & Security:
+On launch Bento asks for both permissions; enable Bento under System Settings -> Privacy & Security:
 
-- Accessibility (needed for tiling, shortcuts, overview, palette and pasting; without it bento opens Settings → Permissions and keeps clipboard history, Keep Awake and Settings working). Tiling starts within a couple of seconds of granting it.
-- Screen Recording (optional; without it animations are off). bento requests it at launch, which adds it to the Screen Recording list. macOS applies the grant only after a relaunch: quit bento from its menu and open it again.
+- Accessibility (needed for tiling, shortcuts, overview, palette and pasting; without it Bento opens Settings → Permissions and keeps clipboard history, Keep Awake and Settings working). Tiling starts within a couple of seconds of granting it.
+- Screen Recording (optional; without it animations are off). Bento requests it at launch, which adds it to the Screen Recording list. macOS applies the grant only after a relaunch: quit Bento from its menu and open it again.
 
 ## 4. Desktops
 
-Keep exactly one macOS Desktop (Space) per display. bento manages its own workspaces 0–9 (0 = MacBook screen when an external monitor is connected, 1–9 otherwise) and cannot see macOS Spaces.
+Keep exactly one macOS Desktop (Space) per display. Bento manages its own workspaces 0–9 (0 = MacBook screen when an external monitor is connected, 1–9 otherwise) and cannot see macOS Spaces.
 
 ## 5. Other window managers
 
-Quit OmniWM and Rectangle before using bento; two window managers fight over window positions.
+Quit OmniWM and Rectangle before using Bento; two window managers fight over window positions.
 
 ## 6. Config
 

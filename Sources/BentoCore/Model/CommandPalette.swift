@@ -58,7 +58,7 @@ public func paletteCommands(binds: [KeyBind]) -> [PaletteCommand] {
         PaletteCommand(id: "app:keepAwake", title: "Keep Awake", symbol: "cup.and.saucer", target: .app(.keepAwake)),
         PaletteCommand(id: "app:launchAtLogin", title: "Launch at login", symbol: "power", target: .app(.launchAtLogin)),
         PaletteCommand(id: "app:clearClipboard", title: "Clear clipboard history", symbol: "clipboard", target: .app(.clearClipboard)),
-        PaletteCommand(id: "app:quit", title: "Quit bento", symbol: "xmark.circle", target: .app(.quit)),
+        PaletteCommand(id: "app:quit", title: "Quit Bento", symbol: "xmark.circle", target: .app(.quit)),
     ]
     var seen: Set<String> = []
     list = list.filter { seen.insert($0.id).inserted }

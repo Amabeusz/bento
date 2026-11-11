@@ -469,16 +469,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         menu.addItem(item(isPaused ? "Resume Tiling" : "Pause Tiling", #selector(togglePause),
                             symbol: isPaused ? "play.circle" : "pause.circle"))
-        let login = item("Launch at Login", #selector(toggleLaunchAtLogin), symbol: "power")
-        login.state = SMAppService.mainApp.status == .enabled ? .on : .off
-        menu.addItem(login)
         let awake = item("Keep Awake", #selector(toggleKeepAwake), symbol: "cup.and.saucer")
         awake.state = keepAwake.isOn ? .on : .off
         menu.addItem(awake)
         menu.addItem(item("Clipboard History…", #selector(showClipboardHistory), symbol: "list.clipboard"))
         menu.addItem(item("Clear Clipboard History", #selector(clearClipboard), symbol: "clipboard"))
         menu.addItem(.separator())
-        menu.addItem(item("Quit bento", #selector(quit), key: "q", symbol: "xmark.circle"))
+        menu.addItem(item("Quit Bento", #selector(quit), key: "q", symbol: "xmark.circle"))
         menu.delegate = self
         statusItem?.menu = menu
     }
@@ -631,7 +628,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return true
         }
         image.isTemplate = true
-        image.accessibilityDescription = awake ? "bento, Keep Awake on" : "bento"
+        image.accessibilityDescription = awake ? "Bento, Keep Awake on" : "Bento"
         return image
     }
 
@@ -676,7 +673,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard !conflicts.isEmpty else { return }
         let alert = NSAlert()
         alert.messageText = "Another window manager is running"
-        alert.informativeText = "\(Set(conflicts).sorted().joined(separator: ", ")) will fight with bento over window positions. Quit it and relaunch bento."
+        alert.informativeText = "\(Set(conflicts).sorted().joined(separator: ", ")) will fight with Bento over window positions. Quit it and relaunch Bento."
         alert.runModal()
     }
 

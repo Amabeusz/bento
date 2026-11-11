@@ -104,15 +104,15 @@ private struct PermissionSection: View {
 
     private var purpose: String {
         switch permission {
-        case .accessibility: "Lets bento move and resize windows of other apps and react to its shortcuts."
-        case .screenRecording: "Lets bento take pictures of windows for animations and overview thumbnails."
+        case .accessibility: "Lets Bento move and resize windows of other apps and react to its shortcuts."
+        case .screenRecording: "Lets Bento take pictures of windows for animations and overview thumbnails."
         }
     }
 
     private var afterGranting: String {
         switch permission {
         case .accessibility: "Tiling starts on its own once granted."
-        case .screenRecording: "Restart bento after granting it."
+        case .screenRecording: "Restart Bento after granting it."
         }
     }
 }
@@ -123,7 +123,7 @@ private struct AboutTab: View {
     var body: some View {
         VStack(spacing: 8) {
             Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 96, height: 96)
-            Text("bento").font(.title.bold())
+            Text("Bento").font(.title.bold())
             Text("Tiling window manager for macOS").foregroundStyle(.secondary)
             if let version {
                 Text("Version \(version)").font(.caption).foregroundStyle(.tertiary)
@@ -429,7 +429,7 @@ private struct ClipboardTab: View {
                 }
             }
             Section("Keep Awake") {
-                FlagRow(title: "Turn on Keep Awake when bento starts", key: "clipboard:keep_awake_on_launch", model: model,
+                FlagRow(title: "Turn on Keep Awake when Bento starts", key: "clipboard:keep_awake_on_launch", model: model,
                         fallback: d.keepAwakeOnLaunch)
             }
         }

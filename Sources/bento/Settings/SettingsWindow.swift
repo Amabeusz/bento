@@ -34,7 +34,7 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
             contentRect: NSRect(x: 0, y: 0, width: 640, height: 600),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered, defer: false)
-        window.title = "bento Settings"
+        window.title = "Bento Settings"
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.isOpaque = false
@@ -53,7 +53,7 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
     private static func editMenu() -> NSMenu {
         let main = NSMenu()
         let app = NSMenuItem()
-        app.submenu = NSMenu(title: "bento")
+        app.submenu = NSMenu(title: "Bento")
         app.submenu?.addItem(withTitle: "Close Settings", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         main.addItem(app)
         let edit = NSMenuItem()

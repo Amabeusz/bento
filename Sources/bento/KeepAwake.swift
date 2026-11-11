@@ -15,7 +15,7 @@ final class KeepAwake {
         var id = IOPMAssertionID(0)
         let result = IOPMAssertionCreateWithName(
             kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
-            IOPMAssertionLevel(kIOPMAssertionLevelOn), "bento Keep Awake" as CFString, &id)
+            IOPMAssertionLevel(kIOPMAssertionLevelOn), "Bento Keep Awake" as CFString, &id)
         if result == kIOReturnSuccess { assertion = id }
     }
 

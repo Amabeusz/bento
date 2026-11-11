@@ -101,7 +101,7 @@ func banner() -> CGImage {
         ctx.fill(CGRect(x: 0, y: 0, width: 1280, height: 640))
 
         ctx.draw(icon(256), in: CGRect(x: 64, y: 330, width: 176, height: 176))
-        text(ctx, "bento", roundedFont(124, .heavy), at: CGPoint(x: 240, y: 370), color: sky)
+        text(ctx, "Bento", roundedFont(124, .heavy), at: CGPoint(x: 240, y: 370), color: sky)
         text(ctx, "Hyprland-style tiling for macOS,", roundedFont(30, .medium), at: CGPoint(x: 92, y: 262), color: hex(0xe6e8ee))
         text(ctx, "plus handy tools, in one menu bar app.", roundedFont(30, .medium), at: CGPoint(x: 92, y: 222),
              color: hex(0xe6e8ee))

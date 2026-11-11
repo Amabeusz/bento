@@ -6,12 +6,12 @@ Checks to run by hand after granting permissions (see docs/SETUP.md).
 
 Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, then:
 
-- [ ] Quit bento from its menu: every window comes back on screen.
+- [ ] Quit Bento from its menu: every window comes back on screen.
 - [ ] Relaunch, park windows again, Pause Tiling: every window comes back on screen.
 - [ ] Relaunch, park windows again, `kill -TERM <pid>`: every window comes back on screen.
-- [ ] Relaunch, park windows again, `kill -9 <pid>`: the parked windows stay off-screen; launch bento again: every window comes back on screen.
+- [ ] Relaunch, park windows again, `kill -9 <pid>`: the parked windows stay off-screen; launch Bento again: every window comes back on screen.
 - [ ] Repeat all four with the external monitor connected (windows parked from both monitors).
-- [ ] With a busy or frozen app (e.g. IntelliJ indexing, or an app beachballing): bento hotkeys still react at once, and typing and clicking in other apps stays responsive.
+- [ ] With a busy or frozen app (e.g. IntelliJ indexing, or an app beachballing): Bento hotkeys still react at once, and typing and clicking in other apps stays responsive.
 
 ## Task 7
 
@@ -22,7 +22,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] With OmniWM (or Rectangle) running at launch, an alert names it.
 - [ ] Without Accessibility permission, no alert blocks the launch: Settings opens on Permissions (Accessibility "Not granted", Screen Recording as it is), the menu shows "Accessibility needed — tiling and shortcuts off" (clicking it opens Permissions), clipboard history keeps collecting, "Clipboard History…" opens the panel and picking an entry copies it without pasting; after granting, tiling starts within about 2 seconds, the menu item disappears and Permissions shows "Granted" within a second.
 - [ ] Without Screen Recording permission, the menu shows "Animations off (no Screen Recording)".
-- [ ] Launch at Login toggles the checkmark; Pause Tiling / Resume Tiling toggles the label.
+- [ ] The menu has no Launch at Login item; Pause Tiling / Resume Tiling toggles the label.
 
 ## Task 8
 
@@ -32,7 +32,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Plug and unplug the external monitor: no window is lost (every window is still reachable on a visible screen).
 - [ ] `kill -9` the app with nothing parked, relaunch: the layout is rebuilt.
 - [ ] Put a tiled Ghostty window into native fullscreen: the other windows re-tile to fill its space. Leave fullscreen: it tiles again.
-- [ ] Launch bento while a window is in native fullscreen; leave fullscreen: the window joins the layout.
+- [ ] Launch Bento while a window is in native fullscreen; leave fullscreen: the window joins the layout.
 - [ ] Minimize a tiled window: the rest re-tile. Restore it from the Dock: it tiles again.
 
 ## Task 9
@@ -70,7 +70,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] One centered translucent island per monitor sits right under the macOS menu bar, showing 1–9 (one screen) or "0" on the MacBook and 1–9 on the external monitor.
 - [ ] The workspace shown on a monitor is a filled pink pill with dark text on that monitor's bar; the workspace shown on the other monitor has a purple outline; empty workspaces are dimmed, others are normal light text.
 - [ ] Switching workspaces with the hotkeys moves the highlights on both monitors' bars.
-- [ ] Clicking a number switches to that workspace without activating bento or stealing focus from the current app.
+- [ ] Clicking a number switches to that workspace without activating Bento or stealing focus from the current app.
 - [ ] Tiled windows never overlap the island; the island stays above other windows and appears on every Space, but not in Mission Control.
 - [ ] Save `bar { height = 40 }`: the island resizes without a relaunch and the tiling area adjusts; save `enabled = false`: the island disappears and tiling grows into the space; `enabled = true` brings it back.
 - [ ] Unplugging / replugging the external monitor removes / recreates its island; Pause Tiling hides the islands, Resume brings them back.
@@ -79,7 +79,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 - [ ] Opening and closing windows animates the re-tiling smoothly at 120 Hz on the built-in display; a new window pops in (slightly scaled up and faded in), or, if it is too new to capture, fades in at the end. During the animation the final layout never shows through behind the moving snapshots (no full-size windows behind growing snapshots, no flickering slivers in the gaps).
 - [ ] Switching from an empty workspace to a populated one never shows the new windows at once: windows with a cached snapshot slide in, others fade in at the end; switching to a workspace for the first time after launch fades its windows in at the end.
-- [ ] The desktop (wallpaper, icons) and unmoved windows look unchanged during an animation; no bento border or bar is doubled in it.
+- [ ] The desktop (wallpaper, icons) and unmoved windows look unchanged during an animation; no Bento border or bar is doubled in it.
 - [ ] ctrl-alt-1 → ctrl-alt-2 slides left, back slides right; clicking a number on the bar slides the same way.
 - [ ] Mashing ctrl-alt-1/2 quickly never lags the keys or leaves an overlay behind; every window ends up at its final frame.
 - [ ] Borders disappear during a transition and come back (at the right frames and colors) when it ends; Pause Tiling in the middle of an animation, then Resume: borders are back.
@@ -90,10 +90,10 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 ## Final review fixes
 
-- [ ] Close a Ghostty window while another Ghostty window is on a different workspace: bento stays on the current workspace (no jump), and the current workspace's next window gets focus and the active border.
+- [ ] Close a Ghostty window while another Ghostty window is on a different workspace: Bento stays on the current workspace (no jump), and the current workspace's next window gets focus and the active border.
 - [ ] Same with Cmd-Q of an app that has a window on another workspace, and with Cmd-H: no jump to another workspace.
-- [ ] Cmd-Tab (slowly, not right after closing a window) to an app whose window is on a hidden workspace: bento switches to that workspace.
-- [ ] Switch to an empty workspace and type: nothing reaches the previously focused (now parked) window; Finder (or, if Finder has windows, bento) is active.
+- [ ] Cmd-Tab (slowly, not right after closing a window) to an app whose window is on a hidden workspace: Bento switches to that workspace.
+- [ ] Switch to an empty workspace and type: nothing reaches the previously focused (now parked) window; Finder (or, if Finder has windows, Bento) is active.
 - [ ] Send the last window of a workspace to another workspace with ctrl-alt-shift-N and type: nothing reaches the sent window.
 - [ ] Close the focused tiled window: the next window on that workspace gets keyboard focus and the active border together.
 - [ ] Drag a tiled window by its title bar (no mod) and release: it snaps back into its tile. Resize a tiled window from its edge: it snaps back.
@@ -103,8 +103,8 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Cmd-H an app with tiled windows: the rest re-tile with no hole; unhide it (Cmd-Tab or Dock): its windows tile again.
 - [ ] An app that starts slowly (its windows don't tile at launch) tiles once you activate it.
 - [ ] Break the config (`gaps_in = x`): each island grows a red "!" at its right end; hovering it shows "line N — message"; fixing the config removes it.
-- [ ] With bento running, turn bento off under Accessibility, then toggle `follow_mouse` in the config and save (this recreates the event tap, which now fails): the menu shows "Hotkeys unavailable — check Accessibility permission". Turn it back on and toggle `follow_mouse` again: the item disappears.
-- [ ] On first launch without Screen Recording, macOS prompts for it and bento appears in System Settings -> Privacy & Security -> Screen Recording; after granting and relaunching, animations run.
+- [ ] With Bento running, turn Bento off under Accessibility, then toggle `follow_mouse` in the config and save (this recreates the event tap, which now fails): the menu shows "Hotkeys unavailable — check Accessibility permission". Turn it back on and toggle `follow_mouse` again: the item disappears.
+- [ ] On first launch without Screen Recording, macOS prompts for it and Bento appears in System Settings -> Privacy & Security -> Screen Recording; after granting and relaunching, animations run.
 - [ ] mod+drag and mod+right-drag still move/resize windows; a mod+click on the empty desktop does nothing; plain clicks and drags still reach apps.
 - [ ] With `follow_mouse = 1`, focus still follows the mouse; toggling it in the config still takes effect without a relaunch.
 
@@ -164,9 +164,9 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 ## Windows keep their workspaces across a restart
 
-- [ ] Spread windows over three workspaces (mod+shift+N), quit bento from the menu, start it again: every window is back on its workspace and the islands show the same icons as before.
-- [ ] Same after `kill <pid>` of bento, and after Pause / Resume in the menu.
-- [ ] Quit an app and reopen it while bento runs: its new window lands on the visible workspace (memory follows the window, not the app).
+- [ ] Spread windows over three workspaces (mod+shift+N), quit Bento from the menu, start it again: every window is back on its workspace and the islands show the same icons as before.
+- [ ] Same after `kill <pid>` of Bento, and after Pause / Resume in the menu.
+- [ ] Quit an app and reopen it while Bento runs: its new window lands on the visible workspace (memory follows the window, not the app).
 - [ ] `~/Library/Application Support/bento/workspaces.json` exists; `~/.config/bento/` gets no new files and the config is not reloaded on window moves.
 
 ## Windows return to their workspace after an app reloads them
@@ -199,9 +199,9 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Typing filters the list (case does not matter); ↑/↓ move the highlight and stop at the first/last row; with more than 14 entries the list scrolls with the highlight.
 - [ ] Return closes the panel and pastes the highlighted text into the app you were in; the text is also on the clipboard (cmd+V pastes it again) and is now at the top of the history; its copy count in the preview did not grow.
 - [ ] Clicking a row pastes it the same way; Esc, shift+cmd+C again, or a click in another window close the panel without pasting.
-- [ ] A password copied from a password manager (1Password, Keychain Access "Copy Password") shows up as `••••••••` in the list and the preview, does not match a search for its text, pastes the real password, and is gone from the history after restarting bento (not in `clipboard.json`).
+- [ ] A password copied from a password manager (1Password, Keychain Access "Copy Password") shows up as `••••••••` in the list and the preview, does not match a search for its text, pastes the real password, and is gone from the history after restarting Bento (not in `clipboard.json`).
 - [ ] A token copied from a terminal (`ghp_…`, `sk-…`, a JWT) is masked the same way; an ordinary sentence is not.
-- [ ] Quit bento and start it again: the history is still there (`~/Library/Application Support/bento/clipboard.json`).
+- [ ] Quit Bento and start it again: the history is still there (`~/Library/Application Support/bento/clipboard.json`).
 - [ ] After Pause Tiling, shift+cmd+C does nothing (decision D2 A); after Resume it works again.
 - [ ] First start after the update: the history from the old version (plain texts) is still there, in the same order.
 - [ ] Each row shows the source app's icon, the text, how long ago it was copied ("now", "5m", "3h", "2d") and ⌘1–⌘9 on the first nine rows; the preview on the right shows the full text and App / First copied / Last copied / Copies; copying the same text again raises Copies and keeps First copied.
@@ -215,14 +215,14 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 ## Keep Awake
 
-- [ ] Menu → Keep Awake: the item gets a ✓, the menu bar icon becomes a cup, `pmset -g assertions` lists `PreventUserIdleDisplaySleep` named "bento Keep Awake".
+- [ ] Menu → Keep Awake: the item gets a ✓, the menu bar icon becomes a cup, `pmset -g assertions` lists `PreventUserIdleDisplaySleep` named "Bento Keep Awake".
 - [ ] Menu → Keep Awake again: no ✓, grid icon back, the assertion is gone from `pmset -g assertions`.
-- [ ] With Keep Awake on, Quit bento and separately `kill <pid>` of bento: in both cases the assertion is gone afterwards.
+- [ ] With Keep Awake on, Quit Bento and separately `kill <pid>` of Bento: in both cases the assertion is gone afterwards.
 - [ ] With Keep Awake on, the screen does not dim or sleep after the display-sleep time from System Settings.
 
 ## Settings window
 
-- [ ] Menu → Settings… (or ⌘, with the menu open) opens a window on top with a glass background and tabs Appearance, Behavior, Shortcuts, Clipboard; bento shows in the Dock while it is open and disappears from it after closing; Settings… again brings the same window back.
+- [ ] Menu → Settings… (or ⌘, with the menu open) opens a window on top with a glass background and tabs Appearance, Behavior, Shortcuts, Clipboard; Bento shows in the Dock while it is open and disappears from it after closing; Settings… again brings the same window back.
 - [ ] Back up `~/.config/bento/bento.conf`; in Appearance move "Gap between windows": the tiles change within a second, and `diff` against the backup shows only the `gaps_in` line changed (comments and order intact).
 - [ ] Change a key the file does not have yet (e.g. island Padding off Auto): a new line appears inside `bar { }`; turning Auto back on removes it.
 - [ ] Island opacity slider from Glass to Solid makes the island tint go from clear to opaque; the Tint color picker changes its color.
@@ -230,10 +230,10 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Permissions tab: each permission shows "Granted" / "Not granted" on the right of its name and a sentence on what it is for; "Open System Settings" opens Privacy & Security → Accessibility / Screen Recording; toggling it there changes the status within a second.
 - [ ] Menu → "Clipboard History…" opens the clipboard panel.
 - [ ] Every color row (focused/unfocused border, island colors) has a ↺ button, greyed out while the color is the default; after changing a color it lights up, and clicking it writes the default back into its line in `bento.conf` (e.g. `col.active_border = rgba(3d9dffff)`) and greys out again; with an invalid border value (text field) ↺ brings back the color picker.
-- [ ] Behavior toggles (focus follows mouse, cursor warp, animations) take effect without restarting; Launch at login matches the menu item.
+- [ ] Behavior toggles (focus follows mouse, cursor warp, animations) take effect without restarting; Launch at login matches System Settings → General → Login Items.
 - [ ] Shortcuts: click a shortcut and press ctrl+alt+← (already bound): it records instead of moving focus; pressing keys that include $mod saves them as `$mod …`; Esc cancels; changing the action and argument updates the line; − removes it; Add shortcut adds `bind = $mod, b, focusorlaunch, Safari` under the last bind.
 - [ ] Unticking/ticking modifiers under "Modifier ($mod)" rewrites the `$mod = …` line and every `$mod` shortcut follows.
-- [ ] Clipboard: lowering "Entries to keep" to 10 trims the history panel to 10 unpinned rows; "Turn on Keep Awake when bento starts" → quit and start bento: the cup icon is there and `pmset -g assertions` shows the bento assertion.
+- [ ] Clipboard: lowering "Entries to keep" to 10 trims the history panel to 10 unpinned rows; "Turn on Keep Awake when Bento starts" → quit and start Bento: the cup icon is there and `pmset -g assertions` shows the Bento assertion.
 - [ ] ⌘C, ⌘V, ⌘X and ⌘A work in the text fields; ⌘W closes the window.
 - [ ] Edit `bento.conf` by hand while the window is open: the window shows the new values; a syntax error shows a red line at the top of the window.
 - [ ] The clipboard history panel (shift+cmd+C) has the same glass look.
@@ -241,7 +241,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 ## Command palette
 
-- [ ] ctrl+alt+space ($mod+space) opens a glass panel a bit above the middle of the screen with the mouse; the app you were in keeps focus; the list shows every bento command with an icon and its shortcut on the right (e.g. "Go to workspace 3  ⌃⌥3").
+- [ ] ctrl+alt+space ($mod+space) opens a glass panel a bit above the middle of the screen with the mouse; the app you were in keeps focus; the list shows every Bento command with an icon and its shortcut on the right (e.g. "Go to workspace 3  ⌃⌥3").
 - [ ] Typing filters by letters in order: "mtw3" puts "Move window to workspace 3" first, "clip" puts "Clipboard history" first, "xyz" shows "No matching command".
 - [ ] ↑/↓ move the highlight, Return runs the command and closes the panel: "Go to workspace 3" switches the workspace, "Move window left" moves the focused window, "Window overview" opens the F3 overview, "Clipboard history" opens the clipboard panel, "Settings…" opens settings, "Keep Awake" toggles the cup icon (the row shows ✓ while it is on).
 - [ ] Your `exec` / `focusorlaunch` shortcuts from bento.conf appear as "Run: …" / "Open …" and work.

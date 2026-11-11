@@ -21,7 +21,7 @@ final class CommandPalettePanel: NSObject, NSSearchFieldDelegate, NSWindowDelega
         self.run = run
         super.init()
         field.delegate = self
-        field.placeholderString = "Search bento commands"
+        field.placeholderString = "Search Bento commands"
         field.focusRingType = .none
         field.font = .systemFont(ofSize: 16)
         list.isOn = isOn
@@ -44,7 +44,7 @@ final class CommandPalettePanel: NSObject, NSSearchFieldDelegate, NSWindowDelega
         let panel = PaletteKeyPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = true
+        panel.hasShadow = false
         panel.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
         panel.collectionBehavior = [.canJoinAllSpaces, .transient, .ignoresCycle]
         panel.isReleasedWhenClosed = false

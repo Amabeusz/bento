@@ -1,6 +1,6 @@
-# bento
+# Bento
 
-![bento](docs/banner.png)
+![Bento](docs/banner.png)
 
 A set of macOS tools in a single menu bar app. The first module is a Hyprland-style tiling window manager: dwindle layout, 10 workspaces, gradient borders, a workspace island under the menu bar, animations, and configuration in Hyprland syntax that reloads on save.
 
@@ -29,12 +29,12 @@ A set of macOS tools in a single menu bar app. The first module is a Hyprland-st
    ```
 
 5. **Grant permissions** in System Settings → Privacy & Security:
-   - **Accessibility** — needed for tiling, shortcuts, the window overview, the command palette and pasting from clipboard history. Without it bento still runs: clipboard history (open it from the menu; picking an entry copies it), Keep Awake and Settings work. Tiling starts a few seconds after it is granted.
-   - **Screen Recording** (optional) — everything works without it, just without animations and overview thumbnails. After granting it, quit bento from its menu and start it again.
+   - **Accessibility** — needed for tiling, shortcuts, the window overview, the command palette and pasting from clipboard history. Without it Bento still runs: clipboard history (open it from the menu; picking an entry copies it), Keep Awake and Settings work. Tiling starts a few seconds after it is granted.
+   - **Screen Recording** (optional) — everything works without it, just without animations and overview thumbnails. After granting it, quit Bento from its menu and start it again.
 
    Settings → Permissions shows what is granted, what each permission is for, and opens the right System Settings pane.
 
-A grid icon appears in the menu bar. Its menu has: settings, config errors, pause, launch at login, and quit.
+A grid icon appears in the menu bar. Its menu has: settings, config errors, pause, and quit; Launch at Login is in Settings → Behavior.
 
 ## Shortcuts (mod = ctrl-alt)
 
@@ -60,7 +60,7 @@ A grid icon appears in the menu bar. Its menu has: settings, config errors, paus
 
 ## Keep Awake
 
-The "Keep Awake" item in the bento menu keeps the display and the system from sleeping (like `caffeinate -d`) until you turn it off or quit bento (or from launch: `clipboard:keep_awake_on_launch = true`). While it is on, the menu bar icon changes to a coffee cup.
+The "Keep Awake" item in the Bento menu keeps the display and the system from sleeping (like `caffeinate -d`) until you turn it off or quit Bento (or from launch: `clipboard:keep_awake_on_launch = true`). While it is on, the menu bar icon changes to a coffee cup.
 
 ## Two displays
 
@@ -74,12 +74,12 @@ An app's auxiliary windows — settings, "About", modal windows, fixed-size wind
 
 The file `~/.config/bento/bento.conf` is created on first launch. Changes take effect a second after saving; a syntax error with its line number shows up in the menu and as "!" on the island.
 
-bento menu → **Settings…** (⌘,) opens the settings window with the tabs Appearance (gaps, borders, island, island transparency), Behavior (focus follows mouse, cursor, animations, launch at login), Shortcuts (shortcut recording, actions, `$mod`) and Clipboard (history size, Keep Awake on launch). The window writes changes straight to `bento.conf` — it changes only the affected line, comments and manual edits are kept. Window rules (`windowrule`), mouse bindings (`bindm`) and detailed animations are still set in the file.
+Bento menu → **Settings…** (⌘,) opens the settings window with the tabs Appearance (gaps, borders, island, island transparency), Behavior (focus follows mouse, cursor, animations, launch at login), Shortcuts (shortcut recording, actions, `$mod`) and Clipboard (history size, Keep Awake on launch). The window writes changes straight to `bento.conf` — it changes only the affected line, comments and manual edits are kept. Window rules (`windowrule`), mouse bindings (`bindm`) and detailed animations are still set in the file.
 
 ```
 clipboard {
     history_size = 200            # 10–2000 entries, pinned ones don't count
-    keep_awake_on_launch = false  # Keep Awake on from bento launch
+    keep_awake_on_launch = false  # Keep Awake on from Bento launch
 }
 ```
 
