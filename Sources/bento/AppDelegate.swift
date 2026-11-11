@@ -585,17 +585,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                          NSRect(x: right, y: area.maxY - upper, width: half, height: upper),
                          NSRect(x: right, y: area.minY, width: quarter, height: upper),
                          NSRect(x: right + quarter + gap, y: area.minY, width: quarter, height: upper)]
-            for (i, (cell, alpha)) in zip(cells, [1.0, 0.75, 0.55, 0.4]).enumerated() {
-                if i == 1, awake, let cup {
-                    let box = NSRect(x: cell.minX - 0.5, y: cell.minY - 0.5, width: 18 - cell.minX + 0.5, height: cell.height + 1.5)
-                    let k = min(box.width / cup.size.width, box.height / cup.size.height)
-                    let size = NSSize(width: cup.size.width * k, height: cup.size.height * k)
-                    cup.draw(in: NSRect(x: box.midX - size.width / 2, y: box.midY - size.height / 2,
-                                        width: size.width, height: size.height))
-                    continue
-                }
+            for (i, (cell, alpha)) in zip(cells, [1.0, 0.75, 0.55, 0.4]).enumerated() where !(awake && i == 1) {
                 NSColor.black.withAlphaComponent(alpha).setFill()
                 NSBezierPath(roundedRect: cell, xRadius: 1.5, yRadius: 1.5).fill()
+            }
+            if awake, let cup {
+                let box = NSRect(x: 7.5, y: 7, width: 10.5, height: 11)
+                let k = min(box.width / cup.size.width, box.height / cup.size.height)
+                let size = NSSize(width: cup.size.width * k, height: cup.size.height * k)
+                let frame = NSRect(x: box.midX - size.width / 2, y: box.midY - size.height / 2, width: size.width, height: size.height)
+                for dx in [-1.2, 0, 1.2] {
+                    for dy in [-1.2, 0, 1.2] {
+                        cup.draw(in: frame.offsetBy(dx: dx, dy: dy), from: .zero, operation: .destinationOut, fraction: 1)
+                    }
+                }
+                cup.draw(in: frame)
             }
             return true
         }
