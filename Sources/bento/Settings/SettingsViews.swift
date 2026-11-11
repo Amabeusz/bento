@@ -21,6 +21,7 @@ struct SettingsView: View {
                         .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
+                    .focusEffectDisabled()
                 }
             }
             .padding(.top, 4)
@@ -291,16 +292,11 @@ private struct ClipboardTab: View {
     }
 }
 
-let dispatchers = [
-    "movefocus", "movewindow", "workspace", "movetoworkspace", "movecurrentworkspacetomonitor", "resizeactive",
-    "togglesplit", "fullscreen", "togglefloating", "killactive", "exec", "focusorlaunch", "overview", "clipboard",
-]
-
-private let modifierNames: [(name: String, symbol: String, flag: NSEvent.ModifierFlags)] = [
+let modifierNames: [(name: String, symbol: String, flag: NSEvent.ModifierFlags)] = [
     ("CTRL", "⌃", .control), ("ALT", "⌥", .option), ("SHIFT", "⇧", .shift), ("SUPER", "⌘", .command),
 ]
 
-private let keyNames: [CGKeyCode: String] = {
+let keyNames: [CGKeyCode: String] = {
     let letters = (UnicodeScalar("a").value...UnicodeScalar("z").value).compactMap(UnicodeScalar.init).map(String.init)
     let names = letters + (0...9).map(String.init) + (1...12).map { "f\($0)" } + [
         "return", "tab", "space", "minus", "equal", "left", "right", "up", "down", "escape", "backspace", "mission_control",
@@ -321,120 +317,6 @@ private func modifierSymbols(_ mods: String, mod: String) -> String {
 
 func describe(_ bind: EditableBind, mod: String) -> String {
     modifierSymbols(bind.mods, mod: mod) + (keySymbols[bind.key] ?? bind.key.uppercased())
-}
-
-private struct ShortcutsTab: View {
-    @Bindable var model: SettingsModel
-
-    var body: some View {
-        Form {
-            Section("Modifier ($mod)") {
-                HStack {
-                    ForEach(modifierNames, id: \.name) { m in
-                        Toggle("\(m.symbol) \(m.name.capitalized)", isOn: Binding(
-                            get: { modNames.contains(m.name) },
-                            set: { on in
-                                var names = modNames
-                                if on { names.insert(m.name) } else { names.remove(m.name) }
-                                model.setMod(modifierNames.map(\.name).filter(names.contains).joined(separator: " "))
-                            }))
-                            .toggleStyle(.checkbox)
-                    }
-                }
-            }
-            Section {
-                ForEach(model.binds) { bind in
-                    BindRow(model: model, bind: bind)
-                }
-                Button("Add shortcut") {
-                    model.addBind(EditableBind(mods: "$mod", key: "b", dispatcher: "focusorlaunch", args: "Safari"))
-                }
-            } header: {
-                Text("Shortcuts")
-            } footer: {
-                Text("Click a shortcut, then press the new keys. Esc cancels.").foregroundStyle(.secondary)
-            }
-        }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-    }
-
-    private var modNames: Set<String> {
-        Set(model.mod.uppercased().split(whereSeparator: \.isWhitespace).map { $0 == "CMD" ? "SUPER" : String($0) })
-    }
-}
-
-private struct BindRow: View {
-    let model: SettingsModel
-    let bind: EditableBind
-    @State private var recording = false
-    @State private var monitor: Any?
-
-    var body: some View {
-        HStack {
-            Button(recording ? "Press keys…" : describe(bind, mod: model.mod)) { startRecording() }
-                .frame(width: 110)
-            Picker("", selection: Binding(get: { bind.dispatcher }, set: { update { $0.dispatcher = $1 }($0) })) {
-                ForEach(dispatchers.contains(bind.dispatcher) ? dispatchers : dispatchers + [bind.dispatcher], id: \.self) {
-                    Text($0).tag($0)
-                }
-            }
-            .labelsHidden()
-            .frame(width: 210)
-            TextField("argument", text: Binding(get: { bind.args }, set: { update { $0.args = $1 }($0) }))
-            Button {
-                model.removeBind(bind)
-            } label: {
-                Image(systemName: "minus.circle")
-            }
-            .buttonStyle(.borderless)
-        }
-        .onDisappear(perform: stopRecording)
-    }
-
-    private func update(_ change: @escaping (inout EditableBind, String) -> Void) -> (String) -> Void {
-        { value in
-            var b = bind
-            change(&b, value)
-            model.setBind(b)
-        }
-    }
-
-    private func startRecording() {
-        guard !recording else { return }
-        recording = true
-        model.recording = true
-        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
-            let code = event.keyCode
-            MainActor.assumeIsolated { record(flags, code) }
-            return nil
-        }
-    }
-
-    private func record(_ flags: NSEvent.ModifierFlags, _ code: UInt16) {
-        defer { stopRecording() }
-        guard code != 53 || !flags.isEmpty, let name = keyNames[CGKeyCode(code)] else { return }
-        let pressed = Set(modifierNames.filter { flags.contains($0.flag) }.map(\.name))
-        let modSet = Set(model.mod.uppercased().split(whereSeparator: \.isWhitespace).map { $0 == "CMD" ? "SUPER" : String($0) })
-        let mods: String
-        if !modSet.isEmpty, modSet.isSubset(of: pressed) {
-            mods = (["$mod"] + modifierNames.map(\.name).filter { pressed.subtracting(modSet).contains($0) }).joined(separator: " ")
-        } else {
-            mods = modifierNames.map(\.name).filter(pressed.contains).joined(separator: " ")
-        }
-        var b = bind
-        b.mods = mods
-        b.key = name
-        model.setBind(b)
-    }
-
-    private func stopRecording() {
-        if let monitor { NSEvent.removeMonitor(monitor) }
-        monitor = nil
-        if recording { model.recording = false }
-        recording = false
-    }
 }
 
 private extension RGBA {
