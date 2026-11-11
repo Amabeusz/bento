@@ -280,13 +280,22 @@ private final class ClipboardPreviewView: NSView {
             ("Last copied", formatter.string(from: Date(timeIntervalSince1970: entry.lastCopied))),
             ("Copies", "\(entry.copies)"),
         ]
-        let detailsHeight = Double(details.count) * 18 + 12
+        let shortcuts = [("⏎", "Paste"), ("⇧⏎", "Paste as plain text"), ("⌥P", entry.pinned ? "Unpin" : "Pin"), ("⌥⌫", "Delete")]
         let content = bounds.insetBy(dx: 12, dy: 12)
-        let body = NSRect(x: content.minX, y: content.minY, width: content.width, height: content.height - detailsHeight)
+        let shortcutsTop = content.maxY - 2 * 22
+        let detailsTop = shortcutsTop - 12 - Double(details.count) * 18
+        let body = NSRect(x: content.minX, y: content.minY, width: content.width, height: detailsTop - 12 - content.minY)
         for (i, (label, value)) in details.enumerated() {
-            let y = body.maxY + 12 + Double(i) * 18
+            let y = detailsTop + Double(i) * 18
             (label as NSString).draw(at: NSPoint(x: content.minX, y: y), withAttributes: [.font: small, .foregroundColor: NSColor.secondaryLabelColor])
             (value as NSString).draw(at: NSPoint(x: content.minX + 90, y: y), withAttributes: [.font: small, .foregroundColor: NSColor.labelColor])
+        }
+        NSColor.separatorColor.setFill()
+        NSRect(x: content.minX, y: shortcutsTop - 7, width: content.width, height: 0.5).fill()
+        for (i, (key, label)) in shortcuts.enumerated() {
+            let origin = NSPoint(x: content.minX + Double(i % 2) * content.width / 2, y: shortcutsTop + Double(i / 2) * 22)
+            drawKey(key, at: origin)
+            (label as NSString).draw(at: NSPoint(x: origin.x + 34, y: origin.y + 2), withAttributes: [.font: small, .foregroundColor: NSColor.secondaryLabelColor])
         }
 
         switch entry.kind {
@@ -296,15 +305,76 @@ private final class ClipboardPreviewView: NSView {
             let size = NSSize(width: picture.size.width * scale, height: picture.size.height * scale)
             picture.draw(in: NSRect(x: body.midX - size.width / 2, y: body.minY, width: size.width, height: size.height),
                          from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
-        case .text, .files:
-            let style = NSMutableParagraphStyle()
-            style.lineBreakMode = .byWordWrapping
-            let font = entry.kind == .text && !entry.secret ? NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
-                : NSFont.systemFont(ofSize: 13)
-            (String(entry.displayText.prefix(5000)) as NSString).draw(
-                with: body, options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine],
-                attributes: [.font: font, .paragraphStyle: style, .foregroundColor: NSColor.labelColor])
+        case .files:
+            draw(entry.text, font: .systemFont(ofSize: 13), color: .labelColor, at: body.minY, in: body)
+        case .text:
+            drawText(entry, in: body)
         }
+    }
+
+    private func drawText(_ entry: ClipEntry, in body: NSRect) {
+        switch clipPreview(for: entry) {
+        case .link(let host, let path):
+            let chip = NSRect(x: body.minX, y: body.minY, width: 46, height: 20)
+            NSColor.controlAccentColor.withAlphaComponent(0.15).setFill()
+            NSBezierPath(roundedRect: chip, xRadius: 5, yRadius: 5).fill()
+            ("Link" as NSString).draw(at: NSPoint(x: chip.minX + 9, y: chip.minY + 3),
+                                      withAttributes: [.font: NSFont.systemFont(ofSize: 11, weight: .medium), .foregroundColor: NSColor.controlAccentColor])
+            let y = chip.maxY + 12 + draw(host, font: .systemFont(ofSize: 20, weight: .medium), color: .labelColor, at: chip.maxY + 12, in: body)
+            draw(path, font: .monospacedSystemFont(ofSize: 12, weight: .regular), color: .secondaryLabelColor, at: y + 6, in: body)
+        case .color(let r, let g, let b, let a):
+            let swatch = NSRect(x: body.minX, y: body.minY, width: body.width, height: min(160, body.height - 60))
+            NSColor(srgbRed: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255, alpha: Double(a) / 255).setFill()
+            let path = NSBezierPath(roundedRect: swatch, xRadius: 8, yRadius: 8)
+            path.fill()
+            NSColor.separatorColor.setStroke()
+            path.stroke()
+            let y = swatch.maxY + 12 + draw(entry.text.trimmingCharacters(in: .whitespacesAndNewlines), font: .systemFont(ofSize: 18, weight: .medium),
+                                            color: .labelColor, at: swatch.maxY + 12, in: body)
+            draw("R \(r)  G \(g)  B \(b)  A \(Int((Double(a) / 255 * 100).rounded()))%", font: .monospacedDigitSystemFont(ofSize: 12, weight: .regular),
+                 color: .secondaryLabelColor, at: y + 4, in: body)
+        case .json(let pretty):
+            draw(String(pretty.prefix(5000)), font: .monospacedSystemFont(ofSize: 12, weight: .regular), color: .labelColor, at: body.minY, in: body)
+        case .plain:
+            let size = entry.secret ? 26 : previewFontSize(entry.text)
+            let font = NSFont.systemFont(ofSize: size, weight: size >= 20 ? .medium : .regular)
+            let text = String(entry.displayText.prefix(5000))
+            guard size >= 20 else {
+                draw(text, font: font, color: .labelColor, at: body.minY, in: body)
+                return
+            }
+            let height = min(body.height, attributed(text, font: font, color: .labelColor, centered: true)
+                .boundingRect(with: body.size, options: .usesLineFragmentOrigin).height)
+            attributed(text, font: font, color: .labelColor, centered: true)
+                .draw(with: NSRect(x: body.minX, y: body.midY - height / 2, width: body.width, height: height),
+                      options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine])
+        }
+    }
+
+    @discardableResult
+    private func draw(_ text: String, font: NSFont, color: NSColor, at y: Double, in body: NSRect) -> Double {
+        let string = attributed(text, font: font, color: color, centered: false)
+        let rect = NSRect(x: body.minX, y: y, width: body.width, height: max(0, body.maxY - y))
+        string.draw(with: rect, options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine])
+        return min(rect.height, string.boundingRect(with: rect.size, options: .usesLineFragmentOrigin).height)
+    }
+
+    private func attributed(_ text: String, font: NSFont, color: NSColor, centered: Bool) -> NSAttributedString {
+        let style = NSMutableParagraphStyle()
+        style.lineBreakMode = .byWordWrapping
+        if centered { style.alignment = .center }
+        return NSAttributedString(string: text, attributes: [.font: font, .paragraphStyle: style, .foregroundColor: color])
+    }
+
+    private func drawKey(_ key: String, at origin: NSPoint) {
+        let font = NSFont.systemFont(ofSize: 11, weight: .medium)
+        let box = NSRect(x: origin.x, y: origin.y, width: 28, height: 18)
+        NSColor.tertiaryLabelColor.setStroke()
+        let path = NSBezierPath(roundedRect: box.insetBy(dx: 0.5, dy: 0.5), xRadius: 4, yRadius: 4)
+        path.lineWidth = 0.5
+        path.stroke()
+        let width = (key as NSString).size(withAttributes: [.font: font]).width
+        (key as NSString).draw(at: NSPoint(x: box.midX - width / 2, y: box.minY + 2), withAttributes: [.font: font, .foregroundColor: NSColor.secondaryLabelColor])
     }
 }
 

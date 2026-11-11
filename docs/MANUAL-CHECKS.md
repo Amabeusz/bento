@@ -208,6 +208,8 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Copy an image (cmd+ctrl+shift+4 screenshot, "Copy Image" in Preview): the row shows a thumbnail and "Image W×H", the preview shows it large, Return pastes the image (e.g. into Notes).
 - [ ] Copy two files in Finder: the row shows the file icon and "name + 1 more", the preview lists the paths, Return in a Finder window pastes copies of the files; typing part of a file name finds it.
 - [ ] Copy styled text (Safari, Notes): Return pastes it with styles into Notes / TextEdit, shift+Return pastes plain text.
+- [ ] Preview of text: a short text (e.g. `git push origin main`) is large and centered; a longer one is smaller from the top; a link (`https://jira.example.com/jira/browse/ABC-123`) shows a "Link" chip, the domain large and the path below; `#378ADD` or `rgb(55, 138, 221)` shows a big color swatch with the value and R G B A; `{"a":1,"b":[1,2]}` shows indented JSON; a masked secret stays `••••••••`.
+- [ ] Under the details of every preview: ⏎ Paste, ⇧⏎ Paste as plain text, ⌥P Pin (Unpin on a pinned row), ⌥⌫ Delete.
 - [ ] In the panel: ⌘3 pastes the third row; ⌥P pins the highlighted row (pin icon, row jumps to the top, no "π" in the search field), ⌥P again unpins it; ⌥⌫ removes the highlighted row.
 - [ ] Pinned rows stay on top after new copies; menu → Clear Clipboard History removes everything except pinned rows (also from `clipboard.json` and `~/Library/Application Support/bento/clipboard/`).
 
