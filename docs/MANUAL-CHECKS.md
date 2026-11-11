@@ -219,3 +219,19 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Menu → Keep Awake again: no ✓, grid icon back, the assertion is gone from `pmset -g assertions`.
 - [ ] With Keep Awake on, Quit bento and separately `kill <pid>` of bento: in both cases the assertion is gone afterwards.
 - [ ] With Keep Awake on, the screen does not dim or sleep after the display-sleep time from System Settings.
+
+## Settings window
+
+- [ ] Menu → Settings… (or ⌘, with the menu open) opens a window on top with a glass background and tabs Appearance, Behavior, Shortcuts, Clipboard; bento shows in the Dock while it is open and disappears from it after closing; Settings… again brings the same window back.
+- [ ] Back up `~/.config/bento/bento.conf`; in Appearance move "Gap between windows": the tiles change within a second, and `diff` against the backup shows only the `gaps_in` line changed (comments and order intact).
+- [ ] Change a key the file does not have yet (e.g. island Padding off Auto): a new line appears inside `bar { }`; turning Auto back on removes it.
+- [ ] Island opacity slider from Glass to Solid makes the island tint go from clear to opaque; the Tint color picker changes its color.
+- [ ] Focused/unfocused border colors: a single color shows a color picker; the default gradient shows a text field that accepts `rgba(…) rgba(…) 135deg`.
+- [ ] Behavior toggles (focus follows mouse, cursor warp, animations) take effect without restarting; Launch at login matches the menu item.
+- [ ] Shortcuts: click a shortcut and press ctrl+alt+← (already bound): it records instead of moving focus; pressing keys that include $mod saves them as `$mod …`; Esc cancels; changing the action and argument updates the line; − removes it; Add shortcut adds `bind = $mod, b, focusorlaunch, Safari` under the last bind.
+- [ ] Unticking/ticking modifiers under "Modifier ($mod)" rewrites the `$mod = …` line and every `$mod` shortcut follows.
+- [ ] Clipboard: lowering "Entries to keep" to 10 trims the history panel to 10 unpinned rows; "Turn on Keep Awake when bento starts" → quit and start bento: the cup icon is there and `pmset -g assertions` shows the bento assertion.
+- [ ] ⌘C, ⌘V, ⌘X and ⌘A work in the text fields; ⌘W closes the window.
+- [ ] Edit `bento.conf` by hand while the window is open: the window shows the new values; a syntax error shows a red line at the top of the window.
+- [ ] The clipboard history panel (shift+cmd+C) has the same glass look.
+

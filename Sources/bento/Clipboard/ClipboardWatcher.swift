@@ -54,6 +54,11 @@ final class ClipboardWatcher {
         save()
     }
 
+    func setLimit(_ limit: Int) {
+        guard limit != history.limit else { return }
+        forget(history.setLimit(limit))
+    }
+
     func togglePin(_ key: String) {
         history.togglePin(key)
         save()

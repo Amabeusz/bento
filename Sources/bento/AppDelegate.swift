@@ -34,6 +34,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let workspaceMemory = WorkspaceMemoryStore()
     private let clipboard = ClipboardWatcher()
     private let keepAwake = KeepAwake()
+    private var settings: SettingsWindow?
+    private var recordingShortcut = false
     private lazy var clipboardPanel = ClipboardPanel(actions: ClipboardActions(
         entries: { [weak self] query in self?.clipboard.matching(query) ?? [] },
         image: { [weak self] entry in self?.clipboard.image(for: entry) },
@@ -74,6 +76,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         clipboard.start()
         writeDefaultConfigIfMissing()
         reloadFromDisk()
+        if loader.current.keepAwakeOnLaunch { toggleKeepAwake() }
         watcher = ConfigWatcher(url: configURL) { [weak self] in self?.configDidChange() }
 
         screenRecordingGranted = CGPreflightScreenCaptureAccess()
@@ -95,6 +98,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func configDidChange() {
         reloadFromDisk()
+        settings?.model.configError = configErrors.first
+        settings?.model.reload()
         world?.updateConfig(loader.current)
         syncTap()
         refreshMenu()
@@ -281,7 +286,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             chords: Set(keyBinds.keys),
             mouseBinds: Set(loader.current.mouseBinds.map { MouseChord(mods: $0.mods, button: $0.button) }),
             followMouse: loader.current.followMouse,
-            paused: isPaused)
+            paused: isPaused || recordingShortcut)
     }
 
     private func handleTap(_ event: TapEvent) {
@@ -356,7 +361,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 if case .tiled(let r) = world.snapshot().placements[d.id] { applier?.place(d.id, r) }
             }
         case .moved(let p):
-            guard loader.current.followMouse else { return }
+            guard loader.current.followMouse, settings?.isUnderMouse != true else { return }
             let snapshot = world.snapshot()
             guard let hit = managedWindow(at: p, in: snapshot), hit.id != snapshot.focused else { return }
             world.externalFocus(hit.id)
@@ -430,10 +435,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         (keyBinds, unknownKeys) = keyTable(for: loader.current.keyBinds)
         animator.config = loader.current
+        clipboard.setLimit(loader.current.clipboardHistorySize)
     }
 
     private func refreshMenu() {
         let menu = NSMenu()
+        menu.addItem(item("Settings…", #selector(openSettings), key: ","))
         menu.addItem(item("Reload Config", #selector(reloadConfig)))
         menu.addItem(item("Open Config", #selector(openConfig)))
         for error in configErrors {
@@ -513,13 +520,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applier = nil
     }
 
+    @objc private func openSettings() {
+        if settings == nil {
+            let model = SettingsModel(url: configURL)
+            model.launchAtLogin = { SMAppService.mainApp.status == .enabled }
+            model.setLaunchAtLogin = { [weak self] on in self?.setLaunchAtLogin(on) }
+            model.onRecording = { [weak self] on in
+                self?.recordingShortcut = on
+                self?.syncTap()
+            }
+            settings = SettingsWindow(model: model)
+        }
+        settings?.model.configError = configErrors.first
+        settings?.show()
+    }
+
     @objc private func toggleLaunchAtLogin() {
+        setLaunchAtLogin(SMAppService.mainApp.status != .enabled)
+    }
+
+    private func setLaunchAtLogin(_ on: Bool) {
         let service = SMAppService.mainApp
         do {
-            if service.status == .enabled {
-                try service.unregister()
-            } else {
+            if on {
                 try service.register()
+            } else {
+                try service.unregister()
             }
         } catch {
             let alert = NSAlert()

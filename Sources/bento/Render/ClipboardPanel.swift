@@ -56,17 +56,15 @@ final class ClipboardPanel: NSObject, NSSearchFieldDelegate, NSWindowDelegate {
         panel.isReleasedWhenClosed = false
         panel.delegate = self
 
-        let background = NSVisualEffectView(frame: NSRect(origin: .zero, size: frame.size))
-        background.material = .popover
-        background.state = .active
-        background.wantsLayer = true
-        background.layer?.cornerRadius = 12
-        background.layer?.masksToBounds = true
+        let glass = NSGlassEffectView(frame: NSRect(origin: .zero, size: frame.size))
+        glass.cornerRadius = 16
+        let background = NSView(frame: glass.bounds)
+        glass.contentView = background
         field.frame = NSRect(x: p, y: height - p - Self.fieldHeight, width: Self.listWidth, height: Self.fieldHeight)
         list.frame = NSRect(x: p, y: p, width: Self.listWidth, height: listHeight)
         preview.frame = NSRect(x: p * 2 + Self.listWidth, y: p, width: Self.previewWidth, height: height - p * 2)
         [field, list, preview].forEach(background.addSubview)
-        panel.contentView = background
+        panel.contentView = glass
 
         field.stringValue = ""
         refresh()

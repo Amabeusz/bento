@@ -56,7 +56,7 @@ W pasku menu pojawia się ikona siatki. Jej menu ma: przeładowanie i otwarcie k
 
 ## Keep Awake
 
-Pozycja „Keep Awake” w menu bento nie pozwala uśpić ekranu ani systemu (jak `caffeinate -d`), aż ją wyłączysz albo zamkniesz bento. Gdy jest włączona, ikonka w pasku menu zmienia się na filiżankę.
+Pozycja „Keep Awake” w menu bento nie pozwala uśpić ekranu ani systemu (jak `caffeinate -d`), aż ją wyłączysz albo zamkniesz bento (albo od startu: `clipboard:keep_awake_on_launch = true`). Gdy jest włączona, ikonka w pasku menu zmienia się na filiżankę.
 
 ## Dwa ekrany
 
@@ -69,6 +69,15 @@ Okna pomocnicze aplikacji — ustawienia, „O programie”, okna modalne, okna 
 ## Konfiguracja
 
 Plik `~/.config/bento/bento.conf` powstaje przy pierwszym uruchomieniu. Zmiany działają w sekundę po zapisie; błąd składni z numerem linii pokazuje się w menu i jako „!” na wyspie.
+
+Menu bento → **Settings…** (⌘,) otwiera okno ustawień z zakładkami Appearance (odstępy, ramki, wyspa, przezroczystość wyspy), Behavior (fokus za myszą, kursor, animacje, start z systemem), Shortcuts (nagrywanie skrótów, akcje, `$mod`) i Clipboard (rozmiar historii, Keep Awake przy starcie). Okno zapisuje zmiany prosto do `bento.conf` — zmienia tylko dotkniętą linię, komentarze i ręczne zmiany zostają. Reguły okien (`windowrule`), skróty myszy (`bindm`) i animacje szczegółowo ustawia się dalej w pliku.
+
+```
+clipboard {
+    history_size = 200            # 10–2000 wpisów, przypięte się nie liczą
+    keep_awake_on_launch = false  # Keep Awake włączone od startu bento
+}
+```
 
 Skrót do aplikacji (przełącza na nią, a jeśli nie działa — uruchamia):
 

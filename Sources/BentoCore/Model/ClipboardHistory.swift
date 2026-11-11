@@ -36,7 +36,7 @@ public struct ClipEntry: Codable, Equatable, Sendable {
 
 public struct ClipboardHistory: Equatable, Sendable {
     public private(set) var entries: [ClipEntry]
-    public let limit: Int
+    public private(set) var limit: Int
 
     public init(limit: Int, entries: [ClipEntry] = []) {
         self.limit = limit
@@ -62,6 +62,11 @@ public struct ClipboardHistory: Equatable, Sendable {
         guard let i = entries.firstIndex(where: { $0.key == key }) else { return }
         entries[i].lastCopied = time
         _ = arrange()
+    }
+
+    public mutating func setLimit(_ limit: Int) -> [String] {
+        self.limit = limit
+        return arrange()
     }
 
     public mutating func togglePin(_ key: String) {

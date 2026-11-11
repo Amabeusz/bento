@@ -175,3 +175,17 @@ import Testing
     #expect(try parseConfig("bind = SUPER SHIFT, c, clipboard").keyBinds == [bind])
     #expect(try parseConfig(defaultConfigText).keyBinds.contains(bind))
 }
+
+@Test func clipboardKeys() throws {
+    let defaults = try parseConfig("")
+    #expect(defaults.clipboardHistorySize == 200)
+    #expect(!defaults.keepAwakeOnLaunch)
+    let set = try parseConfig("clipboard {\n    history_size = 50\n    keep_awake_on_launch = true\n}")
+    #expect(set.clipboardHistorySize == 50)
+    #expect(set.keepAwakeOnLaunch)
+    #expect(try parseConfig("clipboard {\n    history_size = 5000\n}").clipboardHistorySize == 2000)
+    #expect(try parseConfig("clipboard {\n    history_size = 1\n}").clipboardHistorySize == 10)
+    #expect(throws: ConfigError(line: 2, message: "invalid number 'many'")) {
+        try parseConfig("clipboard {\n    history_size = many\n}")
+    }
+}

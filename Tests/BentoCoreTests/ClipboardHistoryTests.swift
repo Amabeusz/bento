@@ -83,6 +83,17 @@ private func texts(_ h: ClipboardHistory) -> [String] {
         #expect(evicted == ["k:1"])
     }
 
+    @Test func shrinkingLimitEvictsAndReturnsKeys() {
+        var h = ClipboardHistory(limit: 200)
+        for i in 1...6 { h.record(clip("\(i)", at: Double(i))) }
+        h.togglePin("k:1")
+        let removed = h.setLimit(3)
+        #expect(Set(removed) == ["k:2", "k:3"])
+        #expect(texts(h) == ["1", "6", "5", "4"])
+        #expect(h.limit == 3)
+        #expect(h.setLimit(10) == [])
+    }
+
     @Test func removeAndClearReturnRemovedKeys() {
         var h = ClipboardHistory(limit: 200)
         for (i, t) in ["a", "b", "c", "d"].enumerated() { h.record(clip(t, at: Double(i))) }

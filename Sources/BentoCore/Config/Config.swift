@@ -184,6 +184,8 @@ public struct Config: Equatable, Sendable {
     public var keyBinds: [KeyBind] = []
     public var mouseBinds: [MouseBind] = []
     public var floatRules: [WindowRule] = []
+    public var clipboardHistorySize = 200
+    public var keepAwakeOnLaunch = false
 
     public init() {}
 

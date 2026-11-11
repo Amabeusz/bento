@@ -41,6 +41,11 @@ cursor {
     warp_to_monitor = true
 }
 
+clipboard {
+    history_size = 200
+    keep_awake_on_launch = false
+}
+
 animations {
     enabled = true
     bezier = smooth, 0.05, 0.9, 0.1, 1.05
