@@ -78,7 +78,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem?.button?.image = NSImage(systemSymbolName: "square.grid.2x2", accessibilityDescription: "bento")
+        statusItem?.button?.image = Self.barIcon
 
         animator.onActiveChange = { [weak self] active in
             if active { self?.borders.hideAll() } else { self?.borders.showAll() }
@@ -563,10 +563,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggleKeepAwake() {
         keepAwake.toggle()
-        statusItem?.button?.image = NSImage(
-            systemSymbolName: keepAwake.isOn ? "cup.and.saucer.fill" : "square.grid.2x2", accessibilityDescription: "bento")
+        statusItem?.button?.image = keepAwake.isOn
+            ? NSImage(systemSymbolName: "cup.and.saucer.fill", accessibilityDescription: "bento") : Self.barIcon
         refreshMenu()
     }
+
+    private static let barIcon: NSImage = {
+        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
+            let area = NSRect(x: 1.5, y: 2, width: 15, height: 14), gap = 1.5
+            let half = (area.width - gap) / 2, upper = (area.height - gap) / 2, quarter = (half - gap) / 2
+            let right = area.minX + half + gap
+            let cells = [NSRect(x: area.minX, y: area.minY, width: half, height: area.height),
+                         NSRect(x: right, y: area.maxY - upper, width: half, height: upper),
+                         NSRect(x: right, y: area.minY, width: quarter, height: upper),
+                         NSRect(x: right + quarter + gap, y: area.minY, width: quarter, height: upper)]
+            for (cell, alpha) in zip(cells, [1.0, 0.75, 0.55, 0.4]) {
+                NSColor.black.withAlphaComponent(alpha).setFill()
+                NSBezierPath(roundedRect: cell, xRadius: 1.5, yRadius: 1.5).fill()
+            }
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = "bento"
+        return image
+    }()
 
     private func paste(_ entry: ClipEntry, plain: Bool) {
         clipboard.put(entry, plain: plain)
