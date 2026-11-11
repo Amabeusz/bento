@@ -171,6 +171,7 @@ private func action(dispatcher: String, argument: String, _ line: Int) throws(Co
     case "killactive": return .killActive
     case "overview": return .overview
     case "clipboard": return .clipboard
+    case "palette": return .palette
     default: throw ConfigError(line: line, message: "unknown dispatcher '\(dispatcher)'")
     }
 }

@@ -189,3 +189,9 @@ import Testing
         try parseConfig("clipboard {\n    history_size = many\n}")
     }
 }
+
+@Test func paletteDispatcherBinds() throws {
+    let bind = KeyBind(mods: [.ctrl, .alt], key: "space", action: .palette)
+    #expect(try parseConfig("bind = CTRL ALT, space, palette").keyBinds == [bind])
+    #expect(try parseConfig(defaultConfigText).keyBinds.contains(bind))
+}

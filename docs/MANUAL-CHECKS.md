@@ -235,3 +235,12 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Edit `bento.conf` by hand while the window is open: the window shows the new values; a syntax error shows a red line at the top of the window.
 - [ ] The clipboard history panel (shift+cmd+C) has the same glass look.
 
+
+## Command palette
+
+- [ ] ctrl+alt+space ($mod+space) opens a glass panel a bit above the middle of the screen with the mouse; the app you were in keeps focus; the list shows every bento command with an icon and its shortcut on the right (e.g. "Go to workspace 3  ⌃⌥3").
+- [ ] Typing filters by letters in order: "mtw3" puts "Move window to workspace 3" first, "clip" puts "Clipboard history" first, "xyz" shows "No matching command".
+- [ ] ↑/↓ move the highlight, Return runs the command and closes the panel: "Go to workspace 3" switches the workspace, "Move window left" moves the focused window, "Window overview" opens the F3 overview, "Clipboard history" opens the clipboard panel, "Settings…" opens settings, "Keep Awake" toggles the cup icon (the row shows ✓ while it is on).
+- [ ] Your `exec` / `focusorlaunch` shortcuts from bento.conf appear as "Run: …" / "Open …" and work.
+- [ ] Reopen the palette: the commands you just ran are on top, most recent first.
+- [ ] Esc, ctrl+alt+space again, or a click in another window close it without running anything.

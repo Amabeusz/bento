@@ -36,6 +36,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let keepAwake = KeepAwake()
     private var settings: SettingsWindow?
     private var recordingShortcut = false
+    private lazy var commandPalette = CommandPalettePanel(
+        commands: { [weak self] in paletteCommands(binds: self?.loader.current.keyBinds ?? []) },
+        isOn: { [weak self] command in
+            switch command.target {
+            case .app(.keepAwake): self?.keepAwake.isOn ?? false
+            case .app(.launchAtLogin): SMAppService.mainApp.status == .enabled
+            default: false
+            }
+        },
+        run: { [weak self] command in self?.runPaletteCommand(command) })
     private lazy var clipboardPanel = ClipboardPanel(actions: ClipboardActions(
         entries: { [weak self] query in self?.clipboard.matching(query) ?? [] },
         image: { [weak self] entry in self?.clipboard.image(for: entry) },
@@ -182,6 +192,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case .focusWindow, .focusNothing: noteFocusDisturbance()
             case .toggleOverview: toggleOverview()
             case .toggleClipboard: clipboardPanel.isOpen ? clipboardPanel.close() : clipboardPanel.show()
+            case .togglePalette: commandPalette.isOpen ? commandPalette.close() : commandPalette.show()
             default: break
             }
             effects?.run(effect)
@@ -567,6 +578,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 event?.flags = .maskCommand
                 event?.post(tap: .cgSessionEventTap)
             }
+        }
+    }
+
+    private func runPaletteCommand(_ command: PaletteCommand) {
+        switch command.target {
+        case .action(let action):
+            guard !isPaused, let world else { return }
+            run(world.perform(action))
+            applyLayout(animated: true)
+        case .app(.settings): openSettings()
+        case .app(.togglePause): togglePause()
+        case .app(.keepAwake): toggleKeepAwake()
+        case .app(.launchAtLogin): toggleLaunchAtLogin()
+        case .app(.clearClipboard): clearClipboard()
+        case .app(.quit): quit()
         }
     }
 

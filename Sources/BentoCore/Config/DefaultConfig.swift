@@ -104,6 +104,7 @@ bind = $mod, return, exec, open -na Ghostty
 bind = , mission_control, overview
 bind = CTRL, up, overview
 bind = SUPER SHIFT, c, clipboard
+bind = $mod, space, palette
 
 # app shortcuts: focus the app if running, launch it if not
 # bind = $mod, b, focusorlaunch, Safari

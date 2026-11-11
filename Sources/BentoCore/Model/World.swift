@@ -90,6 +90,7 @@ public enum SideEffect: Equatable, Sendable {
     case warpCursor(Point)
     case toggleOverview
     case toggleClipboard
+    case togglePalette
 }
 
 public final class World {
@@ -280,6 +281,8 @@ public final class World {
             return [.toggleOverview]
         case .clipboard:
             return [.toggleClipboard]
+        case .palette:
+            return [.togglePalette]
         }
     }
 
