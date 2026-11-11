@@ -11,10 +11,6 @@ general {
     col.inactive_border = rgba(585b70aa)
 }
 
-decoration {
-    rounding = 16
-}
-
 bar {
     enabled = true
     icons = true

@@ -6,7 +6,9 @@ let package = Package(
     platforms: [.macOS(.v26)],
     targets: [
         .target(name: "BentoCore"),
-        .executableTarget(name: "bento", dependencies: ["BentoCore"]),
+        .executableTarget(
+            name: "bento", dependencies: ["BentoCore"],
+            linkerSettings: [.unsafeFlags(["-F/System/Library/PrivateFrameworks", "-framework", "SkyLight"])]),
         .testTarget(name: "BentoCoreTests", dependencies: ["BentoCore"]),
     ]
 )

@@ -3,7 +3,7 @@ import Testing
 
 @Test func defaultConfigParses() throws {
     let c = try parseConfig(defaultConfigText)
-    #expect(c.gapsIn == 10 && c.gapsOut == Insets(all: 12) && c.borderSize == 2 && c.rounding == 16)
+    #expect(c.gapsIn == 10 && c.gapsOut == Insets(all: 12) && c.borderSize == 2)
     #expect(c.activeBorder == Gradient(colors: [RGBA(hex: 0xf5c2e7ff), RGBA(hex: 0xcba6f7ff), RGBA(hex: 0x89b4faff)], angleDegrees: 135))
     #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt], key: "0", action: .workspace(0))))
     #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt, .shift], key: "tab", action: .moveCurrentWorkspaceToMonitor)))
@@ -12,6 +12,10 @@ import Testing
     #expect(c.animations["workspaces"] == AnimationSpec(enabled: true, duration: 0.3, curve: "smooth", style: "slide"))
     #expect(c.startupWorkspace == [.builtin: 1, .external: 1])
     #expect(c.floatRules.count == 2 && !c.followMouse && c.warpCursor)
+}
+
+@Test func decorationRoundingFromOldConfigsIsAccepted() throws {
+    #expect(try parseConfig("decoration {\n    rounding = 4\n}") == Config())
 }
 
 @Test func swiftDefaultsMirrorDefaultConfigText() throws {

@@ -97,10 +97,6 @@ general {
     col.inactive_border = rgba(585b70aa)   # ostatnia para cyfr to przezroczystość
 }
 
-decoration {
-    rounding = 16                 # zaokrąglenie ramki
-}
-
 bar {
     icons = true                  # ikonki aplikacji obok numeru pulpitu; false = same numery
     height = 30

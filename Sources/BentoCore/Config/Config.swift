@@ -146,7 +146,6 @@ public struct Config: Equatable, Sendable {
     public var gapsOut = Insets(all: 12)
     public var borderSize = 2.0
     public var borderSizeInactive: Double?
-    public var rounding = 16.0
     public var activeBorder = Gradient(
         colors: [RGBA(hex: 0xf5c2e7ff), RGBA(hex: 0xcba6f7ff), RGBA(hex: 0x89b4faff)],
         angleDegrees: 135

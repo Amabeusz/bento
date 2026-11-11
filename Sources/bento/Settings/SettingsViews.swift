@@ -249,7 +249,6 @@ private struct AppearanceTab: View {
                                fallback: d.activeBorder)
                 BorderColorRow(title: "Unfocused border color", key: "general:col.inactive_border", model: model,
                                fallback: d.inactiveBorder)
-                NumberRow(title: "Corner rounding", key: "decoration:rounding", range: 0...30, model: model, fallback: d.rounding)
             }
             Section("Island") {
                 FlagRow(title: "Show the island", key: "bar:enabled", model: model, fallback: d.barEnabled)

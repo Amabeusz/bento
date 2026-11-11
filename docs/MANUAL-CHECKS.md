@@ -58,7 +58,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 ## Task 10
 
 - [ ] The focused window has the pink→purple→blue ring at 135° (pink at the top-left, blue at the bottom-right); other windows have the grey ring.
-- [ ] Rings sit in the gaps between windows and line up with the macOS 26 window corners at `rounding = 16`. If they don't, measure the real corner radius and change the default in `DefaultConfig.swift` and `Config.swift` (update the Task 3 test).
+- [ ] Rings sit in the gaps between windows and follow each window's own corner radius (e.g. Safari 26 pt, Ghostty 16 pt, IntelliJ 12 pt on macOS 26).
 - [ ] Changing focus cross-fades the ring colors over about 0.5 s; with `animations = 0` or `animation = border, 0` the switch is instant.
 - [ ] Changing `col.active_border` in the config and saving updates the rings without a relaunch.
 - [ ] A ctrl-alt left-drag of a tiled or floating window moves its ring with it live; resizing with ctrl-alt right-drag resizes the ring live.

@@ -98,12 +98,14 @@ final class BorderWindow {
 final class BorderManager {
     private var windows: [WindowID: BorderWindow] = [:]
     private var snapshot: LayoutSnapshot?
+    private var radii: [WindowID: Double] = [:]
     private var config = Config()
     private var hidden = false
 
     func update(_ s: LayoutSnapshot, config: Config) {
         snapshot = s
         self.config = config
+        radii = windowCornerRadii(Array(s.placements.keys))
         var live: Set<WindowID> = []
         for (id, placement) in s.placements {
             switch placement {
@@ -137,6 +139,7 @@ final class BorderManager {
     func removeAll() {
         windows.values.forEach { $0.close() }
         windows = [:]
+        radii = [:]
         snapshot = nil
         hidden = false
     }
@@ -151,7 +154,7 @@ final class BorderManager {
         let border = windows[id] ?? BorderWindow()
         windows[id] = border
         border.configure(
-            frame: appKit, borderSize: borderSize, rounding: config.rounding,
+            frame: appKit, borderSize: borderSize, rounding: radii[id] ?? 0,
             angleDegrees: (isFocused ? config.activeBorder : config.inactiveBorder).angleDegrees,
             colors: colors(isFocused: isFocused), fade: fade())
         if !hidden { border.place(above: id) }
