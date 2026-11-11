@@ -4,24 +4,75 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var model: SettingsModel
+    @State private var tab = SettingsTab.appearance
 
     var body: some View {
         VStack(spacing: 0) {
+            HStack(spacing: 2) {
+                ForEach(SettingsTab.allCases, id: \.self) { item in
+                    Button { tab = item } label: {
+                        VStack(spacing: 3) {
+                            Image(systemName: item.symbol).font(.system(size: 17)).frame(height: 20)
+                            Text(item.rawValue).font(.caption)
+                        }
+                        .frame(width: 80, height: 46)
+                        .foregroundStyle(tab == item ? Color.accentColor : .secondary)
+                        .background(tab == item ? Color.primary.opacity(0.08) : .clear, in: .rect(cornerRadius: 8))
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.top, 4)
             if let error = model.saveError ?? model.configError {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.red)
                     .padding(.horizontal, 20)
-                    .padding(.top, 36)
+                    .padding(.top, 8)
             }
-            TabView {
-                AppearanceTab(model: model).tabItem { Label("Appearance", systemImage: "paintbrush") }
-                BehaviorTab(model: model).tabItem { Label("Behavior", systemImage: "cursorarrow.motionlines") }
-                ShortcutsTab(model: model).tabItem { Label("Shortcuts", systemImage: "keyboard") }
-                ClipboardTab(model: model).tabItem { Label("Clipboard", systemImage: "doc.on.clipboard") }
+            switch tab {
+            case .appearance: AppearanceTab(model: model)
+            case .behavior: BehaviorTab(model: model)
+            case .shortcuts: ShortcutsTab(model: model)
+            case .clipboard: ClipboardTab(model: model)
+            case .about: AboutTab()
             }
-            .padding(.top, model.saveError ?? model.configError == nil ? 36 : 8)
         }
         .frame(minWidth: 560, minHeight: 440)
+    }
+}
+
+private enum SettingsTab: String, CaseIterable {
+    case appearance = "Appearance", behavior = "Behavior", shortcuts = "Shortcuts", clipboard = "Clipboard", about = "About"
+
+    var symbol: String {
+        switch self {
+        case .appearance: "paintbrush"
+        case .behavior: "gearshape.2"
+        case .shortcuts: "keyboard"
+        case .clipboard: "clipboard"
+        case .about: "info.circle"
+        }
+    }
+}
+
+private struct AboutTab: View {
+    private let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 96, height: 96)
+            Text("bento").font(.title.bold())
+            Text("Tiling window manager for macOS").foregroundStyle(.secondary)
+            if let version {
+                Text("Version \(version)").font(.caption).foregroundStyle(.tertiary)
+            }
+            Link(destination: URL(string: "https://github.com/Amabeusz/bento")!) {
+                Label("github.com/Amabeusz/bento", systemImage: "arrow.up.right.square")
+            }
+            .padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

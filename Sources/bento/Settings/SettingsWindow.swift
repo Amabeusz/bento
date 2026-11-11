@@ -36,6 +36,7 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
             backing: .buffered, defer: false)
         window.title = "bento Settings"
         window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
         window.isOpaque = false
         window.backgroundColor = .clear
         window.isReleasedWhenClosed = false
