@@ -6,6 +6,8 @@
     <string>pl.amadeusz.bento</string>
     <key>CFBundleName</key>
     <string>bento</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleExecutable</key>
     <string>bento</string>
     <key>CFBundlePackageType</key>

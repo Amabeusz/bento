@@ -18,6 +18,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/bento"
 cp scripts/Info.plist "$APP/Contents/Info.plist"
+cp scripts/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 
 if security find-identity -p codesigning | grep -q "bento-dev"; then
     codesign --force --sign "bento-dev" "$APP"
