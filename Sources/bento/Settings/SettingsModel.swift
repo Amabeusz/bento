@@ -73,6 +73,24 @@ final class SettingsModel {
         set(key, formatColor(color))
     }
 
+    func gradient(_ key: String, _ fallback: Gradient) -> Gradient? {
+        guard let raw = editor.value(key) else { return fallback }
+        return parseGradient(raw)
+    }
+
+    func set(_ key: String, gradient: Gradient) {
+        set(key, formatGradient(gradient))
+    }
+
+    func insets(_ key: String, _ fallback: Insets) -> Insets? {
+        guard let raw = editor.value(key) else { return fallback }
+        return parseInsets(raw)
+    }
+
+    func set(_ key: String, insets: Insets, perSide: Bool) {
+        set(key, formatInsets(insets, perSide: perSide))
+    }
+
     func remove(_ key: String) {
         guard editor.value(key) != nil else { return }
         editor.remove(key)

@@ -154,6 +154,18 @@ public func formatColor(_ color: RGBA) -> String {
     return "rgba(\(hex(color.r))\(hex(color.g))\(hex(color.b))\(hex(color.a)))"
 }
 
+public func formatGradient(_ gradient: Gradient) -> String {
+    let colors = gradient.colors.map(formatColor).joined(separator: " ")
+    guard gradient.colors.count > 1 else { return colors }
+    return "\(colors) \(Int(gradient.angleDegrees.rounded()))deg"
+}
+
+public func formatInsets(_ insets: Insets, perSide: Bool) -> String {
+    func number(_ v: Double) -> String { v.rounded() == v ? String(Int(v)) : String(v) }
+    guard perSide else { return number(insets.top) }
+    return [insets.top, insets.right, insets.bottom, insets.left].map(number).joined(separator: " ")
+}
+
 private extension String {
     var trimmed: String {
         String(drop(while: \.isWhitespace).reversed().drop(while: \.isWhitespace).reversed())

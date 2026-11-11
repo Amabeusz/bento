@@ -105,4 +105,40 @@ windowrule = float, app:^Calculator$
         #expect(!config.barEnabled)
         #expect(config.keyBinds.count == 3)
     }
+
+    @Test func gradientRoundTripsThroughParser() throws {
+        let text = "rgba(f5c2e7ff) rgba(cba6f7ff) rgba(89b4faff) 135deg"
+        let gradient = try #require(parseGradient(text))
+        #expect(gradient == Gradient(colors: [RGBA(hex: 0xf5c2e7ff), RGBA(hex: 0xcba6f7ff), RGBA(hex: 0x89b4faff)],
+                                     angleDegrees: 135))
+        #expect(formatGradient(gradient) == text)
+        let single = Gradient(colors: [RGBA(hex: 0x585b70aa)], angleDegrees: 90)
+        #expect(formatGradient(single) == "rgba(585b70aa)")
+        var e = ConfigEditor(text: sample)
+        e.set("general:col.active_border", formatGradient(gradient))
+        e.set("general:col.inactive_border", formatGradient(single))
+        let config = try parseConfig(e.text)
+        #expect(config.activeBorder == gradient)
+        #expect(config.inactiveBorder == Gradient(colors: single.colors, angleDegrees: 0))
+    }
+
+    @Test func invalidGradientAndInsetsParseToNil() {
+        #expect(parseGradient("rgba(f5c2e7ff) rgba(dd) rgba(89b4faff) 135deg") == nil)
+        #expect(parseGradient("") == nil)
+        #expect(parseInsets("12 x") == nil)
+        #expect(parseInsets("1 2 3 4 5") == nil)
+    }
+
+    @Test func insetsRoundTripThroughParser() throws {
+        #expect(parseInsets("12") == Insets(all: 12))
+        #expect(parseInsets("20 12") == Insets(top: 20, right: 12, bottom: 20, left: 12))
+        let sides = Insets(top: 20, right: 12, bottom: 8, left: 4)
+        #expect(formatInsets(sides, perSide: true) == "20 12 8 4")
+        #expect(formatInsets(Insets(all: 12), perSide: false) == "12")
+        #expect(formatInsets(Insets(all: 12), perSide: true) == "12 12 12 12")
+        var e = ConfigEditor(text: sample)
+        e.set("general:gaps_out", formatInsets(sides, perSide: true))
+        #expect(try parseConfig(e.text).gapsOut == sides)
+        #expect(e.value("general:gaps_out") == "20 12 8 4")
+    }
 }

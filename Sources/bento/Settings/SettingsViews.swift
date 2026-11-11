@@ -123,19 +123,88 @@ private struct BorderColorRow: View {
     let title: String
     let key: String
     let model: SettingsModel
+    let fallback: BentoCore.Gradient
 
     var body: some View {
-        let raw = model.string(key) ?? ""
-        if raw.isEmpty || parseColor(raw) != nil {
-            ColorPicker(title, selection: Binding(
-                get: { (parseColor(raw) ?? RGBA(hex: 0x585b70aa)).color },
-                set: { model.set(key, color: RGBA($0)) }), supportsOpacity: true)
+        if let gradient = model.gradient(key, fallback) {
+            LabeledContent(title) {
+                VStack(alignment: .trailing) {
+                    HStack {
+                        ForEach(gradient.colors.indices, id: \.self) { i in
+                            ColorPicker(title, selection: Binding(
+                                get: { gradient.colors[i].color },
+                                set: { color in edit { $0.colors[i] = RGBA(color) } }), supportsOpacity: true)
+                                .labelsHidden()
+                        }
+                        Button { edit { $0.colors.removeLast() } } label: { Image(systemName: "minus") }
+                            .disabled(gradient.colors.count < 2)
+                        Button { edit { $0.colors.append($0.colors[$0.colors.count - 1]) } } label: { Image(systemName: "plus") }
+                    }
+                    if gradient.colors.count > 1 {
+                        HStack {
+                            Slider(value: Binding(get: { gradient.angleDegrees },
+                                                  set: { angle in edit { $0.angleDegrees = angle.rounded() } }), in: 0...360)
+                            Text("\(Int(gradient.angleDegrees))°").monospacedDigit().frame(width: 36, alignment: .trailing)
+                        }
+                    }
+                }
+            }
         } else {
             LabeledContent(title) {
-                TextField(title, text: Binding(get: { raw }, set: { model.set(key, $0) }), prompt: Text("rgba(…) rgba(…) 135deg"))
+                TextField(title, text: Binding(get: { model.string(key) ?? "" }, set: { model.set(key, $0) }),
+                          prompt: Text("rgba(…) rgba(…) 135deg"))
                     .labelsHidden()
                     .font(.system(.body, design: .monospaced))
             }
+        }
+    }
+
+    private func edit(_ change: (inout BentoCore.Gradient) -> Void) {
+        guard var gradient = model.gradient(key, fallback) else { return }
+        change(&gradient)
+        model.set(key, gradient: gradient)
+    }
+}
+
+private struct EdgeGapsRow: View {
+    let model: SettingsModel
+    let fallback: Insets
+    private let key = "general:gaps_out"
+    private let range = 0.0...60
+
+    var body: some View {
+        if let insets = model.insets(key, fallback) {
+            let perSide = (model.string(key) ?? "").split(whereSeparator: { $0 == "," || $0.isWhitespace }).count > 1
+            LabeledContent("Gap to screen edges") {
+                HStack {
+                    Toggle("Per side", isOn: Binding(get: { perSide }, set: { model.set(key, insets: insets, perSide: $0) }))
+                        .toggleStyle(.checkbox)
+                    if !perSide {
+                        slider(insets.top) { Insets(all: $0) }
+                    }
+                }
+            }
+            if perSide {
+                LabeledContent("Top") { slider(insets.top) { var i = insets; i.top = $0; return i } }
+                LabeledContent("Right") { slider(insets.right) { var i = insets; i.right = $0; return i } }
+                LabeledContent("Bottom") { slider(insets.bottom) { var i = insets; i.bottom = $0; return i } }
+                LabeledContent("Left") { slider(insets.left) { var i = insets; i.left = $0; return i } }
+            }
+        } else {
+            LabeledContent("Gap to screen edges") {
+                TextField("Gap to screen edges", text: Binding(get: { model.string(key) ?? "" }, set: { model.set(key, $0) }),
+                          prompt: Text("12 or top right bottom left"))
+                    .labelsHidden()
+            }
+        }
+    }
+
+    private func slider(_ value: Double, _ apply: @escaping (Double) -> Insets) -> some View {
+        let perSide = (model.string(key) ?? "").split(whereSeparator: { $0 == "," || $0.isWhitespace }).count > 1
+        return HStack {
+            Slider(value: Binding(get: { value }, set: { model.set(key, insets: apply($0.rounded()), perSide: perSide) }),
+                   in: range, step: 1)
+            Text("\(Int(value))").monospacedDigit().frame(width: 36, alignment: .trailing)
         }
     }
 }
@@ -172,17 +241,14 @@ private struct AppearanceTab: View {
         Form {
             Section("Windows") {
                 NumberRow(title: "Gap between windows", key: "general:gaps_in", range: 0...40, model: model, fallback: d.gapsIn)
-                LabeledContent("Gap to screen edges") {
-                    TextField("Gap to screen edges", text: Binding(
-                        get: { model.string("general:gaps_out") ?? "12" }, set: { model.set("general:gaps_out", $0) }),
-                              prompt: Text("12 or top right bottom left"))
-                        .labelsHidden()
-                }
+                EdgeGapsRow(model: model, fallback: d.gapsOut)
                 NumberRow(title: "Border", key: "general:border_size", range: 0...10, model: model, fallback: d.borderSize)
                 OptionalNumberRow(title: "Border of unfocused windows", key: "general:border_size_inactive", range: 0...10,
                                   model: model, automatic: model.number("general:border_size", d.borderSize))
-                BorderColorRow(title: "Focused border color", key: "general:col.active_border", model: model)
-                BorderColorRow(title: "Unfocused border color", key: "general:col.inactive_border", model: model)
+                BorderColorRow(title: "Focused border color", key: "general:col.active_border", model: model,
+                               fallback: d.activeBorder)
+                BorderColorRow(title: "Unfocused border color", key: "general:col.inactive_border", model: model,
+                               fallback: d.inactiveBorder)
                 NumberRow(title: "Corner rounding", key: "decoration:rounding", range: 0...30, model: model, fallback: d.rounding)
             }
             Section("Island") {

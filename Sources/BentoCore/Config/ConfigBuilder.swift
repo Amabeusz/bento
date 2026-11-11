@@ -290,3 +290,11 @@ private func commaSeparated(_ text: String, maxSplits: Int = .max) -> [String] {
 public func parseColor(_ text: String) -> RGBA? {
     try? color(text, 0)
 }
+
+public func parseGradient(_ text: String) -> Gradient? {
+    try? gradient(text, 0)
+}
+
+public func parseInsets(_ text: String) -> Insets? {
+    try? insets(text, 0)
+}
