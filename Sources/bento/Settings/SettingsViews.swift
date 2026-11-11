@@ -131,7 +131,8 @@ private struct BorderColorRow: View {
                 set: { model.set(key, color: RGBA($0)) }), supportsOpacity: true)
         } else {
             LabeledContent(title) {
-                TextField("rgba(…) rgba(…) 135deg", text: Binding(get: { raw }, set: { model.set(key, $0) }))
+                TextField(title, text: Binding(get: { raw }, set: { model.set(key, $0) }), prompt: Text("rgba(…) rgba(…) 135deg"))
+                    .labelsHidden()
                     .font(.system(.body, design: .monospaced))
             }
         }
@@ -171,8 +172,10 @@ private struct AppearanceTab: View {
             Section("Windows") {
                 NumberRow(title: "Gap between windows", key: "general:gaps_in", range: 0...40, model: model, fallback: d.gapsIn)
                 LabeledContent("Gap to screen edges") {
-                    TextField("12 or top right bottom left", text: Binding(
-                        get: { model.string("general:gaps_out") ?? "12" }, set: { model.set("general:gaps_out", $0) }))
+                    TextField("Gap to screen edges", text: Binding(
+                        get: { model.string("general:gaps_out") ?? "12" }, set: { model.set("general:gaps_out", $0) }),
+                              prompt: Text("12 or top right bottom left"))
+                        .labelsHidden()
                 }
                 NumberRow(title: "Border", key: "general:border_size", range: 0...10, model: model, fallback: d.borderSize)
                 OptionalNumberRow(title: "Border of unfocused windows", key: "general:border_size_inactive", range: 0...10,
@@ -187,9 +190,10 @@ private struct AppearanceTab: View {
                 NumberRow(title: "Height", key: "bar:height", range: 20...50, model: model, fallback: d.barHeight)
                 NumberRow(title: "Font size", key: "bar:font_size", range: 9...20, model: model, fallback: d.barFontSize)
                 LabeledContent("Font") {
-                    TextField("system", text: Binding(get: { model.string("bar:font") ?? "" }, set: {
+                    TextField("Font", text: Binding(get: { model.string("bar:font") ?? "" }, set: {
                         $0.isEmpty ? model.remove("bar:font") : model.set("bar:font", $0)
-                    }))
+                    }), prompt: Text("system"))
+                        .labelsHidden()
                 }
                 NumberRow(title: "Space above", key: "bar:margin_top", range: 0...20, model: model, fallback: d.barMarginTop)
                 NumberRow(title: "Space below", key: "bar:margin_bottom", range: 0...20, model: model, fallback: d.barMarginBottom)
