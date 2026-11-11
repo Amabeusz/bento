@@ -43,7 +43,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] With two monitors, ctrl-alt-shift-tab moves the current workspace to the other monitor.
 - [ ] ctrl-alt + minus / equal shrink / grow the focused window; holding the key keeps resizing.
 - [ ] ctrl-alt + T toggles the split direction, F fills the tiling area (and back), V toggles floating, Q closes the focused window.
-- [ ] ctrl-alt-Return opens a new Ghostty window.
+- [ ] ctrl-alt-Return opens a new window of the terminal picked in Settings → Behavior → Terminal (Terminal by default), also when that terminal is already running; switching the picker to Ghostty writes `terminal = Ghostty` and the next ctrl-alt-Return opens a Ghostty window. Settings → Shortcuts lists "Open terminal" under Tools, and the palette has "Open terminal".
 - [ ] Add `bind = $mod, b, focusorlaunch, Safari`: with Safari not running the bind launches it; switch to another workspace, press it again: it jumps to Safari's workspace and focuses Safari.
 - [ ] Bind a non-existent key (`bind = $mod, foo, togglesplit`): the menu shows "Config Error: unknown key 'foo'"; remove it and the message disappears.
 - [ ] Modifiers are exact: ctrl-alt-shift-T does not toggle the split; keys without the mod reach the app normally.

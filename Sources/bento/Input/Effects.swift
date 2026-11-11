@@ -33,6 +33,11 @@ final class Effects {
         case .warpCursor(let p):
             CGWarpMouseCursorPosition(CGPoint(x: p.x, y: p.y))
             CGAssociateMouseAndMouseCursorPosition(1)
+        case .openTerminal(let app):
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            process.arguments = terminalOpenArguments(app: app, home: NSHomeDirectory())
+            try? process.run()
         case .toggleOverview, .toggleClipboard, .togglePalette:
             break
         }

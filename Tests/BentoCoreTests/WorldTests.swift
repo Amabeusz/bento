@@ -919,6 +919,16 @@ private func singleScreenWorld() -> World {
     #expect(makeWorld().perform(.palette) == [.togglePalette])
 }
 
+@Test func terminalActionOpensConfiguredTerminal() {
+    let w = makeWorld()
+    #expect(w.perform(.terminal) == [.openTerminal("Terminal")])
+    var config = try! parseConfig(defaultConfigText)
+    config.barEnabled = false
+    config.terminal = "Ghostty"
+    w.updateConfig(config)
+    #expect(w.perform(.terminal) == [.openTerminal("Ghostty")])
+}
+
 @Test func rememberedHiddenWindowDoesNotTakeFocus() {
     let w = makeWorld()
     w.remember([WindowMemory(id: 2, app: "Ghostty", workspace: 5)])

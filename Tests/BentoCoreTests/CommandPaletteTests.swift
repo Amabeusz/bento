@@ -44,6 +44,13 @@ private func ids(_ list: [PaletteCommand]) -> [String] { list.map(\.id) }
         #expect(!list.contains { $0.target == .action(.palette) })
     }
 
+    @Test func terminalBindBecomesCommand() throws {
+        let list = try commands("bind = $mod, return, terminal")
+        let terminal = list.first { $0.title == "Open terminal" }
+        #expect(terminal?.target == .action(.terminal))
+        #expect(terminal?.shortcut == "⌃⌥↩")
+    }
+
     @Test func commandsShowTheirShortcut() throws {
         let list = try commands("""
         bind = $mod, 3, workspace, 3

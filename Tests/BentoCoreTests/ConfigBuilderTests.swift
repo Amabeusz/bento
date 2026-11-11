@@ -199,3 +199,14 @@ import Testing
     #expect(try parseConfig("bind = CTRL ALT, space, palette").keyBinds == [bind])
     #expect(try parseConfig(defaultConfigText).keyBinds.contains(bind))
 }
+
+@Test func terminalKeyAndDispatcher() throws {
+    #expect(Config().terminal == "Terminal")
+    let defaults = try parseConfig(defaultConfigText)
+    #expect(defaults.terminal == "Terminal")
+    #expect(defaults.keyBinds.contains(KeyBind(mods: [.ctrl, .alt], key: "return", action: .terminal)))
+    #expect(!defaults.keyBinds.contains { $0.action == .exec("open -na Ghostty") })
+    let c = try parseConfig("general {\nterminal = Ghostty\n}\nbind = CTRL ALT, return, terminal")
+    #expect(c.terminal == "Ghostty")
+    #expect(c.keyBinds == [KeyBind(mods: [.ctrl, .alt], key: "return", action: .terminal)])
+}

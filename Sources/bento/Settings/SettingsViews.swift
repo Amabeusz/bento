@@ -1,6 +1,7 @@
 import AppKit
 import BentoCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Bindable var model: SettingsModel
@@ -395,6 +396,7 @@ private struct BehaviorTab: View {
                         fallback: d.warpCursor)
                 FlagRow(title: "Animations", key: "animations:enabled", model: model, fallback: d.animationsEnabled)
                 Toggle("Launch at login", isOn: Binding(get: model.launchAtLogin, set: model.setLaunchAtLogin))
+                TerminalRow(model: model)
             }
             Section("Config file") {
                 Button("Open bento.conf") { model.openFile() }
@@ -402,6 +404,23 @@ private struct BehaviorTab: View {
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
+    }
+}
+
+private struct TerminalRow: View {
+    let model: SettingsModel
+
+    var body: some View {
+        let current = model.string("general:terminal") ?? model.defaults.terminal
+        Picker("Terminal", selection: Binding(get: { current }, set: { model.set("general:terminal", $0) })) {
+            ForEach(installedTerminals(including: current), id: \.self) { Text($0).tag($0) }
+        }
+    }
+
+    private func installedTerminals(including current: String) -> [String] {
+        let names = NSWorkspace.shared.urlsForApplications(toOpen: .unixExecutable)
+            .map { $0.deletingPathExtension().lastPathComponent }
+        return Array(Set(names + [current, "Terminal"])).sorted()
     }
 }
 

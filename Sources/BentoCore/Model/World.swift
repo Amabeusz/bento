@@ -91,6 +91,7 @@ public enum SideEffect: Equatable, Sendable {
     case toggleOverview
     case toggleClipboard
     case togglePalette
+    case openTerminal(String)
 }
 
 public final class World {
@@ -283,6 +284,8 @@ public final class World {
             return [.toggleClipboard]
         case .palette:
             return [.togglePalette]
+        case .terminal:
+            return [.openTerminal(config.terminal)]
         }
     }
 

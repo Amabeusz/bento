@@ -54,7 +54,7 @@ A grid icon appears in the menu bar. Its menu has: settings, config errors, paus
 | mod + V | floating / tiled window |
 | mod + Q | close the window |
 | mod + drag / right button | move / resize with the mouse |
-| mod + Return | open Ghostty |
+| mod + Return | new terminal window — Terminal by default, pick another app in Settings → Behavior → Terminal (`general:terminal`) |
 | F3 (Mission Control) / ctrl + ↑ | overview of the windows of all workspaces on every display; arrows — select a window (also on the other display), Return / space / click — go to the window, Esc / F3 / click on the background — close. In an older `bento.conf` add `bind = , mission_control, overview` and `bind = CTRL, up, overview` |
 | shift + cmd + C | clipboard history (last 200 entries + pinned): styled text, images, Finder files; each row shows the app icon and "5m ago", the preview on the right shows the app, first and last copy, and copy count. Typing filters (app name too), ↑/↓ selects, Return / click pastes into the app you were in, shift+Return pastes as plain text, ⌘1–⌘9 pastes the n-th entry, ⌥P pins, ⌥⌫ deletes, Esc closes. Passwords from password managers and tokens (`sk-…`, `ghp_…`, JWT, private keys) are shown as `••••••••` and never written to disk. "Clear Clipboard History" in the menu clears everything except pinned entries. Works while tiling is not paused. In an older `bento.conf` add `bind = SUPER SHIFT, c, clipboard` |
 

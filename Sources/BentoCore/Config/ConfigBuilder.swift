@@ -20,6 +20,7 @@ private func apply(_ entry: ConfigEntry, to config: inout Config) throws(ConfigE
     case "general:border_size_inactive": config.borderSizeInactive = try number(value, line)
     case "general:col.active_border": config.activeBorder = try gradient(value, line)
     case "general:col.inactive_border": config.inactiveBorder = try gradient(value, line)
+    case "general:terminal": config.terminal = value
     case "decoration:rounding": break
     case "bar:enabled": config.barEnabled = try flag(value, line)
     case "clipboard:history_size": config.clipboardHistorySize = Int(min(max(try number(value, line), 10), 2000))
@@ -172,6 +173,7 @@ private func action(dispatcher: String, argument: String, _ line: Int) throws(Co
     case "overview": return .overview
     case "clipboard": return .clipboard
     case "palette": return .palette
+    case "terminal": return .terminal
     default: throw ConfigError(line: line, message: "unknown dispatcher '\(dispatcher)'")
     }
 }

@@ -44,6 +44,7 @@ public func paletteCommands(binds: [KeyBind]) -> [PaletteCommand] {
         act("shrink", "Shrink window", "minus.square", .resizeActive(dx: -50, dy: -50)),
         act("overview", "Window overview", "square.grid.3x3", .overview),
         act("clipboard", "Clipboard history", "doc.on.clipboard", .clipboard),
+        act("terminal", "Open terminal", "terminal", .terminal),
     ]
     for bind in binds {
         switch bind.action {

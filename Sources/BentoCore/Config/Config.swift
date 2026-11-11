@@ -67,6 +67,7 @@ public enum Action: Equatable, Sendable {
     case overview
     case clipboard
     case palette
+    case terminal
 }
 
 public enum MouseAction: Equatable, Sendable {
@@ -183,6 +184,7 @@ public struct Config: Equatable, Sendable {
     public var floatRules: [WindowRule] = []
     public var clipboardHistorySize = 200
     public var keepAwakeOnLaunch = false
+    public var terminal = "Terminal"
 
     public init() {}
 

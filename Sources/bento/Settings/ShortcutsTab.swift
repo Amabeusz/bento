@@ -40,6 +40,7 @@ private let catalog: [(title: String, actions: [ShortcutAction])] = [
         ShortcutAction(title: "Window overview", dispatcher: "overview"),
         ShortcutAction(title: "Clipboard history", dispatcher: "clipboard"),
         ShortcutAction(title: "Command palette", dispatcher: "palette"),
+        ShortcutAction(title: "Open terminal", dispatcher: "terminal"),
     ]),
 ]
 

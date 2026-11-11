@@ -9,6 +9,7 @@ general {
     # border_size_inactive = 1  # unfocused windows; 0 hides their border
     col.active_border = rgba(3d9dffff)
     col.inactive_border = rgba(585b70aa)
+    terminal = Terminal  # app opened by $mod+Return, e.g. Ghostty or iTerm
 }
 
 bar {
@@ -96,7 +97,7 @@ bind = $mod, t, togglesplit
 bind = $mod, f, fullscreen
 bind = $mod, v, togglefloating
 bind = $mod, q, killactive
-bind = $mod, return, exec, open -na Ghostty
+bind = $mod, return, terminal
 bind = , mission_control, overview
 bind = CTRL, up, overview
 bind = SUPER SHIFT, c, clipboard
