@@ -451,30 +451,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func refreshMenu() {
         let menu = NSMenu()
-        menu.addItem(item("Settings…", #selector(openSettings), key: ","))
+        menu.addItem(item("Settings…", #selector(openSettings), key: ",", symbol: "gearshape"))
         for error in configErrors {
-            menu.addItem(disabledItem("Config Error: \(error)"))
+            menu.addItem(disabledItem("Config Error: \(error)", symbol: "exclamationmark.triangle"))
         }
         if permissionsLost {
-            menu.addItem(disabledItem("Permissions lost — hotkeys and tiling stopped"))
+            menu.addItem(disabledItem("Permissions lost — hotkeys and tiling stopped", symbol: "lock"))
         }
         if eventTap?.isRunning == false {
-            menu.addItem(disabledItem("Hotkeys unavailable — check Accessibility permission"))
+            menu.addItem(disabledItem("Hotkeys unavailable — check Accessibility permission", symbol: "keyboard"))
         }
         if !screenRecordingGranted {
-            menu.addItem(disabledItem("Animations off (no Screen Recording)"))
+            menu.addItem(disabledItem("Animations off (no Screen Recording)", symbol: "video.slash"))
         }
         menu.addItem(.separator())
-        menu.addItem(item(isPaused ? "Resume Tiling" : "Pause Tiling", #selector(togglePause)))
-        let login = item("Launch at Login", #selector(toggleLaunchAtLogin))
+        menu.addItem(item(isPaused ? "Resume Tiling" : "Pause Tiling", #selector(togglePause),
+                            symbol: isPaused ? "play.circle" : "pause.circle"))
+        let login = item("Launch at Login", #selector(toggleLaunchAtLogin), symbol: "power")
         login.state = SMAppService.mainApp.status == .enabled ? .on : .off
         menu.addItem(login)
-        let awake = item("Keep Awake", #selector(toggleKeepAwake))
+        let awake = item("Keep Awake", #selector(toggleKeepAwake), symbol: "cup.and.saucer")
         awake.state = keepAwake.isOn ? .on : .off
         menu.addItem(awake)
-        menu.addItem(item("Clear Clipboard History", #selector(clearClipboard)))
+        menu.addItem(item("Clear Clipboard History", #selector(clearClipboard), symbol: "clipboard"))
         menu.addItem(.separator())
-        menu.addItem(item("Quit bento", #selector(quit), key: "q"))
+        menu.addItem(item("Quit bento", #selector(quit), key: "q", symbol: "xmark.circle"))
         statusItem?.menu = menu
     }
 
@@ -488,15 +489,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return errors + unknownKeys.map { "unknown key '\($0)'" }
     }
 
-    private func item(_ title: String, _ action: Selector, key: String = "") -> NSMenuItem {
+    private func item(_ title: String, _ action: Selector, key: String = "", symbol: String) -> NSMenuItem {
         let menuItem = NSMenuItem(title: title, action: action, keyEquivalent: key)
         menuItem.target = self
+        menuItem.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         return menuItem
     }
 
-    private func disabledItem(_ title: String) -> NSMenuItem {
+    private func disabledItem(_ title: String, symbol: String) -> NSMenuItem {
         let menuItem = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         menuItem.isEnabled = false
+        menuItem.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         return menuItem
     }
 
@@ -563,12 +566,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggleKeepAwake() {
         keepAwake.toggle()
-        statusItem?.button?.image = keepAwake.isOn
-            ? NSImage(systemSymbolName: "cup.and.saucer.fill", accessibilityDescription: "bento") : Self.barIcon
+        statusItem?.button?.image = keepAwake.isOn ? Self.awakeBarIcon : Self.barIcon
         refreshMenu()
     }
 
-    private static let barIcon: NSImage = {
+    private static let barIcon = makeBarIcon(awake: false)
+    private static let awakeBarIcon = makeBarIcon(awake: true)
+
+    /// The bento logo as a menu bar template; with Keep Awake on, a coffee cup takes the top-right compartment.
+    private static func makeBarIcon(awake: Bool) -> NSImage {
+        let cup = NSImage(systemSymbolName: "cup.and.saucer.fill", accessibilityDescription: nil)?
+            .withSymbolConfiguration(.init(pointSize: 8, weight: .bold))
         let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
             let area = NSRect(x: 1.5, y: 2, width: 15, height: 14), gap = 1.5
             let half = (area.width - gap) / 2, upper = (area.height - gap) / 2, quarter = (half - gap) / 2
@@ -577,16 +585,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                          NSRect(x: right, y: area.maxY - upper, width: half, height: upper),
                          NSRect(x: right, y: area.minY, width: quarter, height: upper),
                          NSRect(x: right + quarter + gap, y: area.minY, width: quarter, height: upper)]
-            for (cell, alpha) in zip(cells, [1.0, 0.75, 0.55, 0.4]) {
+            for (i, (cell, alpha)) in zip(cells, [1.0, 0.75, 0.55, 0.4]).enumerated() {
+                if i == 1, awake, let cup {
+                    let box = NSRect(x: cell.minX - 0.5, y: cell.minY - 0.5, width: 18 - cell.minX + 0.5, height: cell.height + 1.5)
+                    let k = min(box.width / cup.size.width, box.height / cup.size.height)
+                    let size = NSSize(width: cup.size.width * k, height: cup.size.height * k)
+                    cup.draw(in: NSRect(x: box.midX - size.width / 2, y: box.midY - size.height / 2,
+                                        width: size.width, height: size.height))
+                    continue
+                }
                 NSColor.black.withAlphaComponent(alpha).setFill()
                 NSBezierPath(roundedRect: cell, xRadius: 1.5, yRadius: 1.5).fill()
             }
             return true
         }
         image.isTemplate = true
-        image.accessibilityDescription = "bento"
+        image.accessibilityDescription = awake ? "bento, Keep Awake on" : "bento"
         return image
-    }()
+    }
 
     private func paste(_ entry: ClipEntry, plain: Bool) {
         clipboard.put(entry, plain: plain)
