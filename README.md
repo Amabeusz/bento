@@ -34,7 +34,7 @@ A set of macOS tools in a single menu bar app. The first module is a Hyprland-st
 
    Settings → Permissions shows what is granted, what each permission is for, and opens the right System Settings pane.
 
-A grid icon appears in the menu bar. Its menu has: settings, config errors, pause, and quit; Launch at Login is in Settings → Behavior.
+The Bento icon appears in the menu bar. Its menu has: settings, config errors and missing permissions, pause, Keep Awake, clipboard history, clear clipboard history, and quit; Launch at Login is in Settings → Behavior.
 
 ## Shortcuts (mod = ctrl-alt)
 
@@ -74,7 +74,7 @@ An app's auxiliary windows — settings, "About", modal windows, fixed-size wind
 
 The file `~/.config/bento/bento.conf` is created on first launch. Changes take effect a second after saving; a syntax error with its line number shows up in the menu and as "!" on the island.
 
-Bento menu → **Settings…** (⌘,) opens the settings window with the tabs Appearance (gaps, borders, island, island transparency), Behavior (focus follows mouse, cursor, animations, launch at login), Shortcuts (shortcut recording, actions, `$mod`) and Clipboard (history size, Keep Awake on launch). The window writes changes straight to `bento.conf` — it changes only the affected line, comments and manual edits are kept. Window rules (`windowrule`), mouse bindings (`bindm`) and detailed animations are still set in the file.
+Bento menu → **Settings…** (⌘,) opens the settings window with the tabs Appearance (gaps, borders, island, island transparency), Behavior (focus follows mouse, cursor, animations, launch at login, terminal app), Shortcuts (shortcut recording, actions, `$mod`), Clipboard (history size, Keep Awake on launch), Permissions (what is granted and what it is for) and About. The window writes changes straight to `bento.conf` — it changes only the affected line, comments and manual edits are kept. Window rules (`windowrule`), mouse bindings (`bindm`) and detailed animations are still set in the file.
 
 ```
 clipboard {
@@ -137,4 +137,3 @@ scripts/test.sh
 
 - [docs/SETUP.md](docs/SETUP.md) — system setup details
 - [docs/MANUAL-CHECKS.md](docs/MANUAL-CHECKS.md) — list of manual tests; start with the "Anti-goal checks" section
-- [docs/superpowers/specs/2026-11-02-bento-design.md](docs/superpowers/specs/2026-11-02-bento-design.md) — design

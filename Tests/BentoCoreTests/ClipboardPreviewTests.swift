@@ -19,8 +19,8 @@ private func text(_ s: String, secret: Bool = false) -> ClipEntry {
     }
 
     @Test func recognizesLinks() {
-        #expect(clipPreview(for: text("https://jira.example.com/jira/browse/ABC-123"))
-            == .link(host: "jira.example.com", path: "/jira/browse/ABC-123"))
+        #expect(clipPreview(for: text("https://example.com/docs/page"))
+            == .link(host: "example.com", path: "/docs/page"))
         #expect(clipPreview(for: text("  http://example.com\n")) == .link(host: "example.com", path: ""))
         #expect(clipPreview(for: text("https://a.pl?q=1")) == .link(host: "a.pl", path: "?q=1"))
         #expect(clipPreview(for: text("see https://a.pl now")) == .plain)
@@ -66,7 +66,7 @@ private func text(_ s: String, secret: Bool = false) -> ClipEntry {
     }
 
     @Test func secretStaysPlain() {
-        #expect(clipPreview(for: text("https://jira.example.com/x", secret: true)) == .plain)
+        #expect(clipPreview(for: text("https://example.com/x", secret: true)) == .plain)
         #expect(clipPreview(for: text("#378ADD", secret: true)) == .plain)
         #expect(clipPreview(for: text(#"{"a":1}"#, secret: true)) == .plain)
     }

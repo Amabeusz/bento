@@ -15,7 +15,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 
 ## Task 7
 
-- [ ] `scripts/build-app.sh && open build/bento.app` shows a grid icon in the menu bar.
+- [ ] `scripts/build-app.sh && open build/bento.app` shows the Bento icon in the menu bar.
 - [ ] `~/.config/bento/bento.conf` is created on first launch.
 - [ ] Break the config (`gaps_in = x`): the menu shows "Config Error: line N - message" within a second.
 - [ ] Fix the config: the error disappears from the menu.
@@ -208,7 +208,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Copy an image (cmd+ctrl+shift+4 screenshot, "Copy Image" in Preview): the row shows a thumbnail and "Image W×H", the preview shows it large, Return pastes the image (e.g. into Notes).
 - [ ] Copy two files in Finder: the row shows the file icon and "name + 1 more", the preview lists the paths, Return in a Finder window pastes copies of the files; typing part of a file name finds it.
 - [ ] Copy styled text (Safari, Notes): Return pastes it with styles into Notes / TextEdit, shift+Return pastes plain text.
-- [ ] Preview of text: a short text (e.g. `git push origin main`) is large and centered; a longer one is smaller from the top; a link (`https://jira.example.com/jira/browse/ABC-123`) shows a "Link" chip, the domain large and the path below; `#378ADD` or `rgb(55, 138, 221)` shows a big color swatch with the value and R G B A; `{"a":1,"b":[1,2]}` shows indented JSON; a masked secret stays `••••••••`.
+- [ ] Preview of text: a short text (e.g. `git push origin main`) is large and centered; a longer one is smaller from the top; a link (`https://example.com/docs/page`) shows a "Link" chip, the domain large and the path below; `#378ADD` or `rgb(55, 138, 221)` shows a big color swatch with the value and R G B A; `{"a":1,"b":[1,2]}` shows indented JSON; a masked secret stays `••••••••`.
 - [ ] Under the details of every preview: ⏎ Paste, ⇧⏎ Paste as plain text, ⌥P Pin (Unpin on a pinned row), ⌥⌫ Delete.
 - [ ] In the panel: ⌘3 pastes the third row; ⌥P pins the highlighted row (pin icon, row jumps to the top, no "π" in the search field), ⌥P again unpins it; ⌥⌫ removes the highlighted row.
 - [ ] Pinned rows stay on top after new copies; menu → Clear Clipboard History removes everything except pinned rows (also from `clipboard.json` and `~/Library/Application Support/bento/clipboard/`).
@@ -216,17 +216,17 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 ## Keep Awake
 
 - [ ] Menu → Keep Awake: the item gets a ✓, the menu bar icon becomes a cup, `pmset -g assertions` lists `PreventUserIdleDisplaySleep` named "Bento Keep Awake".
-- [ ] Menu → Keep Awake again: no ✓, grid icon back, the assertion is gone from `pmset -g assertions`.
+- [ ] Menu → Keep Awake again: no ✓, Bento icon back, the assertion is gone from `pmset -g assertions`.
 - [ ] With Keep Awake on, Quit Bento and separately `kill <pid>` of Bento: in both cases the assertion is gone afterwards.
 - [ ] With Keep Awake on, the screen does not dim or sleep after the display-sleep time from System Settings.
 
 ## Settings window
 
-- [ ] Menu → Settings… (or ⌘, with the menu open) opens a window on top with a glass background and tabs Appearance, Behavior, Shortcuts, Clipboard; Bento shows in the Dock while it is open and disappears from it after closing; Settings… again brings the same window back.
+- [ ] Menu → Settings… (or ⌘, with the menu open) opens a window on top with a glass background and tabs Appearance, Behavior, Shortcuts, Clipboard, Permissions, About; Bento shows in the Dock while it is open and disappears from it after closing; Settings… again brings the same window back.
 - [ ] Back up `~/.config/bento/bento.conf`; in Appearance move "Gap between windows": the tiles change within a second, and `diff` against the backup shows only the `gaps_in` line changed (comments and order intact).
 - [ ] Change a key the file does not have yet (e.g. island Padding off Auto): a new line appears inside `bar { }`; turning Auto back on removes it.
 - [ ] Island opacity slider from Glass to Solid makes the island tint go from clear to opaque; the Tint color picker changes its color.
-- [ ] Focused/unfocused border colors: a single color shows a color picker; the default gradient shows a text field that accepts `rgba(…) rgba(…) 135deg`.
+- [ ] Focused/unfocused border colors: a single color (the default) shows one color picker; + adds a color and shows an angle slider, − removes it; a value that does not parse (e.g. `rgba(dd)`) shows a text field instead.
 - [ ] Permissions tab: each permission shows "Granted" / "Not granted" on the right of its name and a sentence on what it is for; "Open System Settings" opens Privacy & Security → Accessibility / Screen Recording; toggling it there changes the status within a second.
 - [ ] Menu → "Clipboard History…" opens the clipboard panel.
 - [ ] Every color row (focused/unfocused border, island colors) has a ↺ button, greyed out while the color is the default; after changing a color it lights up, and clicking it writes the default back into its line in `bento.conf` (e.g. `col.active_border = rgba(3d9dffff)`) and greys out again; with an invalid border value (text field) ↺ brings back the color picker.
