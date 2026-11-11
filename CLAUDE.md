@@ -1,2 +1,2 @@
-## Baza wiedzy
-Mechanizmy, kontrakty i pułapki tego repo — spis: `.claude/kb/INDEX.md`, jedna linia na wpis (hook + plik). Zanim zmienisz kod w obszarze wpisu, przeczytaj wpis.
+## Knowledge base
+Mechanisms, contracts and pitfalls of this repo — index: `.claude/kb/INDEX.md`, one line per entry (hook + file). Before changing code in an entry's area, read the entry.
