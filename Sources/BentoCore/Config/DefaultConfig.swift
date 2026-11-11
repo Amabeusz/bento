@@ -7,7 +7,7 @@ general {
     gaps_out = 12  # or per side: top right bottom left, e.g. 20 12 12 12
     border_size = 2
     # border_size_inactive = 1  # unfocused windows; 0 hides their border
-    col.active_border = rgba(f5c2e7ff) rgba(cba6f7ff) rgba(89b4faff) 135deg
+    col.active_border = rgba(3d9dffff)
     col.inactive_border = rgba(585b70aa)
 }
 

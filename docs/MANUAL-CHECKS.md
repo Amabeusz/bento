@@ -227,6 +227,7 @@ Put windows on workspaces 2 and 3 (ctrl-alt-shift-2 / -3), stay on workspace 1, 
 - [ ] Change a key the file does not have yet (e.g. island Padding off Auto): a new line appears inside `bar { }`; turning Auto back on removes it.
 - [ ] Island opacity slider from Glass to Solid makes the island tint go from clear to opaque; the Tint color picker changes its color.
 - [ ] Focused/unfocused border colors: a single color shows a color picker; the default gradient shows a text field that accepts `rgba(…) rgba(…) 135deg`.
+- [ ] Every color row (focused/unfocused border, island colors) has a ↺ button, greyed out while the color is the default; after changing a color it lights up, and clicking it writes the default back into its line in `bento.conf` (e.g. `col.active_border = rgba(3d9dffff)`) and greys out again; with an invalid border value (text field) ↺ brings back the color picker.
 - [ ] Behavior toggles (focus follows mouse, cursor warp, animations) take effect without restarting; Launch at login matches the menu item.
 - [ ] Shortcuts: click a shortcut and press ctrl+alt+← (already bound): it records instead of moving focus; pressing keys that include $mod saves them as `$mod …`; Esc cancels; changing the action and argument updates the line; − removes it; Add shortcut adds `bind = $mod, b, focusorlaunch, Safari` under the last bind.
 - [ ] Unticking/ticking modifiers under "Modifier ($mod)" rewrites the `$mod = …` line and every `$mod` shortcut follows.

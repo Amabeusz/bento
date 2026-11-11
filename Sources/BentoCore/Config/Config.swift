@@ -146,10 +146,7 @@ public struct Config: Equatable, Sendable {
     public var gapsOut = Insets(all: 12)
     public var borderSize = 2.0
     public var borderSizeInactive: Double?
-    public var activeBorder = Gradient(
-        colors: [RGBA(hex: 0xf5c2e7ff), RGBA(hex: 0xcba6f7ff), RGBA(hex: 0x89b4faff)],
-        angleDegrees: 135
-    )
+    public var activeBorder = Gradient(colors: [RGBA(hex: 0x3d9dffff)], angleDegrees: 0)
     public var inactiveBorder = Gradient(colors: [RGBA(hex: 0x585b70aa)], angleDegrees: 0)
     public var barEnabled = true
     public var barIcons = true

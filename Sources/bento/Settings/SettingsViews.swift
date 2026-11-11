@@ -113,9 +113,26 @@ private struct ColorRow: View {
     let fallback: RGBA
 
     var body: some View {
-        ColorPicker(title, selection: Binding(
-            get: { model.color(key, fallback).color },
-            set: { model.set(key, color: RGBA($0)) }), supportsOpacity: true)
+        LabeledContent(title) {
+            HStack {
+                ColorPicker(title, selection: Binding(
+                    get: { model.color(key, fallback).color },
+                    set: { model.set(key, color: RGBA($0)) }), supportsOpacity: true)
+                    .labelsHidden()
+                ResetButton(isDefault: model.color(key, fallback) == fallback) { model.set(key, color: fallback) }
+            }
+        }
+    }
+}
+
+private struct ResetButton: View {
+    let isDefault: Bool
+    let reset: () -> Void
+
+    var body: some View {
+        Button(action: reset) { Image(systemName: "arrow.counterclockwise") }
+            .help("Reset to default")
+            .disabled(isDefault)
     }
 }
 
@@ -139,6 +156,7 @@ private struct BorderColorRow: View {
                         Button { edit { $0.colors.removeLast() } } label: { Image(systemName: "minus") }
                             .disabled(gradient.colors.count < 2)
                         Button { edit { $0.colors.append($0.colors[$0.colors.count - 1]) } } label: { Image(systemName: "plus") }
+                        ResetButton(isDefault: gradient == fallback) { model.set(key, gradient: fallback) }
                     }
                     if gradient.colors.count > 1 {
                         HStack {
@@ -151,10 +169,13 @@ private struct BorderColorRow: View {
             }
         } else {
             LabeledContent(title) {
-                TextField(title, text: Binding(get: { model.string(key) ?? "" }, set: { model.set(key, $0) }),
-                          prompt: Text("rgba(…) rgba(…) 135deg"))
-                    .labelsHidden()
-                    .font(.system(.body, design: .monospaced))
+                HStack {
+                    TextField(title, text: Binding(get: { model.string(key) ?? "" }, set: { model.set(key, $0) }),
+                              prompt: Text("rgba(…) rgba(…) 135deg"))
+                        .labelsHidden()
+                        .font(.system(.body, design: .monospaced))
+                    ResetButton(isDefault: false) { model.set(key, gradient: fallback) }
+                }
             }
         }
     }

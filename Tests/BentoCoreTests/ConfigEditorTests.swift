@@ -122,6 +122,25 @@ windowrule = float, app:^Calculator$
         #expect(config.inactiveBorder == Gradient(colors: single.colors, angleDegrees: 0))
     }
 
+    @Test func defaultColorsRoundTripThroughParser() throws {
+        let d = Config()
+        let island: [(String, RGBA)] = [
+            ("bar:col.background", d.barBackground), ("bar:col.active", d.barActive),
+            ("bar:col.other_monitor", d.barOtherMonitor), ("bar:col.text", d.barText),
+            ("bar:col.text_active", d.barTextActive), ("bar:col.text_empty", d.barTextEmpty),
+            ("bar:col.error", d.barError),
+        ]
+        var e = ConfigEditor(text: sample)
+        e.set("general:col.active_border", formatGradient(d.activeBorder))
+        e.set("general:col.inactive_border", formatGradient(d.inactiveBorder))
+        for (key, color) in island { e.set(key, formatColor(color)) }
+        let config = try parseConfig(e.text)
+        #expect(config.activeBorder == d.activeBorder)
+        #expect(config.inactiveBorder == d.inactiveBorder)
+        #expect([config.barBackground, config.barActive, config.barOtherMonitor, config.barText,
+                 config.barTextActive, config.barTextEmpty, config.barError] == island.map(\.1))
+    }
+
     @Test func invalidGradientAndInsetsParseToNil() {
         #expect(parseGradient("rgba(f5c2e7ff) rgba(dd) rgba(89b4faff) 135deg") == nil)
         #expect(parseGradient("") == nil)

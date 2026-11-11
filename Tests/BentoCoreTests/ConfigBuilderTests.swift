@@ -4,7 +4,7 @@ import Testing
 @Test func defaultConfigParses() throws {
     let c = try parseConfig(defaultConfigText)
     #expect(c.gapsIn == 10 && c.gapsOut == Insets(all: 12) && c.borderSize == 2)
-    #expect(c.activeBorder == Gradient(colors: [RGBA(hex: 0xf5c2e7ff), RGBA(hex: 0xcba6f7ff), RGBA(hex: 0x89b4faff)], angleDegrees: 135))
+    #expect(c.activeBorder == Gradient(colors: [RGBA(hex: 0x3d9dffff)], angleDegrees: 0))
     #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt], key: "0", action: .workspace(0))))
     #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt, .shift], key: "tab", action: .moveCurrentWorkspaceToMonitor)))
     #expect(c.keyBinds.contains(KeyBind(mods: [.ctrl, .alt], key: "minus", action: .resizeActive(dx: -50, dy: -50))))
