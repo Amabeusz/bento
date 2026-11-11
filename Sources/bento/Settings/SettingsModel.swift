@@ -1,6 +1,7 @@
 import AppKit
 import BentoCore
 import Observation
+import UniformTypeIdentifiers
 
 @MainActor
 @Observable
@@ -28,6 +29,12 @@ final class SettingsModel {
     func reload() {
         guard pending == nil, let text = try? String(contentsOf: url, encoding: .utf8) else { return }
         if text != editor.text { editor = ConfigEditor(text: text) }
+    }
+
+    func openFile() {
+        guard !NSWorkspace.shared.open(url),
+              let textEditor = NSWorkspace.shared.urlForApplication(toOpen: .plainText) else { return }
+        NSWorkspace.shared.open([url], withApplicationAt: textEditor, configuration: NSWorkspace.OpenConfiguration())
     }
 
     func string(_ key: String) -> String? { editor.value(key) }

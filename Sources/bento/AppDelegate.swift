@@ -441,8 +441,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func refreshMenu() {
         let menu = NSMenu()
         menu.addItem(item("Settings…", #selector(openSettings), key: ","))
-        menu.addItem(item("Reload Config", #selector(reloadConfig)))
-        menu.addItem(item("Open Config", #selector(openConfig)))
         for error in configErrors {
             menu.addItem(disabledItem("Config Error: \(error)"))
         }
@@ -489,14 +487,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menuItem = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         menuItem.isEnabled = false
         return menuItem
-    }
-
-    @objc private func reloadConfig() {
-        configDidChange()
-    }
-
-    @objc private func openConfig() {
-        NSWorkspace.shared.open(configURL)
     }
 
     @objc private func togglePause() {

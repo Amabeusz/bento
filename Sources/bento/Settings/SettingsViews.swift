@@ -194,6 +194,9 @@ private struct BehaviorTab: View {
                 FlagRow(title: "Animations", key: "animations:enabled", model: model, fallback: d.animationsEnabled)
                 Toggle("Launch at login", isOn: Binding(get: model.launchAtLogin, set: model.setLaunchAtLogin))
             }
+            Section("Config file") {
+                Button("Open bento.conf") { model.openFile() }
+            }
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
