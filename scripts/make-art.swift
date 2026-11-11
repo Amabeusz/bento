@@ -1,4 +1,4 @@
-// Regenerates scripts/AppIcon.icns, docs/icon.png and docs/banner.png: swift scripts/make-art.swift
+// Regenerates scripts/AppIcon.icns and docs/banner.png: swift scripts/make-art.swift
 import AppKit
 
 func hex(_ v: Int, _ a: CGFloat = 1) -> CGColor {
@@ -184,6 +184,5 @@ iconutil.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
 iconutil.arguments = ["-c", "icns", iconset, "-o", "\(root)/scripts/AppIcon.icns"]
 try! iconutil.run()
 iconutil.waitUntilExit()
-save(icon(512), "\(root)/docs/icon.png")
 save(banner(), "\(root)/docs/banner.png")
-print("scripts/AppIcon.icns docs/icon.png docs/banner.png")
+print("scripts/AppIcon.icns docs/banner.png")

@@ -6,29 +6,15 @@ A set of macOS tools in a single menu bar app. The first module is a Hyprland-st
 
 ## Requirements
 
-- macOS 26 on Apple Silicon
-- Command Line Tools with Swift 6.2 (`xcode-select --install`); Xcode is not needed
-- one macOS desktop (Space) per display
+- macOS 26 or later on a Mac with Apple Silicon (M1 or newer)
+- one macOS desktop (Space) per display — Bento has its own workspaces instead
 
-## First run
+## Installation
 
-1. **Signing certificate (once).** Keychain Access → Certificate Assistant → Create a Certificate…
-   Name `bento-dev`, identity type *Self Signed Root*, certificate type *Code Signing*.
-   Without it macOS asks for permissions again after every rebuild.
-2. **Turn off other window managers:** quit OmniWM and Rectangle (Rectangle also uses ctrl-alt + arrows).
-3. **Build the app:**
-
-   ```bash
-   scripts/build-app.sh
-   ```
-
-4. **Run it:**
-
-   ```bash
-   open build/bento.app
-   ```
-
-5. **Grant permissions** in System Settings → Privacy & Security:
+1. Download `Bento.zip` from the [latest release](https://github.com/Amabeusz/bento/releases/latest), unzip it and move **Bento** to Applications.
+2. Open Bento. It is not notarized by Apple, so the first launch is blocked: go to System Settings → Privacy & Security, scroll down and click **Open Anyway** next to the Bento message.
+3. Quit other window managers (OmniWM, Rectangle): they fight with Bento over window positions, and Rectangle also uses ctrl-alt + arrows.
+4. **Grant permissions** in System Settings → Privacy & Security:
    - **Accessibility** — needed for tiling, shortcuts, the window overview, the command palette and pasting from clipboard history. Without it Bento still runs: clipboard history (open it from the menu; picking an entry copies it), Keep Awake and Settings work. Tiling starts a few seconds after it is granted.
    - **Screen Recording** (optional) — everything works without it, just without animations and overview thumbnails. After granting it, quit Bento from its menu and start it again.
 
@@ -125,15 +111,31 @@ Colours are written only as `rgba(RRGGBBAA)` or `rgb(RRGGBB)` — `#` starts a c
 
 Windows on hidden workspaces are "parked" off-screen. On quit, pause and `kill -TERM` they come back on screen; after a crash (`kill -9`) they come back on the next launch.
 
-## Tests
+## Building from source
 
-```bash
-scripts/test.sh
-```
+You need Command Line Tools with Swift 6.2 (`xcode-select --install`); Xcode is not needed.
 
-(`swift test` alone won't find the Testing framework without Xcode.)
+1. **Signing certificate (once).** Keychain Access → Certificate Assistant → Create a Certificate…
+   Name `bento-dev`, identity type *Self Signed Root*, certificate type *Code Signing*.
+   Without it macOS asks for permissions again after every rebuild.
+2. **Build and run:**
 
-## More
+   ```bash
+   scripts/build-app.sh
+   ```
 
-- [docs/SETUP.md](docs/SETUP.md) — system setup details
-- [docs/MANUAL-CHECKS.md](docs/MANUAL-CHECKS.md) — list of manual tests; start with the "Anti-goal checks" section
+   ```bash
+   open build/bento.app
+   ```
+
+3. **Tests:**
+
+   ```bash
+   scripts/test.sh
+   ```
+
+   (`swift test` alone won't find the Testing framework without Xcode.)
+
+4. **Release:** `scripts/release.sh` builds the app and packs it as `build/Bento.zip` (with `Bento.app` inside) for a GitHub release. It refuses to run without the `bento-dev` certificate: every release must be signed with the same certificate, or users have to grant permissions again after updating.
+
+More details in [docs/SETUP.md](docs/SETUP.md).
