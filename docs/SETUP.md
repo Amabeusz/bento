@@ -38,3 +38,15 @@ Quit OmniWM and Rectangle before using Bento; two window managers fight over win
 ## 6. Config
 
 `~/.config/bento/bento.conf` is created from the default on first launch. Saved changes apply within a second; syntax errors show up in the menu bar menu with the line number.
+
+## 7. Tests
+
+```
+scripts/test.sh
+```
+
+`swift test` alone won't find the Testing framework without Xcode.
+
+## 8. Release
+
+`scripts/release.sh` builds the app and packs it as `build/Bento.zip` (with `Bento.app` inside) for a GitHub release. It refuses to run without the `bento-dev` certificate: every release must be signed with the same certificate, or users have to grant permissions again after updating.
