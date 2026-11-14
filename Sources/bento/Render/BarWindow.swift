@@ -126,7 +126,7 @@ private final class WorkspaceStrip: NSView {
 @MainActor
 private final class BarPanel {
     private let panel: NSPanel
-    private let glass = NSGlassEffectView()
+    private let glass = makeGlass()
     private let strip = WorkspaceStrip()
     private var frame: NSRect = .zero
 

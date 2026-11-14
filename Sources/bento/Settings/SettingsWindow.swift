@@ -42,7 +42,7 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 560, height: 440)
         window.delegate = self
-        let glass = NSGlassEffectView()
+        let glass = makeGlass()
         glass.cornerRadius = 16
         glass.contentView = NSHostingView(rootView: SettingsView(model: model))
         window.contentView = glass

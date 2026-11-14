@@ -59,7 +59,7 @@ export const Outro: React.FC<{ repo: string; cta: string }> = ({ repo, cta }) =>
         {repo}
       </div>
       <div style={{ ...rise(32), marginTop: 20, fontSize: 32, color: C.muted }}>
-        macOS 26+ · Apple Silicon
+        macOS 14+ · Apple Silicon
       </div>
     </AbsoluteFill>
   );

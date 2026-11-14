@@ -6,7 +6,7 @@
 
 [**Download for macOS**](https://github.com/Amabeusz/bento/releases/latest/download/Bento.zip) · [Guide](docs/GUIDE.md) · [Releases](https://github.com/Amabeusz/bento/releases)
 
-![macOS 26+](https://img.shields.io/badge/macOS-26%2B-blue?logo=apple&logoColor=white&style=flat-square)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?logo=apple&logoColor=white&style=flat-square)
 ![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1%2B-blue?logo=apple&logoColor=white&style=flat-square)
 [![Latest release](https://img.shields.io/github/v/release/Amabeusz/bento?style=flat-square)](https://github.com/Amabeusz/bento/releases/latest)
 
@@ -30,7 +30,7 @@ Bento tiles your windows automatically, gives you 10 keyboard-driven workspaces 
 
 ## Installation
 
-Requires macOS 26 or later on Apple Silicon.
+Requires macOS 14 (Sonoma) or later on Apple Silicon. Liquid Glass panels on macOS 26+, a blurred backdrop on older systems.
 
 1. Install with [Homebrew](https://brew.sh):
 

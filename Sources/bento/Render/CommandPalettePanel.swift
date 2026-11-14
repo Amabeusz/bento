@@ -50,7 +50,7 @@ final class CommandPalettePanel: NSObject, NSSearchFieldDelegate, NSWindowDelega
         panel.isReleasedWhenClosed = false
         panel.delegate = self
 
-        let glass = NSGlassEffectView(frame: NSRect(origin: .zero, size: frame.size))
+        let glass = makeGlass(frame: NSRect(origin: .zero, size: frame.size))
         glass.cornerRadius = 16
         let background = NSView(frame: glass.bounds)
         glass.contentView = background
