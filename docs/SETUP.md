@@ -50,3 +50,12 @@ scripts/test.sh
 ## 8. Release
 
 `scripts/release.sh` builds the app and packs it as `build/Bento.zip` (with `Bento.app` inside) for a GitHub release. It refuses to run without the `bento-dev` certificate: every release must be signed with the same certificate, or users have to grant permissions again after updating.
+
+It also updates the Homebrew cask: it writes the version from `scripts/Info.plist` and the zip's sha256 into `Casks/bento.rb` in a clone of the tap repo [Amabeusz/homebrew-bento](https://github.com/Amabeusz/homebrew-bento), by default `../homebrew-bento` (override with `BENTO_TAP=/path/to/clone`). It skips the cask when the clone is missing or when release `v<version>` already exists.
+
+To release:
+
+1. Bump `CFBundleShortVersionString` in `scripts/Info.plist`.
+2. Run `scripts/release.sh`.
+3. Upload exactly that zip (it is not reproducible, so a rebuild changes the sha256): `gh release create v<version> build/Bento.zip`.
+4. Commit and push the tap clone; the script prints both commands.

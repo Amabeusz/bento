@@ -32,7 +32,13 @@ Bento tiles your windows automatically, gives you 10 keyboard-driven workspaces 
 
 Requires macOS 26 or later on Apple Silicon.
 
-1. Download [**Bento.zip**](https://github.com/Amabeusz/bento/releases/latest/download/Bento.zip), unzip it and move **Bento** to Applications.
+1. Install with [Homebrew](https://brew.sh):
+
+   ```bash
+   brew install --cask amabeusz/bento/bento
+   ```
+
+   Or download [**Bento.zip**](https://github.com/Amabeusz/bento/releases/latest/download/Bento.zip), unzip it and move **Bento** to Applications.
 2. Open Bento. The first launch is blocked — go to **System Settings → Privacy & Security** and click **Open Anyway**.
 3. Grant the permissions below in the same pane. **Settings → Permissions** in Bento shows what is granted and opens the right place.
 
