@@ -12,7 +12,7 @@
 
 </div>
 
-<!-- Preview video: drag video/out/bento-preview.mp4 into the GitHub editor and replace this comment with the github.com/user-attachments/assets/… link it inserts, on its own line. -->
+https://github.com/user-attachments/assets/09425a3f-3d4d-4147-b4a4-97baea1c960e
 
 Bento tiles your windows automatically, gives you 10 keyboard-driven workspaces and puts them on a small island under the menu bar. Next to the window manager it ships the tools you'd otherwise install separately: clipboard history, a window overview and Keep Awake.
 
